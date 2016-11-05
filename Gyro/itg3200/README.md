@@ -1,0 +1,1 @@
+Particle Photon (Arduino-compatible) driver for the ITG-3200 gyroscope. For mor info check out the sources in examples/
