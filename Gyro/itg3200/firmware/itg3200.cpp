@@ -21,9 +21,16 @@
 #include <stdint.h>
 using namespace std;
 
-ITG3200::ITG3200(bool debug, char itgAddress){
+/*
+*   debug:          if true, debug messages are outout via the Serial interface (USB)
+*   itgAddress:     specifies the I2C address of the sensor
+*   selfHeating:    if so desired, users may specify the amount of self heating of the sensor to calibrate the temperature reading
+*/
+ITG3200::ITG3200(bool debug, char itgAddress, float selfHeatingAmount){
     itgAddress_ = itgAddress;
     debug_ = debug;
+    selfHeatingAmount_ = selfHeatingAmount;
+    
     pinMode(D2, OUTPUT);
     digitalWrite(D2,HIGH);
     
@@ -67,7 +74,7 @@ float ITG3200::getTemperature(){
     rawData |= itgRead(itgAddress_, TEMP_L);  
     // from the datasheet : 35 degrees Celsius = (1/280) * -13200 + b; b = 82.142857. 
     
-    data = (float)rawData/280 + 82.142857; 
+    data = (float)rawData/280 + 82.142857 - selfHeatingAmount_; 
     if(debug_){
         Serial.println(String(data)+" degC.");  
     } 

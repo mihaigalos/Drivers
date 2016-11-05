@@ -21,14 +21,20 @@
 ITG3200 * itg3200;
 
 void setup() {
+    auto debug = true;
     auto itgAddress = 0x68; // jumper pin to GND
-    itg3200 = new ITG3200(true, itgAddress);
+    auto sensorSelfHeatingAmount = 3.7; // degrees Celsius, compensate for self-heating when computing temperature
+    
+    itg3200 = new ITG3200(debug, itgAddress, sensorSelfHeatingAmount);
 }
 
 void loop() {
+    auto tic1 = micros();
     itg3200->getRotations();
     itg3200->getTemperature();
     itg3200->powerMode(TEitg3200_powerMode_Sleep);
+    auto toc1 = micros();
+    Serial.println("delta: "+String(toc1-tic1));
     delay(350);
     itg3200->powerMode(TEitg3200_powerMode_Normal);
 }

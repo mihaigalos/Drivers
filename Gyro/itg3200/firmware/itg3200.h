@@ -55,7 +55,9 @@ class ITG3200{
     static char const startupTime = 50; // ms
 
     char itgAddress_; 
-    bool debug_;
+    bool debug_;               
+    float selfHeatingAmount_;  
+    
     void itgWrite(char address, char registerAddress, char data);
     unsigned char itgRead(char address, char registerAddress);
     int readX();
@@ -63,7 +65,7 @@ class ITG3200{
     int readZ();
     
     public:
-    ITG3200(bool debug=false, char itgAddress=DEFAULT_ITG3200_ADDRESS); 
+    ITG3200(bool debug=false, char itgAddress=DEFAULT_ITG3200_ADDRESS, float selfHeatingAmount=0); 
     
     std::vector<int> getRotations();
     float getTemperature();
