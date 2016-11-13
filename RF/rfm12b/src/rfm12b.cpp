@@ -21,6 +21,7 @@ volatile int8_t RFM12B::rxstate;       // current transceiver state
 volatile uint16_t RFM12B::rf12_crc;    // running crc value
 volatile uint8_t rf12_buf[RF_MAX];     // recv/xmit buf, including hdr & crc bytes
 
+TELedState RFM12B::ledState;
 
 uint16_t
 _crc16_update(uint16_t crc, uint8_t a)
@@ -48,7 +49,7 @@ void RFM12B::SPIInit() {
     pinMode(BOARD_GND, OUTPUT);
     digitalWrite(BOARD_GND, LOW);
     
-    delay(1000); // wait for chrystal
+    delay(100); // wait for chrystal
     
     pinMode(SPI_SS, OUTPUT);
     digitalWrite(SPI_SS, 1);
@@ -68,7 +69,6 @@ uint8_t RFM12B::Byte(uint8_t out) {
         if(((1<<i) & (out))) {
             c = 1;
         }
-        //Particle.publish("SPI "+String(i)+String("  : ")+String(c)); delay(1000);
         digitalWrite(SPI_MOSI, c);
         delayMicroseconds(5);
         digitalWrite(SPI_SCK, 1);
@@ -101,9 +101,13 @@ uint16_t RFM12B::XFER(uint16_t cmd) {
 // - lowVoltageThreshold [optional - default = RF12_2v75]
 void RFM12B::Initialize(uint8_t ID, uint8_t freqBand, uint8_t networkid, uint8_t txPower, uint8_t airKbps, uint8_t lowVoltageThreshold)
 {
-    Serial.begin();
-    //while(millis()<60);
-    //cs_pin = SS_BIT;
+    
+    #ifdef DEBUG_
+        Serial.begin();
+    #endif
+    
+    ledState = TELedState_Green;
+    RGB.control(true);
     
     ownId = ID;
     networkID = networkid;
@@ -127,11 +131,11 @@ void RFM12B::Initialize(uint8_t ID, uint8_t freqBand, uint8_t networkid, uint8_t
     XFER(0x94A0);             // VDI,FAST,134kHz,0dBm,-103dBm
     XFER(0xC2AC);             // AL,!ml,DIG,DQD4
     if (networkID != 0) {
-    XFER(0xCA83);           // FIFO8,2-SYNC,!ff,DR
-    XFER(0xCE00 | networkID); // SYNC=2DXX;
+        XFER(0xCA83);           // FIFO8,2-SYNC,!ff,DR
+        XFER(0xCE00 | networkID); // SYNC=2DXX;
     } else {
-    XFER(0xCA8B); // FIFO8,1-SYNC,!ff,DR
-    XFER(0xCE2D); // SYNC=2D;
+        XFER(0xCA8B); // FIFO8,1-SYNC,!ff,DR
+        XFER(0xCE2D); // SYNC=2D;
     }
     XFER(0xC483); // @PWR,NO RSTRIC,!st,!fi,OE,EN
     
@@ -151,13 +155,29 @@ uint16_t RFM12B::Control(uint16_t cmd) {
     return r;
 }
 
+void RFM12B::LedToggle(){
+    
+    switch(ledState){
+        case TELedState_Green: 
+            RGB.color(0,255,0);
+            ledState = TELedState_RedBlue;
+        break;
+        case TELedState_RedBlue:
+            RGB.color(255,0,255);
+            ledState = TELedState_Green;
+        break;
+    }
+}
+
 void RFM12B::InterruptHandler() {
   // a transfer of 2x 16 bits @ 2 MHz over SPI takes 2x 8 us inside this ISR
   // correction: now takes 2 + 8 µs, since sending can be done at 8 MHz
-  
+  rf12_crc = 0;
   if (rxstate == TXRECV) {
       
-        uint16_t length = 255, readBytes = 0;
+        uint16_t length = 255, receivedCrc = 0;
+        rxfill = 0; 
+        dbg("Receiving.\n\r\n\r");
         do{
             
              while (   (1 == digitalRead(RFM_IRQ)) ) {
@@ -169,62 +189,75 @@ void RFM12B::InterruptHandler() {
             
             
             uint8_t in = XFER(RF_RX_FIFO_READ);
+           
+           
+            if(rxfill < (length - CRC_LENGTH_BYTES)){
+                rf12_buf[rxfill] = in;
+                rf12_crc = _crc16_update(rf12_crc, in);
+            }
+            rxfill++;
             
-                if (rxfill == 0 && networkID != 0){
-                    rf12_buf[rxfill++] = networkID;  
+            
+              dbg2(in, HEX); dbg(' '); dbg("      CRC: "); dbg2(rf12_crc>>8, HEX); dbg("_"); dbg2((uint8_t)rf12_crc, HEX);
+                if ( (rxfill == 0) && (networkID != 0)){
+                    //rf12_buf[rxfill] = networkID;  
                 }
-               else if(3 == rxfill){
-                   rf12_buf[rxfill++] = in;
-                    length = rf12_buf[3];
-                    Particle.publish("Got length: "+ String(length));
+               else if(TRANSMISSION_HEADER_LENGTH == rxfill){ // length is within the header
+                   
+                    length = in + TRANSMISSION_HEADER_LENGTH + CRC_LENGTH_BYTES;
+                    dbg(String("Got Length: ")+String(length) + String("   "));
                 }
-                else {
-                    rf12_buf[rxfill++] = in;
-                    rf12_crc = _crc16_update(rf12_crc, in);
+                else if (rxfill == (length - CRC_LENGTH_BYTES+1)){
+                    receivedCrc = in; dbg(" --- CRC1");
+                } else if (rxfill == length ){
+                    receivedCrc |= (in << 8); dbg(" --- CRC2");
                 }
                 
-                
-                if (rxfill >= rf12_len + 6 || rxfill >= RF_MAX)
-                  XFER(RF_IDLE_MODE);
-        } while( ++readBytes < length);
-      
-     
-    Particle.publish("RxFill_1"+String(rxfill)+" Buf: "+String((const char*) rf12_buf)+"."); delay(1000);
-    Particle.publish("RxFill_2"+String(rxfill)+" Buf: "+String((const char*) &rf12_buf[50])+"."); delay(1000);
+                 dbg("\n\r");
+               // if (rxfill >= rf12_len + 6 || rxfill >= RF_MAX)
+                //  XFER(RF_IDLE_MODE);
+        } while( rxfill < length);
         
-    Serial.println(String((const char*) rf12_buf));
+       
+      
+    dbg("Got CRC: "); dbg2((uint8_t)(receivedCrc>>8), HEX); dbg("_"); dbg2((uint8_t)receivedCrc, HEX) ;dbg ("   ");
+    dbg("Computed CRC: "); dbg2((uint8_t)(rf12_crc>>8), HEX); dbg("_"); dbg2((uint8_t)rf12_crc, HEX) ;dbg ("   ");
+       
+    if(receivedCrc == rf12_crc) LedToggle();
         
   } else {
-      XFER(0x0000);
-    uint8_t out;
-    while (TXDONE != rxstate){
-        // AA AA AA (pramble)   2D  <Network Id>    <Destination>     <Source>   <Length>     <Payload>    <CRC1>    <CRC2>
-        
-        while (1 == digitalRead(RFM_IRQ)); // wait for previous transmission to finish
+        XFER(0x0000);
+        uint8_t out;
+        dbg("Sending.\n\r\n\r");
+        while (TXDONE != rxstate){
+            // AA AA AA (pramble)   2D  <Network Id>    <Destination>     <Source>   <Length>     <Payload>    <CRC1>    <CRC2>
             
-        
-        if (rxstate < 0) {
-        uint8_t pos = 4 + rf12_len + rxstate++;
-        out = rf12_buf[pos];
-        rf12_crc = _crc16_update(rf12_crc, out);
-        } else
-        switch (rxstate++) {
-          case TXSYN1: out = 0x2D; break;
-          case TXSYN2: out = networkID; rxstate = -(3 + rf12_len); break;
-          case TXCRC1: out = rf12_crc; break;
-          case TXCRC2: out = rf12_crc >> 8; break;//Serial.print("\n\r"); break; 
-          case TXDONE: XFER(RF_IDLE_MODE); // fall through
-          default:     out = 0xAA;
-        }
-        
-        Serial.print(out, HEX); Serial.print(' ');
-        XFER(RF_TXREG_WRITE + out);
-    } 
-    
-    
-    
-  }
-  rxfill = 0;
+            while (1 == digitalRead(RFM_IRQ)); // wait for previous transmission to finish
+                
+            
+            if (rxstate < 0) { // sending payload
+                uint8_t pos = 4 + rf12_len + rxstate++;
+                out = rf12_buf[pos];
+                
+                 
+                
+                rf12_crc = _crc16_update(rf12_crc, out);
+            } else
+            switch (rxstate++) {
+              case TXSYN1: out = 0x2D; break;
+              case TXSYN2: out = networkID; rxstate = -(3 + rf12_len); rf12_crc = 0; break;
+              case TXCRC1: out = rf12_crc;  dbg("CRC1: "); break;
+              case TXCRC2: out = rf12_crc >> 8; dbg("CRC2: "); break;//dbg("\n\r"); break; 
+              case TXDONE: XFER(RF_IDLE_MODE); dbg('\n');// fall through
+              default:     out = 0xAA;
+            }
+            
+            //dbg(out, HEX); dbg(' ');
+            dbg2(out, HEX); dbg(' '); dbg("      CRC: "); dbg2(rf12_crc>>8, HEX); dbg("_"); dbg2((uint8_t)rf12_crc, HEX); dbg("\r");
+            XFER(RF_TXREG_WRITE + out);
+        } 
+    }
+    rxfill = 0; rf12_crc = 0;
     rxstate = TXDONE;
 }
 
@@ -237,8 +270,9 @@ void RFM12B::ReceiveStart() {
     if (networkID != 0)
     rf12_crc = _crc16_update(~0, networkID);
     rxstate = TXRECV;
-    XFER(RF_RECEIVER_ON);
+    XFER(RF_RECEIVER_ON);   
     InterruptHandler();
+    delay(10);
 }
 
 bool RFM12B::ReceiveComplete() {
@@ -319,13 +353,12 @@ void RFM12B::OnOff(uint8_t value) {
 }
 
 void RFM12B::Sleep(char n) {
-  if (n == 0)
+  if (n == 0){
     Control(RF_IDLE_MODE);
+   
+  }
   else {
-    Control(RF_WAKEUP_TIMER | 0x0500 | n);
     Control(RF_SLEEP_MODE);
-    if (n > 0)
-      Control(RF_WAKEUP_MODE);
   }
   rxstate = TXIDLE;
 }

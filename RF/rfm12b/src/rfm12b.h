@@ -8,8 +8,10 @@
 
 #include "application.h"
 #include <inttypes.h>
+#include "config.h"
 
-#define TRANSMISSION_LENGTH_BYTES 2
+#define TRANSMISSION_HEADER_LENGTH 4 // <Network Id>    <Destination>     <Source>   <Length>
+#define CRC_LENGTH_BYTES 2
 
 ///RF12 Driver version
 #define OPTIMIZE_SPI       1  // uncomment this to write to the RFM12B @ 8 Mhz
@@ -99,10 +101,16 @@
 
 // transceiver states, these determine what to do with each interrupt
 enum {
-  TXCRC1, TXCRC2, TXTAIL, TXDONE, TXIDLE,
+  TXCRC1, TXCRC2, TXTAIL, TXTAIL2, TXTAIL3, TXDONE, TXIDLE,
   TXRECV,
   TXPRE1, TXPRE2, TXPRE3, TXSYN1, TXSYN2,
 };
+
+typedef enum{
+    TELedState_Unknown,
+    TELedState_Green,
+    TELedState_RedBlue
+}TELedState;
 
 extern volatile uint8_t rf12_buf[RF_MAX];          // recv/xmit buf, including hdr & crc bytes
 class RFM12B
@@ -130,11 +138,16 @@ class RFM12B
     volatile uint8_t* Data;
     volatile uint8_t* DataLen;
 
-    static void InterruptHandler();
+    static TELedState ledState;
+    static void LedToggle();
 
+    static void InterruptHandler();
+    
+    
     //Defaults: Group: 0x55, transmit power: 0(max), KBPS: 38.3Kbps (air transmission baud - has to be same on all radios in same group)
   	void Initialize(uint8_t ownId, uint8_t freqBand, uint8_t groupid=0x55, uint8_t txPower=0, uint8_t airKbps=0x08, uint8_t lowVoltageThreshold=RF12_2v75);
 
+     
     void ReceiveStart();
     bool ReceiveComplete();
     bool CanSend();

@@ -1,15 +1,13 @@
 #include "RFM12B.h"
 
-#define SEND
+//#define SEND
 
 #define OWNID 0x12
 String payload = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890~!@#$%^&*(){}[]`|<>?+=:;,.";
 #define TOID     1  //the node ID we're sending to
- RFM12B r;
+RFM12B r;
 void setup() {
-
- r.Initialize(OWNID, RF12_868MHZ);
- 
+    r.Initialize(OWNID, RF12_868MHZ);
 }
 
 void loop() {
@@ -22,10 +20,8 @@ void loop() {
         r.Send(TOID, buf, len);
         delay (3000);
     #else 
-        Serial.begin(9600);
         r.Wakeup();
         r.ReceiveStart();
-        
-        delay (5000);
+        r.Sleep();
     #endif
 }
