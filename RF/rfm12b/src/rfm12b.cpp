@@ -21,7 +21,9 @@ volatile int8_t RFM12B::rxstate;       // current transceiver state
 volatile uint16_t RFM12B::rf12_crc;    // running crc value
 volatile uint8_t rf12_buf[RF_MAX];     // recv/xmit buf, including hdr & crc bytes
 
+#ifndef COMPILE_FOR_AVR
 TELedState RFM12B::ledState;
+#endif
 
 uint16_t
 _crc16_update(uint16_t crc, uint8_t a)
@@ -40,21 +42,23 @@ _crc16_update(uint16_t crc, uint8_t a)
 }
 
 void RFM12B::SPIInit() {
+	 delay(100); // wait for chrystal
+ #ifdef COMPILE_FOR_AVR  
+	
+ #else
+	pinMode(BOARD_VDD, OUTPUT);
+	digitalWrite(BOARD_VDD,HIGH);
+	pinMode(BOARD_GND, OUTPUT);
+	digitalWrite(BOARD_GND, LOW);
+#endif
     
-    pinMode(BOARD_VDD, OUTPUT);
-    digitalWrite(BOARD_VDD,HIGH);
-    pinMode(BOARD_GND, OUTPUT);
-    digitalWrite(BOARD_GND, LOW);
-    
-    delay(100); // wait for chrystal
-    
-    pinMode(SPI_SS, OUTPUT);
-    digitalWrite(SPI_SS, 1);
-    
-    pinMode(SPI_MOSI, OUTPUT);
-    pinMode(SPI_MISO, INPUT);
-    pinMode(SPI_SCK, OUTPUT);
-    pinMode(RFM_IRQ, INPUT);
+	pinMode(SPI_SS, OUTPUT);
+	digitalWrite(SPI_SS, 1);
+	
+	pinMode(SPI_MOSI, OUTPUT);
+	pinMode(SPI_MISO, INPUT);
+	pinMode(SPI_SCK, OUTPUT);
+	pinMode(RFM_IRQ, INPUT);
   
 }
 
@@ -103,8 +107,10 @@ void RFM12B::Initialize(uint8_t ID, uint8_t freqBand, uint8_t networkid, uint8_t
         Serial.begin();
     #endif
     
-    ledState = TELedState_Green;
-    RGB.control(true);
+	#ifndef COMPILE_FOR_AVR
+		ledState = TELedState_Green;
+		RGB.control(true);
+	#endif
     
     ownId = ID;
     networkID = networkid;
@@ -147,6 +153,7 @@ uint16_t RFM12B::Control(uint16_t cmd) {
     return r;
 }
 
+#ifndef COMPILE_FOR_AVR
 void RFM12B::LedToggle(){
     switch(ledState){
         case TELedState_Green: 
@@ -159,7 +166,7 @@ void RFM12B::LedToggle(){
         break;
     }
 }
-
+#endif
 void RFM12B::TxRx() {
   rf12_crc = 0;
   if (rxstate == TXRECV) {
@@ -170,7 +177,9 @@ void RFM12B::TxRx() {
         do{
             
              while (   (1 == digitalRead(RFM_IRQ)) ) {
-                 Particle.process();// wait for previous transmission to finish
+                #ifndef COMPILE_FOR_AVR
+					Particle.process();// wait for previous transmission to finish
+				#endif
              }
                
             XFER(0x0000); 
@@ -202,7 +211,9 @@ void RFM12B::TxRx() {
     dbg("Got CRC: "); dbg2((uint8_t)(receivedCrc>>8), HEX); dbg("_"); dbg2((uint8_t)receivedCrc, HEX) ;dbg ("   ");
     dbg("Computed CRC: "); dbg2((uint8_t)(rf12_crc>>8), HEX); dbg("_"); dbg2((uint8_t)rf12_crc, HEX) ;dbg ("   ");
        
-    if(receivedCrc == rf12_crc) LedToggle();
+    #ifndef COMPILE_FOR_AVR
+		if(receivedCrc == rf12_crc) LedToggle();
+	#endif
         
   } else {
         XFER(0x0000);
@@ -309,7 +320,12 @@ void RFM12B::SendACK(const void* sendBuf, uint8_t sendLen) {
 
 void RFM12B::Send(uint8_t toNodeID, const void* sendBuf, uint8_t sendLen, bool requestACK)
 {
-  while (!CanSend()) Particle.process();
+  while (!CanSend()){
+	#ifndef COMPILE_FOR_AVR
+	  Particle.process();
+	#endif
+	
+  }
   SendStart(toNodeID, sendBuf, sendLen, requestACK, false);
   Sleep();
 }
@@ -344,7 +360,7 @@ uint8_t RFM12B::GetSender(){
 }
 
 volatile uint8_t * RFM12B::GetData() { return rf12_data; }
-uint8_t RFM12B::GetDataLen() { return *DataLen; }
+
 bool RFM12B::ACKRequested() { return RF12_WANTS_ACK; }
 
 /// Should be polled immediately after sending a packet with ACK request

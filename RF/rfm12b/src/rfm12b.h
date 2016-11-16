@@ -5,10 +5,31 @@
 
 #ifndef RFM12B_h
 #define RFM12B_h
-
-#include "application.h"
-#include <inttypes.h>
 #include "config.h"
+#ifndef COMPILE_FOR_AVR
+	#include "application.h"
+	#include <inttypes.h>
+#else
+	#include <avr/io.h>
+
+	#define digitalWrite(A,B) if(1 == B) PORTB|=(1<<A); else PORTB&=~(1<<A);
+	#define digitalRead(A) (PORTB&(1<<A))
+	#include <stdint.h>
+	#include <string.h> // for memcpy
+	
+	typedef unsigned char byte;
+	
+	#define OUTPUT 1
+	#define INPUT 0
+	
+	#define pinMode(A, B) if(1 == B) PORTB|=(1<<A); else PORTB&=~(0<<A);
+	
+	#include <util/delay.h>
+	#define delay(A) _delay_ms(A);
+	#define delayMicroseconds(A) _delay_us(A);
+#endif
+
+
 
 #define TRANSMISSION_HEADER_LENGTH 4 // <Network Id>    <Destination>     <Source>   <Length>
 #define CRC_LENGTH_BYTES 2
@@ -73,16 +94,22 @@
 //    select pin for the RFM12B (you're free to set them to anything you like)
 //  - please leave SPI_SS, SPI_MOSI, SPI_MISO, and SPI_SCK as is, i.e. pointing
 //    to the hardware-supported SPI pins on the ATmega, *including* SPI_SS !
+#ifndef COMPILE_FOR_AVR
+	#define BOARD_VDD   DAC
+	#define BOARD_GND   A5
 
-#define BOARD_VDD   DAC
-#define BOARD_GND   A5
-
-#define RFM_IRQ     A4
-//#define SS_BIT      2     // for PORTB: 2 = d.10, 1 = d.9, 0 = d.8
-#define SPI_SS      A0    // PB2, pin 16
-#define SPI_MOSI    A2    // PB3, pin 17
-#define SPI_MISO    A3    // PB4, pin 18
-#define SPI_SCK     A1    // PB5, pin 19
+	#define RFM_IRQ     A4
+	#define SPI_SS      A0    // PB2, pin 16
+	#define SPI_MOSI    A2    // PB3, pin 17
+	#define SPI_MISO    A3    // PB4, pin 18
+	#define SPI_SCK     A1    // PB5, pin 19
+#else 
+	#define RFM_IRQ		0
+	#define SPI_SS      1
+	#define SPI_MOSI    2
+	#define SPI_MISO    3
+	#define SPI_SCK     4
+#endif
 
 // RF12 command codes
 #define RF_RECEIVER_ON  0x82D9
@@ -105,11 +132,13 @@ enum {
   TXPRE1, TXPRE2, TXPRE3, TXSYN1, TXSYN2,
 };
 
+#ifndef COMPILE_FOR_AVR
 typedef enum{
     TELedState_Unknown,
     TELedState_Green,
     TELedState_RedBlue
 }TELedState;
+#endif
 
 extern volatile uint8_t rf12_buf[RF_MAX];          // recv/xmit buf, including hdr & crc bytes
 class RFM12B
@@ -129,17 +158,17 @@ class RFM12B
 
 	public:
     //constructor
-    RFM12B():Data(rf12_data),DataLen(&rf12_buf[3]){}
+    RFM12B(){}
 
     static uint8_t networkID;         // network group
     static uint8_t ownId;            // address of this node
     static const byte DATAMAXLEN;
-    volatile uint8_t* Data;
-    volatile uint8_t* DataLen;
 
-    static TELedState ledState;
-    static void LedToggle();
-
+	#ifndef COMPILE_FOR_AVR
+		static TELedState ledState;
+		static void LedToggle();
+	#endif
+	
     static void TxRx();
     
     //Defaults: Group: 0x55, transmit power: 0(max), KBPS: 38.3Kbps (air transmission baud - has to be same on all radios in same group)
@@ -162,7 +191,7 @@ class RFM12B
     void Wakeup();
 
     volatile uint8_t * GetData();
-    uint8_t GetDataLen(); //how many bytes were received
+    
     uint8_t GetSender();
     bool LowBattery();
     bool ACKRequested();
