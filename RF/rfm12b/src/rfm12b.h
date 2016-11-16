@@ -84,7 +84,6 @@
 #define SPI_MISO    A3    // PB4, pin 18
 #define SPI_SCK     A1    // PB5, pin 19
 
-
 // RF12 command codes
 #define RF_RECEIVER_ON  0x82D9
 #define RF_XMITTER_ON   0x8239
@@ -141,12 +140,10 @@ class RFM12B
     static TELedState ledState;
     static void LedToggle();
 
-    static void InterruptHandler();
-    
+    static void TxRx();
     
     //Defaults: Group: 0x55, transmit power: 0(max), KBPS: 38.3Kbps (air transmission baud - has to be same on all radios in same group)
   	void Initialize(uint8_t ownId, uint8_t freqBand, uint8_t groupid=0x55, uint8_t txPower=0, uint8_t airKbps=0x08, uint8_t lowVoltageThreshold=RF12_2v75);
-
      
     void ReceiveStart();
     bool ReceiveComplete();
@@ -170,9 +167,14 @@ class RFM12B
     bool LowBattery();
     bool ACKRequested();
     bool ACKReceived(uint8_t fromNodeID=0);
-    static void CryptFunction(bool sending);
-    void Encrypt(const uint8_t* key, uint8_t keyLen = 16);
+    
     bool CRCPass() { return rf12_crc == 0; }
+    
+    #ifdef USE_ENCRYPTION
+        static void CryptFunction(bool sending);
+        void Encrypt(const uint8_t* key, uint8_t keyLen = 16);
+    #endif
+    
 };
 
 #endif

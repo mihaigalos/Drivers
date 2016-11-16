@@ -36,13 +36,10 @@ _crc16_update(uint16_t crc, uint8_t a)
         else
             crc = (crc >> 1);
     }
-
     return crc;
 }
 
 void RFM12B::SPIInit() {
-    /*bitSet(SS_PORT, cs_pin);
-    bitSet(SS_DDR, cs_pin);*/
     
     pinMode(BOARD_VDD, OUTPUT);
     digitalWrite(BOARD_VDD,HIGH);
@@ -113,16 +110,12 @@ void RFM12B::Initialize(uint8_t ID, uint8_t freqBand, uint8_t networkid, uint8_t
     networkID = networkid;
     SPIInit();
     
-    
     XFER(0x0000); // intitial SPI transfer added to avoid power-up problem
     XFER(RF_SLEEP_MODE); // DC (disable clk pin), enable lbd
     
     // wait until RFM12B is out of power-up reset, this takes several *seconds*
     XFER(RF_TXREG_WRITE); // in case we're still in OOK mode
-    while (digitalRead(RFM_IRQ) == 0){
-    XFER(0x0000);
-    
-    }
+    while (digitalRead(RFM_IRQ) == 0) XFER(0x0000);
     
     XFER(0x80C7 | (freqBand << 4)); // EL (ena TX), EF (ena RX FIFO), 12.0pF
     XFER(0x8209);               // enable xtal, disable clk pin
@@ -149,14 +142,12 @@ void RFM12B::Initialize(uint8_t ID, uint8_t freqBand, uint8_t networkid, uint8_t
      
 }
 
-// access to the RFM12B internal registers with interrupts disabled
 uint16_t RFM12B::Control(uint16_t cmd) {
   uint16_t r = XFER(cmd);
     return r;
 }
 
 void RFM12B::LedToggle(){
-    
     switch(ledState){
         case TELedState_Green: 
             RGB.color(0,255,0);
@@ -169,9 +160,7 @@ void RFM12B::LedToggle(){
     }
 }
 
-void RFM12B::InterruptHandler() {
-  // a transfer of 2x 16 bits @ 2 MHz over SPI takes 2x 8 us inside this ISR
-  // correction: now takes 2 + 8 µs, since sending can be done at 8 MHz
+void RFM12B::TxRx() {
   rf12_crc = 0;
   if (rxstate == TXRECV) {
       
@@ -182,43 +171,33 @@ void RFM12B::InterruptHandler() {
             
              while (   (1 == digitalRead(RFM_IRQ)) ) {
                  Particle.process();// wait for previous transmission to finish
-                
              }
                
             XFER(0x0000); 
-            
-            
             uint8_t in = XFER(RF_RX_FIFO_READ);
-           
            
             if(rxfill < (length - CRC_LENGTH_BYTES)){
                 rf12_buf[rxfill] = in;
                 rf12_crc = _crc16_update(rf12_crc, in);
             }
             rxfill++;
+            dbg2(in, HEX); dbg(' '); dbg("      CRC: "); dbg2(rf12_crc>>8, HEX); dbg("_"); dbg2((uint8_t)rf12_crc, HEX);
+            if ( (rxfill == 0) && (networkID != 0)){
+                //rf12_buf[rxfill] = networkID;  
+            }
+            else if(TRANSMISSION_HEADER_LENGTH == rxfill){ // length is within the header
+               
+                length = in + TRANSMISSION_HEADER_LENGTH + CRC_LENGTH_BYTES;
+                dbg(String("Got Length: ")+String(length) + String("   "));
+            }
+            else if (rxfill == (length - CRC_LENGTH_BYTES+1)){
+                receivedCrc = in; dbg(" --- CRC1");
+            } else if (rxfill == length ){
+                receivedCrc |= (in << 8); dbg(" --- CRC2");
+            }
             
-            
-              dbg2(in, HEX); dbg(' '); dbg("      CRC: "); dbg2(rf12_crc>>8, HEX); dbg("_"); dbg2((uint8_t)rf12_crc, HEX);
-                if ( (rxfill == 0) && (networkID != 0)){
-                    //rf12_buf[rxfill] = networkID;  
-                }
-               else if(TRANSMISSION_HEADER_LENGTH == rxfill){ // length is within the header
-                   
-                    length = in + TRANSMISSION_HEADER_LENGTH + CRC_LENGTH_BYTES;
-                    dbg(String("Got Length: ")+String(length) + String("   "));
-                }
-                else if (rxfill == (length - CRC_LENGTH_BYTES+1)){
-                    receivedCrc = in; dbg(" --- CRC1");
-                } else if (rxfill == length ){
-                    receivedCrc |= (in << 8); dbg(" --- CRC2");
-                }
-                
-                 dbg("\n\r");
-               // if (rxfill >= rf12_len + 6 || rxfill >= RF_MAX)
-                //  XFER(RF_IDLE_MODE);
+            dbg("\n\r");
         } while( rxfill < length);
-        
-       
       
     dbg("Got CRC: "); dbg2((uint8_t)(receivedCrc>>8), HEX); dbg("_"); dbg2((uint8_t)receivedCrc, HEX) ;dbg ("   ");
     dbg("Computed CRC: "); dbg2((uint8_t)(rf12_crc>>8), HEX); dbg("_"); dbg2((uint8_t)rf12_crc, HEX) ;dbg ("   ");
@@ -233,14 +212,10 @@ void RFM12B::InterruptHandler() {
             // AA AA AA (pramble)   2D  <Network Id>    <Destination>     <Source>   <Length>     <Payload>    <CRC1>    <CRC2>
             
             while (1 == digitalRead(RFM_IRQ)); // wait for previous transmission to finish
-                
             
             if (rxstate < 0) { // sending payload
                 uint8_t pos = 4 + rf12_len + rxstate++;
                 out = rf12_buf[pos];
-                
-                 
-                
                 rf12_crc = _crc16_update(rf12_crc, out);
             } else
             switch (rxstate++) {
@@ -252,7 +227,6 @@ void RFM12B::InterruptHandler() {
               default:     out = 0xAA;
             }
             
-            //dbg(out, HEX); dbg(' ');
             dbg2(out, HEX); dbg(' '); dbg("      CRC: "); dbg2(rf12_crc>>8, HEX); dbg("_"); dbg2((uint8_t)rf12_crc, HEX); dbg("\r");
             XFER(RF_TXREG_WRITE + out);
         } 
@@ -262,16 +236,15 @@ void RFM12B::InterruptHandler() {
 }
 
 void RFM12B::ReceiveStart() {
-    
     XFER(0xCA83); //Enable FIFO     
     
     rxfill = rf12_len = 0;
     rf12_crc = ~0;
-    if (networkID != 0)
-    rf12_crc = _crc16_update(~0, networkID);
+    if (networkID != 0) rf12_crc = _crc16_update(~0, networkID);
+
     rxstate = TXRECV;
     XFER(RF_RECEIVER_ON);   
-    InterruptHandler();
+    TxRx();
     delay(10);
 }
 
@@ -336,16 +309,13 @@ void RFM12B::SendACK(const void* sendBuf, uint8_t sendLen) {
 
 void RFM12B::Send(uint8_t toNodeID, const void* sendBuf, uint8_t sendLen, bool requestACK)
 {
-    //Particle.publish("starting"); delay(1000);
-  while (!CanSend()) delay(1000);
-  //Particle.publish("canSend!"); delay(1000);
+  while (!CanSend()) Particle.process();
   SendStart(toNodeID, sendBuf, sendLen, requestACK, false);
-  //Particle.publish("finished!"); delay(1000);
   Sleep();
 }
 
 void RFM12B::SendWait() {
-    InterruptHandler(); // manual call to send
+    TxRx(); // manual call to send
 }
 
 void RFM12B::OnOff(uint8_t value) {
@@ -388,6 +358,9 @@ bool RFM12B::ACKReceived(uint8_t fromNodeID) {
   return false;
 }
 
+//--------------------------------------------------- ENCRYPTION --------------------------------------------------- 
+
+#ifdef USE_ENCRYPTION
 
 // XXTEA by David Wheeler, adapted from http://en.wikipedia.org/wiki/XXTEA
 #define DELTA 0x9E3779B9
@@ -450,3 +423,4 @@ void RFM12B::Encrypt(const uint8_t* key, uint8_t keyLen) {
     crypter = CryptFunction;
   } else crypter = 0;
 }
+#endif //#ifdef USE_ENCRYPTION
