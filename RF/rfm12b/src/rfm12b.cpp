@@ -176,11 +176,7 @@ void RFM12B::TxRx() {
         dbg("Receiving.\n\r\n\r");
         do{
             
-             while (   (1 == digitalRead(RFM_IRQ)) ) {
-                #ifndef COMPILE_FOR_AVR
-					Particle.process();// wait for previous transmission to finish
-				#endif
-             }
+            while (   (1 == digitalRead(RFM_IRQ)) );
                
             XFER(0x0000); 
             uint8_t in = XFER(RF_RX_FIFO_READ);
@@ -320,12 +316,7 @@ void RFM12B::SendACK(const void* sendBuf, uint8_t sendLen) {
 
 void RFM12B::Send(uint8_t toNodeID, const void* sendBuf, uint8_t sendLen, bool requestACK)
 {
-  while (!CanSend()){
-	#ifndef COMPILE_FOR_AVR
-	  Particle.process();
-	#endif
-	
-  }
+  while (!CanSend());
   SendStart(toNodeID, sendBuf, sendLen, requestACK, false);
   Sleep();
 }
