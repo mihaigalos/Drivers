@@ -11,7 +11,6 @@ E2PROM::E2PROM(uint8_t ownAddress, uint32_t speed){
     E2PROM::ownAddress_ = ownAddress;
 }
 
-
 uint8_t E2PROM::readByte(uint16_t registerAddress)
 {
     uint8_t data=0;
@@ -30,8 +29,6 @@ uint8_t E2PROM::readByte(uint16_t registerAddress)
     return data;
 }
 
-
-
 void E2PROM::dump(uint8_t columnCount){
     Serial.begin(9600);
     Serial.println("----------------------------------------");
@@ -41,7 +38,6 @@ void E2PROM::dump(uint8_t columnCount){
     }
     
     Serial.print('\n');
-    Serial.end();
 }
 
 void E2PROM::writeByte(uint16_t registerAddress, uint8_t data){
