@@ -8,7 +8,7 @@ Copyright Mihai Galos 2017
 #include <avr/io.h>
 
 #include <string.h> // for memset
-#include "i2csoft.h"
+#include "i2c.h"
 
 #define SPACING_DELAY ; //nothing per default, otherwise: _delay_us(1); 
 #define HIGH_HOLD_DELAY _delay_us((1000.0f/(float)(SPEED_KHZ)) / 2 + MANUAL_CLK_OFFSET_USEC); // /2 because a period has HIGH and LOW component, 
