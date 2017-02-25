@@ -3,8 +3,8 @@
 
 int main(void)
 {
-	I2C i2c;
-	i2c.Begin();
+    I2C i2c;
+    i2c.Begin();
 		
     while (1) {
 		i2c.StartTransmission(0x42);
