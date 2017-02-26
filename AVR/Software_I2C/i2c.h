@@ -8,16 +8,29 @@ Copyright Mihai Galos 2017
 #ifndef _I2CSOFT_H
 #define _I2CSOFT_H
 
-#define F_CPU 16000000L
+#define F_CPU 8000000L
+#define SPEED_KHZ 100 // kHz
+
 #include <util/delay.h>
 
-#define SPEED_KHZ 300 // kHz
-#if SPEED_KHZ == 200
-#define MANUAL_CLK_OFFSET_USEC -0.28
-#elif SPEED_KHZ == 300
-#define MANUAL_CLK_OFFSET_USEC -0.3 // manual fine-tuning, can be 0. This is to compensate for the bit shifts inside the sending and receiving methods
-#elif SPEED_KHZ == 400
-#define MANUAL_CLK_OFFSET_USEC -0.33
+#if F_CPU == 8000000L
+    #if SPEED_KHZ == 100
+    #define MANUAL_CLK_OFFSET_USEC +4.5
+    #elif SPEED_KHZ == 200
+    #define MANUAL_CLK_OFFSET_USEC +1.99
+    #elif SPEED_KHZ == 300
+    #define MANUAL_CLK_OFFSET_USEC +0.97 // manual fine-tuning, can be 0. This is to compensate for the bit shifts inside the sending and receiving methods
+    #elif SPEED_KHZ == 400
+    #define MANUAL_CLK_OFFSET_USEC +0.63
+    #else
+    #error Allowed frequencies are 100, 200, 300 or 400 kHz.
+    #endif
+#elif F_CPU == 1000000L
+    #if SPEED_KHZ == 100
+    #define MANUAL_CLK_OFFSET_USEC -0.58
+    #else
+    #error Only 100kHz I2C clock is suported for 1Mhz main clock
+    #endif
 #endif
 
 #define SCLPORT   PORTB    
