@@ -35,7 +35,7 @@ void I2C::Stop()
      SDA_LOW;
      HIGH_HOLD_DELAY;
      SCL_HIGH;
-     SPACING_DELAY;
+     HIGH_HOLD_DELAY;
      SDA_HIGH;
      HIGH_HOLD_DELAY;
 }
@@ -67,7 +67,7 @@ bool I2C::WriteByte(uint8_t data)
         
     SDA_HIGH;        
     HIGH_HOLD_DELAY;
-        
+    SDADDR &=~(1<<SDA)  ; // set to input
     SCL_HIGH;
     HIGH_HOLD_DELAY;    
     
@@ -75,7 +75,7 @@ bool I2C::WriteByte(uint8_t data)
     
     SCL_LOW;
     HIGH_HOLD_DELAY;
-    
+    SDADDR |=(1<<SDA)  ; // set to output
     return ack;
      
 }
@@ -148,6 +148,8 @@ uint8_t I2C::EndTransmission(){
     for(uint8_t i = 0; i < buffer_pos_; i++){
         WriteByte(buffer_[i]);
     }
+    
+    Stop();  // reset SDA and SDL to their normal low state
     return ret;
 }
 
