@@ -83,6 +83,7 @@ bool I2C::WriteByte(uint8_t data)
  
 uint8_t I2C::ReadByte(uint8_t ack)
 {
+    SDADDR &=~(1<<SDA)  ; // set to input
     uint8_t data=0x00;
     uint8_t i;
             
@@ -99,7 +100,7 @@ uint8_t I2C::ReadByte(uint8_t ack)
         
     SCL_LOW;
     SPACING_DELAY;
-    
+    SDADDR |=(1<<SDA)  ; // set to output
     // generate an ACK if needed
     if(ack) SDA_LOW;    
     else    SDA_HIGH;
