@@ -14,7 +14,7 @@ in screenshots/.
 
 # Usage 
 
-* Set the required macros
+1. Set the required macros
 ..* F_CPU to the microcontroller frequency
 ..* FIXED_BAUD_RATE to the desired communication baud rate
 ..* RX_PIN and TX_PIN to the reception an transmission pins. The pins need to be on the same port.
@@ -23,8 +23,8 @@ in screenshots/.
 for reception.
 ..** UART_OUT_PORT_MAPPING to the output port mapping on the AVR. The pin specified in TX_PIN will be used 
 for transmission. 
-* Call uart_init().
-* Call uart_write(char), where char is a character (i.e. : 'a').
+2. Call uart_init().
+3. Call uart_write(char), where char is a character (i.e. : 'a').
 
 # License
 This software is freely available under the GNU GPL v3.0 aegis, please consult the LICENSE file for further information.
