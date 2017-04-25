@@ -4,6 +4,7 @@ A custom-made lightweight Software UART Library for the AVR
 # Keywords 
 C, asm, software uart library
 
+# The gist
 Own C implementation (assembler-optimized) Software UART for the AVR.
 Easily customizable through the include header. Just set the F_CPU, FIXED_BAUD_RATE and the PORT macros to 
 desired values and the library should do the rest. 
