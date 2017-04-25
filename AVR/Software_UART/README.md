@@ -12,7 +12,7 @@ desired values and the library should do the rest.
 Tested at 9600bps 8N1 LSB first @ 1, 2, 4 and 8Mhz on a AtTiny85. Screenshots for 2Mhz :: 9600/8N1 available
 in screenshots/.
 
-#Usage 
+# Usage 
 
 * Set the required macros
 ** F_CPU to the microcontroller frequency
