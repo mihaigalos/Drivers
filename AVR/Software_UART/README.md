@@ -6,12 +6,11 @@ C, asm, software uart library
 
 # The gist
 Own C implementation (assembler-optimized) Software UART for the AVR.
-Easily customizable through the include header. Just set the F_CPU, FIXED_BAUD_RATE and the PORT macros to 
-desired values and the library should do the rest. 
+Easily customizable through the include header. 
 
 Receive not yet ready. Please do not use uart_read().
 
-Tested at 9600bps 8N1 LSB first @ 1, 2, 4 and 8Mhz on a AtTiny85. Screenshots for 2Mhz :: 9600/8N1 available
+Send tested at 9600bps 8N1 LSB first @ 1, 2, 4 and 8Mhz on a AtTiny85. Screenshots for 2Mhz :: 9600/8N1 available
 in screenshots/.
 
 # Usage 
