@@ -3,30 +3,35 @@
  *
  * Created: 4/20/2017 9:29:03 PM
  *  Author: Mihai Galos
- */ 
+ */
 #include "SoftwareUart.h"
 
 #ifndef F_CPU
-    #error Please #define F_CPU
+#error Please #define F_CPU
 #endif
 
 // Internal computing macros
-#define BIT_TIME_NANOSEC 1000000000UL/FIXED_BAUD_RATE 
-#define ONE_CLOCK_CYCLE_NANOSEC (1000000000UL/F_CPU)
+#define BIT_TIME_NANOSEC 1000000000UL / FIXED_BAUD_RATE
+#define ONE_CLOCK_CYCLE_NANOSEC (1000000000UL / F_CPU)
 #define CLOCK_CYCLES_PER_FULL_WAIT_LOOP 3 // using 3cc for each iteration
-#define PRESCALE_WAIT_ONE_BIT ((BIT_TIME_NANOSEC/ONE_CLOCK_CYCLE_NANOSEC)/(CLOCK_CYCLES_PER_FULL_WAIT_LOOP)) 
-#define PRESCALE_WAIT_HALF_BIT 
+#define PRESCALE_WAIT_ONE_BIT                                                  \
+  ((BIT_TIME_NANOSEC / ONE_CLOCK_CYCLE_NANOSEC) /                              \
+   (CLOCK_CYCLES_PER_FULL_WAIT_LOOP))
+#define PRESCALE_WAIT_HALF_BIT
 
 #define PRESCALE_WAIT_ONE_BIT_RX PRESCALE_WAIT_ONE_BIT
-#define PRESCALE_WAIT_HALF_BIT_RX (static_cast<uint8_t>(PRESCALE_WAIT_ONE_BIT_RX)) / 2
+#define PRESCALE_WAIT_HALF_BIT_RX                                              \
+  (static_cast<uint8_t>(PRESCALE_WAIT_ONE_BIT_RX)) / 2
 
-#define INSTRUCTION_OFFSET 7 // clock cycles needed after setting a pin hi/lo before starting bitDelaySend
+#define INSTRUCTION_OFFSET                                                     \
+  7 // clock cycles needed after setting a pin hi/lo before starting
+    // bitDelaySend
 #define PRESCALE_WAIT_ONE_BIT_TX (PRESCALE_WAIT_ONE_BIT - INSTRUCTION_OFFSET)
 
 #if PRESCALE_WAIT_ONE_BIT_RX == 0
-    #ifdef F_CPU
-        #error PRESCALE_WAIT_ONE_BIT_RX is 0. Try decreasing the Baudrate.
-    #endif
+#ifdef F_CPU
+#error PRESCALE_WAIT_ONE_BIT_RX is 0. Try decreasing the Baudrate.
+#endif
 #endif
 
 #define STR_HELPER(x) #x
@@ -34,18 +39,17 @@
 
 #pragma message "assuming clock: " STR(F_CPU) " Mhz."
 
-void uart_init(){
-    UART_DDR |= (1<<TX_PIN);
-    UART_DDR &=~(1<<RX_PIN);
-    UART_OUT_PORT_MAPPING |= (1<<TX_PIN); // Tx line high when idle
+void uart_init() {
+  UART_DDR |= (1 << TX_PIN);
+  UART_DDR &= ~(1 << RX_PIN);
+  UART_OUT_PORT_MAPPING |= (1 << TX_PIN); // Tx line high when idle
 }
 
+uint8_t uart_read() {
+  uint8_t temporary1 = 0;
+  uint8_t readValue;
 
-uint8_t uart_read(){ 
-    uint8_t temporary1 =0;
-    uint8_t readValue;
-
-    __asm__ volatile (
+  __asm__ volatile(
         "wait: \n\t"
             "in %2, %6 \n\t"      
             "andi %2, %1 \n\t"       
@@ -82,17 +86,18 @@ uint8_t uart_read(){
        
         // done
         "eof_read8bits: \n\t" 
-        : "=&r" (readValue)
-        : "M" (RX_PIN), "r" (temporary1), "M" (1), "M" (PRESCALE_WAIT_HALF_BIT_RX) , "r" (PRESCALE_WAIT_ONE_BIT_RX), "M" (_SFR_IO_ADDR (UART_IN_PORT_MAPPING))
-        
-    );
-    return readValue;
+      : "=&r"(readValue)
+      : "M"(RX_PIN), "r"(temporary1), "M"(1), "M"(PRESCALE_WAIT_HALF_BIT_RX),
+        "r"(PRESCALE_WAIT_ONE_BIT_RX), "M"(_SFR_IO_ADDR(UART_IN_PORT_MAPPING))
+
+          );
+  return readValue;
 }
 
-void uart_write(uint8_t value){ // TODO : pin should only have one bit set
-    uint8_t temporary =0, currentBitIndex = 8; // 8 bits
-    __asm__ volatile(
-    
+void uart_write(uint8_t value) { // TODO : pin should only have one bit set
+  uint8_t temporary = 0, currentBitIndex = 8; // 8 bits
+  __asm__ volatile(
+
     "cbi %4, %0 \n\t"           // falling edge : start condition
     "rcall bitDelaySend \n\t"
     "write8bits: \n\t"           // read in 8 bits
@@ -122,11 +127,11 @@ void uart_write(uint8_t value){ // TODO : pin should only have one bit set
     // done
     "eof_write8bits: \n\t"
         "sbi %4, %0 \n\t"               // stop bit
-        "rcall bitDelaySend \n\t"           
-    : 
-    : "M" (TX_PIN), "r" (value), "M" (0x80), "r"(currentBitIndex), "M" (_SFR_IO_ADDR (UART_OUT_PORT_MAPPING)), "r" (temporary), "r" (PRESCALE_WAIT_ONE_BIT_TX)
-    
-    );
-     
-}
+        "rcall bitDelaySend \n\t"      
+      :
+      : "M"(TX_PIN), "r"(value), "M"(0x80), "r"(currentBitIndex),
+        "M"(_SFR_IO_ADDR(UART_OUT_PORT_MAPPING)), "r"(temporary),
+        "r"(PRESCALE_WAIT_ONE_BIT_TX)
 
+          );
+}
