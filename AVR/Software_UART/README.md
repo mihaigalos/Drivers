@@ -15,13 +15,13 @@ in screenshots/.
 # Usage 
 
 * Set the required macros
-- F_CPU to the microcontroller frequency
-- FIXED_BAUD_RATE to the desired communication baud rate
-- RX_PIN and TX_PIN to the reception an transmission pins. The pins need to be on the same port.
-- UART_DDR to the data direction register on the AVR
-- UART_IN_PORT_MAPPING to the input port mapping on the AVR. The pin specified in RX_PIN will be used 
+..* F_CPU to the microcontroller frequency
+..* FIXED_BAUD_RATE to the desired communication baud rate
+..* RX_PIN and TX_PIN to the reception an transmission pins. The pins need to be on the same port.
+..* UART_DDR to the data direction register on the AVR
+..* UART_IN_PORT_MAPPING to the input port mapping on the AVR. The pin specified in RX_PIN will be used 
 for reception.
-** UART_OUT_PORT_MAPPING to the output port mapping on the AVR. The pin specified in TX_PIN will be used 
+..** UART_OUT_PORT_MAPPING to the output port mapping on the AVR. The pin specified in TX_PIN will be used 
 for transmission. 
 * Call uart_init().
 * Call uart_write(char), where char is a character (i.e. : 'a').
