@@ -14,4 +14,4 @@ in screenshots/.
 
 
 # License
-This software is freely available under the GNU GPL v3.0 aegis, please consult the LICENSE file for further information
+This software is freely available under the GNU GPL v3.0 aegis, please consult the LICENSE file for further information.
