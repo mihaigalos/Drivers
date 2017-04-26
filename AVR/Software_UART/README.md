@@ -20,7 +20,7 @@ in screenshots/.
 
 # Usage
 
-1. Set the required macros
+1. Set the required macros.
   * F_CPU to the microcontroller frequency.
   * FIXED_BAUD_RATE to the desired communication baud rate.
   * RX_PIN and TX_PIN to the reception an transmission pins. The pins need to be on the same port.
