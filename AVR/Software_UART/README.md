@@ -51,7 +51,7 @@ Rom usage has been computed using the following command:
 
 **RAM**
 ```
-4 bytes required for stack pushes of PC during calls.
+6 bytes required for stack pushes of PC during calls and local variables.
 ```
 
 # License
