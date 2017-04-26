@@ -49,7 +49,7 @@ Rom usage has been computed using the following command:
 64 bytes Total.
 ```
 
-RAM
+**RAM**
 ```
 4 bytes required for stack pushes of PC during calls.
 ```
