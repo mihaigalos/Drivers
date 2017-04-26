@@ -1,3 +1,22 @@
+/*****************************************************************************
+*
+* This file is part of SoftwareUart.
+*
+* SoftwareUart is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* SoftwareUart is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with SoftwareUart.  If not, see <http://www.gnu.org/licenses/>.
+*
+******************************************************************************/
+
 /*
  * SoftwareUart.h
  *
@@ -10,8 +29,8 @@
 
 #include <avr/io.h>
 
-#define F_CPU 2000000UL          // Frequency of the CPU of the microcontroller
-#define FIXED_BAUD_RATE (9600UL) // Desired Baudrate
+#define F_CPU 16000000UL          // Frequency of the CPU of the microcontroller
+#define FIXED_BAUD_RATE (230400UL) // Desired Baudrate
 
 #define RX_PIN 0
 #define TX_PIN 1
