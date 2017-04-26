@@ -13,6 +13,7 @@ Receive not yet ready. Please do not use uart_read().
 Send tested successfuly on a AtTiny85 at:
   * 9600bps   8N1 LSB first @ 1, 2, 4 and 8Mhz. 
   * 115200 bps  8N1 LSB first @ 8Mhz.
+  * 230400 bps  8N1 LSB first @ 16Mhz.
   
 Screenshots for 2Mhz :: 9600/8N1 available
 in screenshots/.
