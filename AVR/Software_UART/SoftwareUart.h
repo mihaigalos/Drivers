@@ -29,8 +29,8 @@
 
 #include <avr/io.h>
 
-#define F_CPU 16000000UL          // Frequency of the CPU of the microcontroller
-#define FIXED_BAUD_RATE (230400UL) // Desired Baudrate
+#define F_CPU 2000000UL          // Frequency of the CPU of the microcontroller
+#define FIXED_BAUD_RATE (9600UL) // Desired Baudrate
 
 #define RX_PIN 0
 #define TX_PIN 1
