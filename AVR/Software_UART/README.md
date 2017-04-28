@@ -5,15 +5,13 @@ A custom-made lightweight Software UART Library for the AVR.
 C, asm, software uart library
 
 # The gist
-Own C implementation (assembler-optimized) Software UART for the AVR.
+Own C implementation (assembler-optimized) Software UART (send and receive) for the AVR.
 Easily customizable through the include header.
 
-Receive not yet ready. Please do not use uart_read().
-
 Send tested successfully on an AtTiny85 at:
-  * 9600bps   8N1 little endian @ 1, 2, 4 and 8Mhz.
-  * 115200 bps  8N1 little endian @ 8Mhz.
-  * 230400 bps  8N1 little endian @ 16Mhz.
+  * 9600bps     8N1 big endian (lsb-first) @ 1, 2, 4 and 8Mhz.
+  * 115200 bps  8N1 @ 8Mhz.
+  * 230400 bps  8N1 @ 16Mhz.
 
 Screenshots for 2Mhz :: 9600/8N1 available
 in screenshots/.
@@ -30,7 +28,9 @@ for reception.
   * UART_OUT_PORT_MAPPING to the output port mapping on the AVR. The pin specified in TX_PIN will be used
 for transmission.
 2. Call uart_init().
-3. Call uart_write(char), where char is a character (i.e. : 'a').
+3. Send or receive
+  * Call uart_write(char), where char is a character (i.e. : 'a').
+  * Call uart_read() to get a character from the UART interface.
 
 # Size Requirements
 
@@ -43,15 +43,17 @@ Rom usage has been computed using the following command:
 
 
 ```
+00000056 T uart_read()
 00000056 T uart_write(unsigned char)
 00000008 T uart_init()
 
-64 bytes Total.
+120 bytes Total.
 ```
 
 **RAM**
 ```
-6 bytes required for stack pushes of PC during calls and local variables.
+Up to 5 bytes required for stack pushes of PC during calls and local variables. If only reading from UART is required,
+RAM usage is 4 bytes.
 ```
 
 # License
