@@ -8,7 +8,7 @@ C, asm, software uart library
 Own C implementation (assembler-optimized) Software UART (send and receive) for the AVR.
 Easily customizable through the include header.
 
-Send tested successfully on an AtTiny85 at:
+Send and receive tested successfully on an AtTiny85 at:
   * 9600bps     8N1 big endian (lsb-first) @ 1, 2, 4 and 8Mhz.
   * 115200 bps  8N1 @ 8Mhz.
   * 230400 bps  8N1 @ 16Mhz.
