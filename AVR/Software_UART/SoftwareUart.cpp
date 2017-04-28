@@ -90,18 +90,16 @@ uint8_t uart_read() {
   __asm__ volatile(
         "wait: \n\t"
             "in %2, %6 \n\t"      
-            "andi %2, %1 \n\t"       
             "brne wait \n\t"        
             "rcall halfDelay \n\t"  
             "in %2, %6 \n\t"
-            "andi %2, %1 \n\t"
             "brne wait \n\t"
             "rcall bitDelayReceive \n\t"
         
         "read8bits: \n\t"           // read in 8 bits
             "in %2, %6 \n\t" 
             "andi %2, 0x80 \n\t"
-            "brne skipBitSet \n\t" // 2cc (true), 1cc (false)
+            "breq skipBitSet \n\t" // 2cc (true), 1cc (false)
                 "ori %0, 0x80 \n\t"
                 "nop \n\t"         // balance out brne == false
         "skipBitSet: \n\t"
