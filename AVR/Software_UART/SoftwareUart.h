@@ -29,10 +29,12 @@
 
 #include <avr/io.h>
 
+
 #define F_CPU 2000000UL          // Frequency of the CPU of the microcontroller
 #define FIXED_BAUD_RATE (9600UL) // Desired Baudrate
 
-#define RX_PIN 0
+//Pins used in writing and reading to/from the UART. Comment out if not needed to save up Flash space.
+#define RX_PIN 0                
 #define TX_PIN 1
 
 #define UART_DDR DDRB             // Data direction for port
