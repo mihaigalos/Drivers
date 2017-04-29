@@ -51,10 +51,10 @@ Rom usage has been computed using the following command:
 ```
 
 **RAM**
-```
+
 Up to 5 bytes required for stack pushes of PC during calls and local variables. If only reading from UART is required,
 RAM usage is 4 bytes.
-```
+
 
 # License
 This software is freely available under the GNU GPL v3.0 aegis, please consult the LICENSE file for further information.
