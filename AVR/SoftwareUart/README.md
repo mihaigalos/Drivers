@@ -5,16 +5,18 @@ A custom-made lightweight Software UART Library for the AVR.
 C, asm, software uart library
 
 # The gist
-Own C implementation (assembler-optimized) Software UART (send and receive) for the AVR.
+Own C implementation (assembler-optimized) Software UART (send ~~and receive~~) for the AVR.
 Easily customizable through the include header.
 
-Send and receive tested successfully on an AtTiny85 at:
+Send ~~and receive~~ tested successfully on an AtTiny85 at:
   * 9600bps     8N1 big endian (lsb-first) @ 1, 2, 4 and 8Mhz.
   * 115200 bps  8N1 @ 8Mhz.
   * 230400 bps  8N1 @ 16Mhz.
 
 Screenshots for 2Mhz :: 9600/8N1 available
 in screenshots/.
+
+Receive not yet ready.
 
 # Usage
 
@@ -28,9 +30,9 @@ for reception.
   * UART_OUT_PORT_MAPPING to the output port mapping on the AVR. The pin specified in TX_PIN will be used
 for transmission.
 2. Call uart_init().
-3. Send or receive
+3. Send ~~or receive~~
   * Call uart_write(char), where char is a character (i.e. : 'a').
-  * Call uart_read() to get a character from the UART interface.
+  * ~~Call uart_read() to get a character from the UART interface.~~
 
 # Size Requirements
 
