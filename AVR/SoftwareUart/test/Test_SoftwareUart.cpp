@@ -37,12 +37,12 @@ void self_test_sw_uart_send() {
     ;
 }
 
-void self_test_sw_uart_receive_send(){
-    uint8_t buf[7];
-    for(uint8_t i = 0; i<sizeof(buf) ; ++i){
-        buf[i] = uart_read();
-    }
-    for(uint8_t i = 0; i<sizeof(buf) ;++i){
-        uart_write(buf[i]);
-    }
+void self_test_sw_uart_receive_send() {
+  uint8_t buf[7];
+  for (uint8_t i = 0; i < sizeof(buf); ++i) {
+    buf[i] = uart_read();
+  }
+  for (uint8_t i = 0; i < sizeof(buf); ++i) {
+    uart_write(buf[i]);
+  }
 }

@@ -29,7 +29,7 @@
 
 #include <avr/io.h>
 
-#define F_CPU 8000000UL          // Frequency of the CPU of the microcontroller
+#define F_CPU 8000000UL           // Frequency of the CPU of the microcontroller
 #define FIXED_BAUD_RATE (38400UL) // Desired Baudrate
 
 // Pins used in writing and reading to/from the UART. Comment out if not needed
