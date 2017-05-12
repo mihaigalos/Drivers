@@ -18,21 +18,16 @@
 ******************************************************************************/
 
 /*
- * Test_SoftwareUart.cpp
+ * Test_SoftwareUart.h
  *
- * Created: 4/25/2017 7:10:58 PM
+ * Created: 4/25/2017 7:09:58 PM
  *  Author: Mihai Galos
  */
 
-#include "SoftwareUart.h"
+#ifndef TEST_SOFTWAREUART_H_
+#define TEST_SOFTWAREUART_H_
 
-void self_test_sw_uart_send() {
-  uart_init();
+void self_test_sw_uart_send();
+void self_test_sw_uart_receive_send();
 
-  for (int i = 'a'; i <= 'z'; ++i) {
-    uart_write(i);
-  }
-
-  for (volatile long long i = 0; i < 1000UL; ++i)
-    ;
-}
+#endif /* TEST_SOFTWAREUART_H_ */
