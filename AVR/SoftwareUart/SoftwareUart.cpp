@@ -41,11 +41,11 @@
 
 #define PRESCALE_WAIT_ONE_BIT_RX_NO_OFFSET PRESCALE_WAIT_ONE_BIT
 #define INSTRUCTION_OFFSET_RX                                                  \
-  6 // clock cycles needed after reading a pin hi/lo before starting
+  8 // clock cycles needed after reading a pin hi/lo before starting
     // bitDelaySend
 
 #define PRESCALE_WAIT_ONE_BIT_RX                                               \
-  PRESCALE_WAIT_ONE_BIT_RX_NO_OFFSET - INSTRUCTION_OFFSET_RX
+  (PRESCALE_WAIT_ONE_BIT_RX_NO_OFFSET - INSTRUCTION_OFFSET_RX)
 #define PRESCALE_WAIT_HALF_BIT_RX                                              \
   (static_cast<uint8_t>(PRESCALE_WAIT_ONE_BIT_RX)) / 2
 
@@ -82,27 +82,62 @@ void uart_init() {
 
 uint8_t uart_read() {
   uint8_t temporary = 0;
-  uint8_t readValue;
-  uint8_t bitPosition = 8;
+  uint8_t readValue = 0;
+  uint8_t bitPosition = 0x40;
 
   __asm__ volatile(
+           
+            // debug
+            //"sbi 0x01, 0\n\t"
+            //"sbi 0x02, 0\n\t"
+            //eof debug
+            
 			"wait: \n\t"
-			            "in %2, %6 \n\t"      
-			            "brne wait \n\t"        
+                        "sbic %6, %1\n\t"
+                            "rjmp wait \n\t" 
 			            "rcall halfDelay \n\t"  
-			            "in %2, %6 \n\t"
-			            "brne wait \n\t"
+                        
+                        // debug
+                        //"cbi 0x02, 2\n\t"
+                        //eof debug
+                        
+                        
+                        "sbic %6, %1\n\t"
+                            "rjmp wait \n\t" 
 			            "rcall bitDelayReceive \n\t"
 			        
-			        "read8bits: \n\t"           // read in 8 bits
-			            "in %2, %6 \n\t" 
-			            "andi %2, 0x80 \n\t"
-			            "breq skipBitSet \n\t" // 2cc (true), 1cc (false)
-			                "ori %0, 0x80 \n\t"
-			                "nop \n\t"         // balance out brne == false
+                     // debug
+                     //"sbi 0x02, 2\n\t"
+                     //"sbi 0x01, 1\n\t"
+                     //"cbi 0x02, 0\n\t"
+                     //eof debug
+                    
+			        "read8bits: \n\t"   
+                        
+                        // debug
+                        //"cbi 0x02, 2\n\t"
+                        //eof debug
+                                
+                        "sbic %6, %1\n\t"       // 2cc true, 1cc false
+                            "rjmp setBit\n\t"       
+                        "rjmp skipBitSet\n\t"   
+                        
+                        "setBit:   \n\t"
+                            "ori %0, 0x80\n\t" 
+                          
+                       // debug
+                       //"cbi 0x02, 2\n\t"
+                       //eof debug 
 			        "skipBitSet: \n\t"
 			            "rcall bitDelayReceive \n\t"
-			            "lsr %3 \n\t"
+                        
+                        // debug
+                        //"sbi 0x02, 2\n\t"
+                        //eof debug
+                        
+                        
+                        "lsr %0 \n\t"
+                        "lsr %3 \n\t"
 			            "breq eof_read8bits \n\t"
 			            "rjmp read8bits \n\t"
 			        
@@ -120,6 +155,12 @@ uint8_t uart_read() {
 			       
 			        // done
 			        "eof_read8bits: \n\t" 
+                     
+                 
+                     // debug
+                    //"sbi 0x02, 0\n\t"
+                    //eof debug
+                    
 			      : "=&r"(readValue)
                   : "M"(RX_PIN), "r"(temporary), "r"(bitPosition),
                     "M"(PRESCALE_WAIT_HALF_BIT_RX),
