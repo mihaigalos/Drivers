@@ -18,6 +18,7 @@ Receive and send tested successfully on an AtTiny10:
   * higher bps currently not working (need to calibrate the delay offset INSTRUCTION_OFFSET_RX).
     
 Screenshots for Tiny85::2Mhz :: 9600/8N1 send available in screenshots/self_test_sw_uart_send.png 
+
 Screenshots for Tiny10::8Mhz :: 38400/8N1 s&r available in screenshots/self_test_sw_uart_receive_send.png 
 
 Receive not yet ready.
