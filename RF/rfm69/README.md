@@ -1,6 +1,8 @@
 RFM69_softSPI Library
 =====================
 
+Original work of Grzegorz Miasko, Felix Rusu.
+
 This library allows you to use RFM69 radio module with Arduino over software SPI while using another SPI peripheral.
 It is a modified version of RFM69 library by Felix Rusu (LowPowerLab), but it uses software SPI addressable RFM69 instance like in RF24_softSPI (sorry, I don't know it's author).
 The SoftSPI library (part of DigitalIO library) is by William Greiman.
