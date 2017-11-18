@@ -1,0 +1,285 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="14.0">
+  <PropertyGroup>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectVersion>7.0</ProjectVersion>
+    <ToolchainName>com.Atmel.AVRGCC8.CPP</ToolchainName>
+    <ProjectGuid>{7289bd85-2887-4b53-b339-ae2dc36e2fc0}</ProjectGuid>
+    <avrdevice>ATmega328P</avrdevice>
+    <avrdeviceseries>none</avrdeviceseries>
+    <OutputType>Executable</OutputType>
+    <Language>CPP</Language>
+    <OutputFileName>$(MSBuildProjectName)</OutputFileName>
+    <OutputFileExtension>.elf</OutputFileExtension>
+    <OutputDirectory>$(MSBuildProjectDirectory)\$(Configuration)</OutputDirectory>
+    <AssemblyName>sketch_jan28a</AssemblyName>
+    <Name>sketch_jan28a</Name>
+    <RootNamespace>sketch_jan28a</RootNamespace>
+    <ToolchainFlavour>Native</ToolchainFlavour>
+    <KeepTimersRunning>true</KeepTimersRunning>
+    <OverrideVtor>false</OverrideVtor>
+    <OverrideVtorValue>exception_table</OverrideVtorValue>
+    <eraseonlaunchrule>0</eraseonlaunchrule>
+    <ProgFlashFromRam>true</ProgFlashFromRam>
+    <RamSnippetAddress>0x20000000</RamSnippetAddress>
+    <CacheFlash>true</CacheFlash>
+    <UncachedRange />
+    <BootSegment>0</BootSegment>
+    <AsfFrameworkConfig>
+      <framework-data>
+        <options />
+        <configurations />
+        <files />
+        <documentation help="" />
+        <offline-documentation help="" />
+        <dependencies>
+          <content-extension eid="atmel.asf" uuidref="Atmel.ASF" version="3.28.1" />
+        </dependencies>
+      </framework-data>
+    </AsfFrameworkConfig>
+    <preserveEEPROM>true</preserveEEPROM>
+    <avrtool>
+    </avrtool>
+    <avrtoolserialnumber>00B000002960</avrtoolserialnumber>
+    <avrdeviceexpectedsignature>0x1E950F</avrdeviceexpectedsignature>
+    <com_atmel_avrdbg_tool_jtagicemkii>
+      <ToolOptions>
+        <InterfaceProperties>
+          <IspClock>125000</IspClock>
+        </InterfaceProperties>
+        <InterfaceName>ISP</InterfaceName>
+      </ToolOptions>
+      <ToolType>com.atmel.avrdbg.tool.jtagicemkii</ToolType>
+      <ToolNumber>00B000002960</ToolNumber>
+      <ToolName>JTAGICE mkII</ToolName>
+    </com_atmel_avrdbg_tool_jtagicemkii>
+    <avrtoolinterface>
+    </avrtoolinterface>
+    <avrtoolinterfaceclock>125000</avrtoolinterfaceclock>
+    <com_atmel_avrdbg_tool_simulator>
+      <ToolOptions xmlns="">
+        <InterfaceProperties>
+        </InterfaceProperties>
+        <InterfaceName>
+        </InterfaceName>
+      </ToolOptions>
+      <ToolType xmlns="">com.atmel.avrdbg.tool.simulator</ToolType>
+      <ToolNumber xmlns="">
+      </ToolNumber>
+      <ToolName xmlns="">Simulator</ToolName>
+    </com_atmel_avrdbg_tool_simulator>
+    <custom>
+      <ToolOptions>
+        <InterfaceProperties>
+          <IspClock>125000</IspClock>
+        </InterfaceProperties>
+        <InterfaceName>
+        </InterfaceName>
+      </ToolOptions>
+      <ToolType>custom</ToolType>
+      <ToolNumber>
+      </ToolNumber>
+      <ToolName>Custom Programming Tool</ToolName>
+    </custom>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <ToolchainSettings>
+      <AvrGccCpp>
+  <avrgcc.common.outputfiles.hex>True</avrgcc.common.outputfiles.hex>
+  <avrgcc.common.outputfiles.lss>True</avrgcc.common.outputfiles.lss>
+  <avrgcc.common.outputfiles.eep>True</avrgcc.common.outputfiles.eep>
+  <avrgcc.common.outputfiles.srec>True</avrgcc.common.outputfiles.srec>
+  <avrgcc.common.outputfiles.usersignatures>False</avrgcc.common.outputfiles.usersignatures>
+  <avrgcc.compiler.general.ChangeDefaultCharTypeUnsigned>True</avrgcc.compiler.general.ChangeDefaultCharTypeUnsigned>
+  <avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>True</avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>
+  <avrgcc.compiler.symbols.DefSymbols>
+    <ListValues>
+      <Value>__AVR_ATmega328p__</Value>
+      <Value>__AVR_ATmega328P__</Value>
+      <Value>ARDUINO=10800</Value>
+      <Value>ARDUINO_MAIN</Value>
+      <Value>F_CPU=16000000L</Value>
+      <Value>__AVR__</Value>
+      <Value>ARDUINO_AVR_UNO</Value>
+      <Value>ARDUINO_ARCH_AVR</Value>
+    </ListValues>
+  </avrgcc.compiler.symbols.DefSymbols>
+  <avrgcc.compiler.directories.IncludePaths>
+    <ListValues>
+      <Value>C:/Mihai/Progs/Digispark_arduino-1.8.0/hardware/arduino/avr/libraries/SPI/src</Value>
+      <Value>C:/Mihai/Progs/Digispark_arduino-1.8.0/libraries</Value>
+      <Value>C:/Mihai/Progs/Digispark_arduino-1.8.0/hardware/arduino/avr/libraries</Value>
+      <Value>../../libraries</Value>
+      <Value>C:/Mihai/Progs/Digispark_arduino-1.8.0/hardware/arduino/avr/cores/arduino</Value>
+      <Value>C:/Mihai/Progs/Digispark_arduino-1.8.0/hardware/arduino/avr/variants/standard</Value>
+      <Value>../../../sketch_jan28a</Value>
+      <Value>C:/Mihai/Progs/Digispark_arduino-1.8.0/hardware/tools/avr/avr/include/</Value>
+      <Value>C:/Mihai/Progs/Digispark_arduino-1.8.0/hardware/tools/avr//avr/include/avr/</Value>
+      <Value>C:/Mihai/Progs/Digispark_arduino-1.8.0/hardware/tools/avr/lib/gcc/avr/4.8.1/include</Value>
+    </ListValues>
+  </avrgcc.compiler.directories.IncludePaths>
+  <avrgcc.compiler.optimization.level>Optimize (-O1)</avrgcc.compiler.optimization.level>
+  <avrgcc.compiler.optimization.PackStructureMembers>True</avrgcc.compiler.optimization.PackStructureMembers>
+  <avrgcc.compiler.optimization.AllocateBytesNeededForEnum>True</avrgcc.compiler.optimization.AllocateBytesNeededForEnum>
+  <avrgcc.compiler.optimization.DebugLevel>Default (-g2)</avrgcc.compiler.optimization.DebugLevel>
+  <avrgcc.compiler.warnings.AllWarnings>True</avrgcc.compiler.warnings.AllWarnings>
+  <avrgcccpp.compiler.general.ChangeDefaultCharTypeUnsigned>True</avrgcccpp.compiler.general.ChangeDefaultCharTypeUnsigned>
+  <avrgcccpp.compiler.general.ChangeDefaultBitFieldUnsigned>True</avrgcccpp.compiler.general.ChangeDefaultBitFieldUnsigned>
+  <avrgcccpp.compiler.symbols.DefSymbols>
+    <ListValues>
+      <Value>__AVR_ATmega328p__</Value>
+      <Value>__AVR_ATmega328P__</Value>
+      <Value>ARDUINO=10800</Value>
+      <Value>ARDUINO_MAIN</Value>
+      <Value>F_CPU=16000000L</Value>
+      <Value>__AVR__</Value>
+      <Value>ARDUINO_AVR_UNO</Value>
+      <Value>ARDUINO_ARCH_AVR</Value>
+    </ListValues>
+  </avrgcccpp.compiler.symbols.DefSymbols>
+  <avrgcccpp.compiler.directories.IncludePaths>
+    <ListValues>
+      <Value>C:/Mihai/Progs/Digispark_arduino-1.8.0/hardware/arduino/avr/libraries/SPI/src</Value>
+      <Value>C:/Mihai/Progs/Digispark_arduino-1.8.0/libraries</Value>
+      <Value>C:/Mihai/Progs/Digispark_arduino-1.8.0/hardware/arduino/avr/libraries</Value>
+      <Value>../../libraries</Value>
+      <Value>C:/Mihai/Progs/Digispark_arduino-1.8.0/hardware/arduino/avr/cores/arduino</Value>
+      <Value>C:/Mihai/Progs/Digispark_arduino-1.8.0/hardware/arduino/avr/variants/standard</Value>
+      <Value>../../../sketch_jan28a</Value>
+      <Value>C:/Mihai/Progs/Digispark_arduino-1.8.0/hardware/tools/avr/avr/include/</Value>
+      <Value>C:/Mihai/Progs/Digispark_arduino-1.8.0/hardware/tools/avr//avr/include/avr/</Value>
+      <Value>C:/Mihai/Progs/Digispark_arduino-1.8.0/hardware/tools/avr/lib/gcc/avr/4.8.1/include</Value>
+    </ListValues>
+  </avrgcccpp.compiler.directories.IncludePaths>
+  <avrgcccpp.compiler.optimization.level>Optimize (-O1)</avrgcccpp.compiler.optimization.level>
+  <avrgcccpp.compiler.optimization.PackStructureMembers>True</avrgcccpp.compiler.optimization.PackStructureMembers>
+  <avrgcccpp.compiler.optimization.AllocateBytesNeededForEnum>True</avrgcccpp.compiler.optimization.AllocateBytesNeededForEnum>
+  <avrgcccpp.compiler.optimization.DebugLevel>Default (-g2)</avrgcccpp.compiler.optimization.DebugLevel>
+  <avrgcccpp.compiler.warnings.AllWarnings>True</avrgcccpp.compiler.warnings.AllWarnings>
+  <avrgcccpp.assembler.debugging.DebugLevel>Default (-Wa,-g)</avrgcccpp.assembler.debugging.DebugLevel>
+</AvrGccCpp>
+    </ToolchainSettings>
+    <VMSETTING_IncludePaths>C:/Mihai/Progs/Digispark_arduino-1.8.0/libraries;C:/Mihai/Progs/Digispark_arduino-1.8.0/hardware/arduino/avr/libraries;../../libraries;C:/Mihai/Progs/Digispark_arduino-1.8.0/hardware/arduino/avr/cores/arduino;C:/Mihai/Progs/Digispark_arduino-1.8.0/hardware/arduino/avr/variants/standard;../../../sketch_jan28a;C:/Mihai/Progs/Digispark_arduino-1.8.0/hardware/tools/avr/avr/include/;C:/Mihai/Progs/Digispark_arduino-1.8.0/hardware/tools/avr//avr/include/avr/;C:/Mihai/Progs/Digispark_arduino-1.8.0/hardware/tools/avr/lib/gcc/avr/4.8.1/include;C:/Mihai/Progs/Digispark_arduino-1.8.0/hardware/arduino/avr/libraries/SPI/src;C:/Mihai/Progs/Digispark_arduino-1.8.0/hardware/arduino/avr/libraries/SPI/src/utility;C:/Mihai/Progs/Atmel/Studio/7.0/Extensions/bnliz3tx.d3e/Micro Platforms/default/debuggers/VM_DBG;C:/Mihai/Progs/Atmel/Studio/7.0/Extensions/bnliz3tx.d3e/Micro Platforms/default/debuggers;</VMSETTING_IncludePaths>
+    <VisualMicroSettings>
+      <VisualMicroSettings xmlns="">
+        <arduino.upload.port>COM7</arduino.upload.port>
+      </VisualMicroSettings>
+    </VisualMicroSettings>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <ToolchainSettings>
+      <AvrGccCpp>
+  <avrgcc.common.outputfiles.hex>True</avrgcc.common.outputfiles.hex>
+  <avrgcc.common.outputfiles.lss>True</avrgcc.common.outputfiles.lss>
+  <avrgcc.common.outputfiles.eep>True</avrgcc.common.outputfiles.eep>
+  <avrgcc.common.outputfiles.srec>True</avrgcc.common.outputfiles.srec>
+  <avrgcc.common.outputfiles.usersignatures>False</avrgcc.common.outputfiles.usersignatures>
+  <avrgcc.compiler.general.ChangeDefaultCharTypeUnsigned>True</avrgcc.compiler.general.ChangeDefaultCharTypeUnsigned>
+  <avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>True</avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>
+  <avrgcc.compiler.symbols.DefSymbols>
+    <ListValues>
+      <Value>__AVR_ATmega328p__</Value>
+      <Value>__AVR_ATmega328P__</Value>
+      <Value>ARDUINO=10800</Value>
+      <Value>ARDUINO_MAIN</Value>
+      <Value>F_CPU=16000000L</Value>
+      <Value>__AVR__</Value>
+      <Value>ARDUINO_AVR_UNO</Value>
+      <Value>ARDUINO_ARCH_AVR</Value>
+    </ListValues>
+  </avrgcc.compiler.symbols.DefSymbols>
+  <avrgcc.compiler.directories.IncludePaths>
+    <ListValues>
+      <Value>C:/Mihai/Progs/Digispark_arduino-1.8.0/hardware/arduino/avr/libraries/SPI/src</Value>
+      <Value>C:/Mihai/Progs/Digispark_arduino-1.8.0/libraries</Value>
+      <Value>C:/Mihai/Progs/Digispark_arduino-1.8.0/hardware/arduino/avr/libraries</Value>
+      <Value>../../libraries</Value>
+      <Value>C:/Mihai/Progs/Digispark_arduino-1.8.0/hardware/arduino/avr/cores/arduino</Value>
+      <Value>C:/Mihai/Progs/Digispark_arduino-1.8.0/hardware/arduino/avr/variants/standard</Value>
+      <Value>../../../sketch_jan28a</Value>
+      <Value>C:/Mihai/Progs/Digispark_arduino-1.8.0/hardware/tools/avr/avr/include/</Value>
+      <Value>C:/Mihai/Progs/Digispark_arduino-1.8.0/hardware/tools/avr//avr/include/avr/</Value>
+      <Value>C:/Mihai/Progs/Digispark_arduino-1.8.0/hardware/tools/avr/lib/gcc/avr/4.8.1/include</Value>
+    </ListValues>
+  </avrgcc.compiler.directories.IncludePaths>
+  <avrgcc.compiler.optimization.level>Optimize (-O1)</avrgcc.compiler.optimization.level>
+  <avrgcc.compiler.optimization.PackStructureMembers>True</avrgcc.compiler.optimization.PackStructureMembers>
+  <avrgcc.compiler.optimization.AllocateBytesNeededForEnum>True</avrgcc.compiler.optimization.AllocateBytesNeededForEnum>
+  <avrgcc.compiler.optimization.DebugLevel>Default (-g2)</avrgcc.compiler.optimization.DebugLevel>
+  <avrgcc.compiler.warnings.AllWarnings>True</avrgcc.compiler.warnings.AllWarnings>
+  <avrgcccpp.compiler.general.ChangeDefaultCharTypeUnsigned>True</avrgcccpp.compiler.general.ChangeDefaultCharTypeUnsigned>
+  <avrgcccpp.compiler.general.ChangeDefaultBitFieldUnsigned>True</avrgcccpp.compiler.general.ChangeDefaultBitFieldUnsigned>
+  <avrgcccpp.compiler.symbols.DefSymbols>
+    <ListValues>
+      <Value>__AVR_ATmega328p__</Value>
+      <Value>__AVR_ATmega328P__</Value>
+      <Value>ARDUINO=10800</Value>
+      <Value>ARDUINO_MAIN</Value>
+      <Value>F_CPU=16000000L</Value>
+      <Value>__AVR__</Value>
+      <Value>ARDUINO_AVR_UNO</Value>
+      <Value>ARDUINO_ARCH_AVR</Value>
+    </ListValues>
+  </avrgcccpp.compiler.symbols.DefSymbols>
+  <avrgcccpp.compiler.directories.IncludePaths>
+    <ListValues>
+      <Value>C:/Mihai/Progs/Digispark_arduino-1.8.0/hardware/arduino/avr/libraries/SPI/src</Value>
+      <Value>C:/Mihai/Progs/Digispark_arduino-1.8.0/libraries</Value>
+      <Value>C:/Mihai/Progs/Digispark_arduino-1.8.0/hardware/arduino/avr/libraries</Value>
+      <Value>../../libraries</Value>
+      <Value>C:/Mihai/Progs/Digispark_arduino-1.8.0/hardware/arduino/avr/cores/arduino</Value>
+      <Value>C:/Mihai/Progs/Digispark_arduino-1.8.0/hardware/arduino/avr/variants/standard</Value>
+      <Value>../../../sketch_jan28a</Value>
+      <Value>C:/Mihai/Progs/Digispark_arduino-1.8.0/hardware/tools/avr/avr/include/</Value>
+      <Value>C:/Mihai/Progs/Digispark_arduino-1.8.0/hardware/tools/avr//avr/include/avr/</Value>
+      <Value>C:/Mihai/Progs/Digispark_arduino-1.8.0/hardware/tools/avr/lib/gcc/avr/4.8.1/include</Value>
+    </ListValues>
+  </avrgcccpp.compiler.directories.IncludePaths>
+  <avrgcccpp.compiler.optimization.level>Optimize (-O1)</avrgcccpp.compiler.optimization.level>
+  <avrgcccpp.compiler.optimization.PackStructureMembers>True</avrgcccpp.compiler.optimization.PackStructureMembers>
+  <avrgcccpp.compiler.optimization.AllocateBytesNeededForEnum>True</avrgcccpp.compiler.optimization.AllocateBytesNeededForEnum>
+  <avrgcccpp.compiler.optimization.DebugLevel>Default (-g2)</avrgcccpp.compiler.optimization.DebugLevel>
+  <avrgcccpp.compiler.warnings.AllWarnings>True</avrgcccpp.compiler.warnings.AllWarnings>
+  <avrgcccpp.assembler.debugging.DebugLevel>Default (-Wa,-g)</avrgcccpp.assembler.debugging.DebugLevel>
+</AvrGccCpp>
+    </ToolchainSettings>
+    <VMSETTING_IncludePaths>C:/Mihai/Progs/Digispark_arduino-1.8.0/libraries;C:/Mihai/Progs/Digispark_arduino-1.8.0/hardware/arduino/avr/libraries;../../libraries;C:/Mihai/Progs/Digispark_arduino-1.8.0/hardware/arduino/avr/cores/arduino;C:/Mihai/Progs/Digispark_arduino-1.8.0/hardware/arduino/avr/variants/standard;../../../sketch_jan28a;C:/Mihai/Progs/Digispark_arduino-1.8.0/hardware/tools/avr/avr/include/;C:/Mihai/Progs/Digispark_arduino-1.8.0/hardware/tools/avr//avr/include/avr/;C:/Mihai/Progs/Digispark_arduino-1.8.0/hardware/tools/avr/lib/gcc/avr/4.8.1/include;C:/Mihai/Progs/Digispark_arduino-1.8.0/hardware/arduino/avr/libraries/SPI/src;C:/Mihai/Progs/Digispark_arduino-1.8.0/hardware/arduino/avr/libraries/SPI/src/utility;C:/Mihai/Progs/Atmel/Studio/7.0/Extensions/bnliz3tx.d3e/Micro Platforms/default/debuggers/VM_DBG;C:/Mihai/Progs/Atmel/Studio/7.0/Extensions/bnliz3tx.d3e/Micro Platforms/default/debuggers;</VMSETTING_IncludePaths>
+    <VisualMicroSettings>
+      <VisualMicroSettings xmlns="">
+        <arduino.upload.port>COM7</arduino.upload.port>
+      </VisualMicroSettings>
+    </VisualMicroSettings>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="sketch_jan28a.ino">
+      <SubType>compile</SubType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="__vm\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Adafruit_mfGFX.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="Adafruit_mfGFX.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="Adafruit_ST7735.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="Adafruit_ST7735.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="fonts.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="fonts.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="__vm\.sketch_jan28a.vsarduino.h">
+      <SubType>compile</SubType>
+    </Compile>
+  </ItemGroup>
+  <Import Project="$(AVRSTUDIO_EXE_PATH)\\Vs\\Compiler.targets" />
+</Project>

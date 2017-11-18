@@ -1,0 +1,11 @@
+Use the following wiring:
+
+SS => A2 (default)
+SCK => A3
+MISO => not used
+MOSI => A5
+
+RST => 3V3
+LED => 3V3
+VCC => 3V3
+GND => GND
