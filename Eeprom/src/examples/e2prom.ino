@@ -16,23 +16,24 @@
 * along with E2PROM.  If not, see <http://www.gnu.org/licenses/>.
 *
 ******************************************************************************/
-
+#define F_CPU 16000000UL
 #include "e2prom.h"
-
-E2PROM *e = NULL;
+#include "intel_hex.h"
 
 #define OWNADDRESS 0x50 // 127 maximum devices, 0b0101000 << 1 + 1 bit R/W (automatically added by Wire) = 0x50
 
+E2PROM e(OWNADDRESS);
+IntelHex ihex;
+
 void setup() {
-    e = new E2PROM(OWNADDRESS); 
-    delay(1000);
     
-    uint8_t buffer[] = {"Hello World!"};
-    e->writePage(0, &buffer[0], 8);
+    //e.dump(43);
+    //uint8_t buffer[] = {"AAA!"};
+    //e.writePage(10, &buffer[0], 5);
+    //e.dump();
+    //ihex.parse_intel_hex_from_flash();
 }
 
 void loop() {
-    e->dump();
-    
-    delay(2000);
+  ihex.write_to_eeprom_i2c(0x50,2);
 }
