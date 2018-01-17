@@ -39,6 +39,7 @@ int main(){
     if(bytes> 0 && 0 == (bytes-1)%2){
       crc = crc32(crc, reinterpret_cast<uint8_t*>(&word));
     }
+
     std::cout<<std::hex<<"crc32 [representation = 0x"<<polynomial_representation<<"] : 0x"<<crc<<std::endl;
     
   return 0;
