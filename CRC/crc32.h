@@ -12,15 +12,15 @@ static inline uint32_t crc32_for_byte(uint32_t r) {
   return r ^ (uint32_t)0xFF000000L;
 }
 
-static inline void init_table(uint32_t *table) {
+static inline void init_table(uint32_t *crc_table) {
   for (uint16_t i = 0; i < crc_table_size; ++i) {
-    table[i] = crc32_for_byte(i);
+    crc_table[i] = crc32_for_byte(i);
   }
 }
 
 static inline void crc32(const void *data, const uint16_t length,
-                         const uint32_t *table, uint32_t *crc) {
+                         const uint32_t *crc_table, uint32_t *crc) {
   for (uint16_t i = 0; i < length; ++i) {
-    *crc = table[static_cast<uint8_t>(*crc) ^ ((uint8_t *)data)[i]] ^ *crc >> 8;
+    *crc = crc_table[static_cast<uint8_t>(*crc) ^ ((uint8_t *)data)[i]] ^ *crc >> 8;
   }
 }
