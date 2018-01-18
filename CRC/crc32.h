@@ -2,22 +2,25 @@
 
 #include <stdint.h>
 
-// Warning! This crc32 implementation is performed word-wise and not on the
-// whole
-// buffer. Optimized for use on microcontrollers. Because of the word-wise
-// computation, 3rd party checksums won't be the same.
-static constexpr uint32_t polynomial_representation = 0xEDB88320;
+static constexpr uint32_t polynomial_representation = 0xEDB88320UL;
+static constexpr uint16_t table_size = 0x100;
 
-static inline uint32_t crc32(uint32_t crc, uint8_t *buffer, int length = 2) {
-  int i, j;
-  for (i = 0; i < length; i++) {
-    crc = crc ^ *(buffer++);
-    for (j = 0; j < 8; j++) {
-      if (crc & 1)
-        crc = (crc >> 1) ^ polynomial_representation;
-      else
-        crc = crc >> 1;
-    }
+static inline uint32_t crc32_for_byte(uint32_t r) {
+  for (uint8_t i = 0; i < 8; ++i) {
+    r = (r & 1 ? 0 : polynomial_representation) ^ r >> 1;
   }
-  return crc;
+  return r ^ (uint32_t)0xFF000000L;
+}
+
+static inline void init_table(uint32_t *table) {
+  for (uint16_t i = 0; i < table_size; ++i) {
+    table[i] = crc32_for_byte(i);
+  }
+}
+
+static inline void crc32(const void *data, const uint16_t length,
+                         const uint32_t *table, uint32_t *crc) {
+  for (uint16_t i = 0; i < length; ++i) {
+    *crc = table[static_cast<uint8_t>(*crc) ^ ((uint8_t *)data)[i]] ^ *crc >> 8;
+  }
 }

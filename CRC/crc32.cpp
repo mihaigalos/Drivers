@@ -1,46 +1,50 @@
 #include "crc32.h"
 
 #include <iostream>
-#include <fstream>
-#include <vector>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 
-int main(){
-  
-  //static inline uint32_t crc32 (uint32_t crc, uint8_t *serialized, int length=2) 
-  //seek to the end
-  std::ifstream file("blink.bin", std::ios::binary);
-    file.seekg(0, std::ios::end);
+void crc_on_buffer(uint8_t ac, char **av) {
+  FILE *fp;
+  char buf[1L << 15];
+  uint32_t table[table_size + 1];
 
-    //Get the file size
-    int fileSize = file.tellg();
-    file.seekg(0, std::ios::beg);
-
-    //Reduce the file size by any header bytes that might be present
-    fileSize -= file.tellg();
-
-    std::vector<unsigned char> serialized;
-    serialized.resize(fileSize);
-    file.read((char *)&(serialized[0]), fileSize);
-    file.close();
-    
-    uint32_t crc = 0, bytes = 0; uint16_t word = 0;
-    for(const auto & i : serialized){
-      word<<=8;
-      word|=i;
-      
-      if(bytes> 0 && 0 == (bytes-1)%2){
-        std::cout<<std::dec<<bytes<<":  "<<std::hex<<word<<std::endl;
-        crc = crc32(crc, reinterpret_cast<uint8_t*>(&word));
+  init_table(&table[0]);
+  for (uint8_t i = ac > 1; i < ac; ++i) {
+    if ((fp = i ? fopen(av[i], "rb") : stdin)) {
+      uint32_t crc = 0;
+      while (!feof(fp) && !ferror(fp)) {
+        crc32(buf, fread(buf, 1, sizeof(buf), fp), &table[0], &crc);
       }
-      
-      ++bytes;
-    }
-    
-    if(bytes> 0 && 0 == (bytes-1)%2){
-      crc = crc32(crc, reinterpret_cast<uint8_t*>(&word));
-    }
+      std::cout << "CRC32: " << std::hex << crc << std::endl;
 
-    std::cout<<std::hex<<"crc32 [representation = 0x"<<polynomial_representation<<"] : 0x"<<crc<<std::endl;
-    
+      if (i) {
+        fclose(fp);
+      }
+    }
+  }
+}
+
+void crc_on_word(uint8_t ac, char **av) {
+  FILE *fp;
+  uint8_t buf[2]; // 2 bytes : one word
+  uint32_t table[table_size + 1];
+
+  init_table(&table[0]);
+
+  for (uint8_t i = ac > 1; i < ac; ++i) {
+    if ((fp = i ? fopen(av[i], "rb") : stdin)) {
+      uint32_t crc = 0;
+      while (!feof(fp) && !ferror(fp)) {
+        crc32(buf, fread(buf, 1, sizeof(buf), fp), &table[0], &crc);
+      }
+      std::cout << "CRC32: " << std::hex << crc << std::endl;
+    }
+  }
+}
+
+int main(int ac, char **av) {
+  crc_on_word(ac, av);
   return 0;
 }
