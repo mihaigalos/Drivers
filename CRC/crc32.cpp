@@ -8,7 +8,7 @@
 void crc_on_buffer(uint8_t ac, char **av) {
   FILE *fp;
   char buf[1L << 15];
-  uint32_t table[table_size + 1];
+  uint32_t table[crc_table_size + 1];
 
   init_table(&table[0]);
   for (uint8_t i = ac > 1; i < ac; ++i) {
@@ -29,7 +29,7 @@ void crc_on_buffer(uint8_t ac, char **av) {
 void crc_on_word(uint8_t ac, char **av) {
   FILE *fp;
   uint8_t buf[2]; // 2 bytes : one word
-  uint32_t table[table_size + 1];
+  uint32_t table[crc_table_size + 1];
 
   init_table(&table[0]);
 

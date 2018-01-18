@@ -3,7 +3,7 @@
 #include <stdint.h>
 
 static constexpr uint32_t polynomial_representation = 0xEDB88320UL;
-static constexpr uint16_t table_size = 0x100;
+static constexpr uint16_t crc_table_size = 0x100;
 
 static inline uint32_t crc32_for_byte(uint32_t r) {
   for (uint8_t i = 0; i < 8; ++i) {
@@ -13,7 +13,7 @@ static inline uint32_t crc32_for_byte(uint32_t r) {
 }
 
 static inline void init_table(uint32_t *table) {
-  for (uint16_t i = 0; i < table_size; ++i) {
+  for (uint16_t i = 0; i < crc_table_size; ++i) {
     table[i] = crc32_for_byte(i);
   }
 }
