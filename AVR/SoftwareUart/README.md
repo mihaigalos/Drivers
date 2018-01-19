@@ -21,8 +21,6 @@ Screenshots for Tiny85::2Mhz :: 9600/8N1 send available in screenshots/self_test
 
 Screenshots for Tiny10::8Mhz :: 38400/8N1 s&r available in screenshots/self_test_sw_uart_receive_send.png 
 
-Receive not yet ready.
-
 # Usage
 
 1. Set the required macros.
