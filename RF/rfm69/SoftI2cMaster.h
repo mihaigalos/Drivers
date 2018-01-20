@@ -29,12 +29,12 @@
  */
 #if ARDUINO < 100
 #error Requires Arduino 1.0 or greater.
-#else  // ARDUINO
+#else // ARDUINO
 #include <Arduino.h>
-#endif  // ARDUINO
-#include <util/delay_basic.h>
+#endif // ARDUINO
 #include <DigitalPin.h>
 #include <I2cConstants.h>
+#include <util/delay_basic.h>
 //------------------------------------------------------------------------------
 // State codes.
 
@@ -63,7 +63,7 @@ const uint8_t STATE_TX_DATA_NACK = 6;
  * @brief Base class for FastI2cMaster, SoftI2cMaster
  */
 class I2cMasterBase {
- public:
+public:
   I2cMasterBase() : _state(STATE_STOP) {}
   /** Read a byte
    *
@@ -90,9 +90,9 @@ class I2cMasterBase {
    */
   virtual void stop() = 0;
 
-  bool transfer(uint8_t addressRW, void *buf,
-                size_t nbyte, uint8_t option = I2C_STOP);
-                
+  bool transfer(uint8_t addressRW, void *buf, size_t nbyte,
+                uint8_t option = I2C_STOP);
+
   bool transferContinue(void *buf, size_t nbyte, uint8_t option = I2C_STOP);
   /** Write a byte
    *
@@ -103,7 +103,7 @@ class I2cMasterBase {
    * @return true for ACK or false for NACK */
   virtual bool write(uint8_t data) = 0;
 
- private:
+private:
   uint8_t _state;
 };
 //==============================================================================
@@ -112,7 +112,7 @@ class I2cMasterBase {
  * @brief Software I2C master class
  */
 class SoftI2cMaster : public I2cMasterBase {
- public:
+public:
   SoftI2cMaster() {}
   SoftI2cMaster(uint8_t sclPin, uint8_t sdaPin);
   void begin(uint8_t sclPin, uint8_t sdaPin);
@@ -120,42 +120,42 @@ class SoftI2cMaster : public I2cMasterBase {
   void start();
   void stop(void);
   bool write(uint8_t b);
-  
- private:
+
+private:
   uint8_t _sclBit;
   uint8_t _sdaBit;
-  volatile uint8_t* _sclDDR;
-  volatile uint8_t* _sdaDDR;
-  volatile uint8_t* _sdaInReg;
+  volatile uint8_t *_sclDDR;
+  volatile uint8_t *_sdaDDR;
+  volatile uint8_t *_sdaInReg;
   //----------------------------------------------------------------------------
-  bool readSda() {return *_sdaInReg & _sdaBit;}
+  bool readSda() { return *_sdaInReg & _sdaBit; }
   //----------------------------------------------------------------------------
-  void sclDelay(uint8_t n) {_delay_loop_1(n);}
+  void sclDelay(uint8_t n) { _delay_loop_1(n); }
   //----------------------------------------------------------------------------
   bool writeScl(bool value) {
-	  uint8_t s = SREG;
-	  noInterrupts();
-  	if (value == LOW) {
+    uint8_t s = SREG;
+    noInterrupts();
+    if (value == LOW) {
       // Pull scl low.
-		  *_sclDDR |= _sclBit;
-	  } else {
+      *_sclDDR |= _sclBit;
+    } else {
       // Put scl in high Z  input mode.
-	  	*_sclDDR &= ~_sclBit;
-  	}
-	  SREG = s;
+      *_sclDDR &= ~_sclBit;
+    }
+    SREG = s;
   }
   //----------------------------------------------------------------------------
   bool writeSda(bool value) {
-	  uint8_t s = SREG;
-	  noInterrupts();
-	  if (value == LOW) {
+    uint8_t s = SREG;
+    noInterrupts();
+    if (value == LOW) {
       // Pull sda low.
-	  	*_sdaDDR |= _sdaBit;
-	  } else {
+      *_sdaDDR |= _sdaBit;
+    } else {
       // Put sda in high Z input mode.
-	  	*_sdaDDR &= ~_sdaBit;
-	  }
-	  SREG = s;
+      *_sdaDDR &= ~_sdaBit;
+    }
+    SREG = s;
   }
 };
 //==============================================================================
@@ -165,13 +165,11 @@ class SoftI2cMaster : public I2cMasterBase {
  * @class FastI2cMaster
  * @brief Fast software I2C master class.
  */
-template<uint8_t sclPin, uint8_t sdaPin>
+template <uint8_t sclPin, uint8_t sdaPin>
 class FastI2cMaster : public I2cMasterBase {
- public:
+public:
   //----------------------------------------------------------------------------
-  FastI2cMaster() {
-    begin();
-  }
+  FastI2cMaster() { begin(); }
   //----------------------------------------------------------------------------
   /** Initialize I2C bus pins. */
   void begin() {
@@ -249,27 +247,32 @@ class FastI2cMaster : public I2cMasterBase {
     sdaWrite(LOW);
     return rtn == 0;
   }
- private:
+
+private:
   //----------------------------------------------------------------------------
-  inline __attribute__((always_inline))
-  void sclWrite(bool value) {fastPinMode(sclPin, !value);}
-  //----------------------------------------------------------------------------
-  inline __attribute__((always_inline))
-  void sdaWrite(bool value) {fastPinMode(sdaPin, !value);}
-  //----------------------------------------------------------------------------
-  inline __attribute__((always_inline))
-  void readBit(uint8_t bit, uint8_t* data) {
-    sclWrite(HIGH);
-    sclDelay(5);
-    if (fastDigitalRead(sdaPin)) *data |= 1 << bit;
-    sclWrite(LOW);
-    if (bit) sclDelay(6);
+  inline __attribute__((always_inline)) void sclWrite(bool value) {
+    fastPinMode(sclPin, !value);
   }
   //----------------------------------------------------------------------------
-  void sclDelay(uint8_t n) {_delay_loop_1(n);}
+  inline __attribute__((always_inline)) void sdaWrite(bool value) {
+    fastPinMode(sdaPin, !value);
+  }
   //----------------------------------------------------------------------------
-  inline __attribute__((always_inline))
-  void writeBit(uint8_t bit, uint8_t data) {
+  inline __attribute__((always_inline)) void readBit(uint8_t bit,
+                                                     uint8_t *data) {
+    sclWrite(HIGH);
+    sclDelay(5);
+    if (fastDigitalRead(sdaPin))
+      *data |= 1 << bit;
+    sclWrite(LOW);
+    if (bit)
+      sclDelay(6);
+  }
+  //----------------------------------------------------------------------------
+  void sclDelay(uint8_t n) { _delay_loop_1(n); }
+  //----------------------------------------------------------------------------
+  inline __attribute__((always_inline)) void writeBit(uint8_t bit,
+                                                      uint8_t data) {
     uint8_t mask = 1 << bit;
     sdaWrite(data & mask);
     sclWrite(HIGH);
@@ -278,5 +281,5 @@ class FastI2cMaster : public I2cMasterBase {
     sclDelay(5);
   }
 };
-#endif  // SOFT_I2C_MASTER_H
-/** @} */
+#endif // SOFT_I2C_MASTER_H
+       /** @} */

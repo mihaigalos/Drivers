@@ -7,6 +7,7 @@
 
 class IntelHex {
 public:
+  IntelHex() : last_written_file_length_(0){}
   void write_to_eeprom_i2c_old(uint8_t eeprom_i2c_address = 0x50,
                                uint16_t destination_start_byte = 2);
   void write_to_eeprom_i2c(uint8_t eeprom_i2c_address = 0x50,
@@ -24,4 +25,8 @@ private:
   void write_variable(uint8_t eeprom_i2c_address,
                       uint16_t destination_start_byte, uint8_t *data,
                       uint8_t size_in_bytes);
+
+  uint32_t GetValueFromSerial(char* message, uint8_t base = 10) const;  
+
+  uint16_t last_written_file_length_;
 };

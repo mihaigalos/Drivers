@@ -31,21 +31,21 @@
 
 /** Option argument for transfer() of transferContinue() to continue a
    an I2C operation. */
-const uint8_t I2C_CONTINUE =  0;
+const uint8_t I2C_CONTINUE = 0;
 
 /** Option argument for transfer() of transferContinue() to end a
     transfer with a STOP condition */
-const uint8_t I2C_STOP      = 1;
+const uint8_t I2C_STOP = 1;
 
 /** Option argument for transfer() of transferContinue() to end a
     transfer with a repeated START condition */
 const uint8_t I2C_REP_START = 2;
 
 /** Set I2C bus speed to 100 kHz. Used by TwiMaster class. */
-const uint8_t I2C_100KHZ    = 0;
+const uint8_t I2C_100KHZ = 0;
 
 /** Set I2C bus speed to 400 kHz. Used by TwiMaster class. */
-const uint8_t I2C_400KHZ    = 1;
+const uint8_t I2C_400KHZ = 1;
 
 /** Bit to OR with address for a read operation. */
 const uint8_t I2C_READ = 1;
@@ -58,5 +58,5 @@ const uint8_t I2C_NO_PULLUPS = 0;
 
 /** Enable internal pull-ups on SDA and SCL. Used by TwiMaster class. */
 const uint8_t I2C_INTERNAL_PULLUPS = 1;
-#endif  // I2cConstants_h
-/** @} */
+#endif // I2cConstants_h
+       /** @} */

@@ -21,6 +21,7 @@ static inline void init_table(uint32_t *crc_table) {
 static inline void crc32(const void *data, const uint16_t length,
                          const uint32_t *crc_table, uint32_t *crc) {
   for (uint16_t i = 0; i < length; ++i) {
-    *crc = crc_table[static_cast<uint8_t>(*crc) ^ ((uint8_t *)data)[i]] ^ *crc >> 8;
+    *crc = crc_table[static_cast<uint8_t>(*crc) ^ ((uint8_t *)data)[i]] ^
+           *crc >> 8;
   }
 }
