@@ -257,13 +257,13 @@ void IntelHex::write_variable(uint8_t eeprom_i2c_address,
   }
 }
 
-uint32_t IntelHex::GetValueFromSerial(char* message, uint8_t base) const{
+uint32_t IntelHex::GetValueFromSerial(char *message, uint8_t base) const {
   String inString = "";
   uint32_t result = 0;
   bool ready = false;
 
   Serial.print(message);
-  do{
+  do {
     while (Serial.available() > 0) {
       uint8_t inChar = Serial.read();
       if (10 == base && isDigit(inChar)) {
@@ -272,12 +272,14 @@ uint32_t IntelHex::GetValueFromSerial(char* message, uint8_t base) const{
         inString += static_cast<char>(inChar);
       }
       if ('\n' == inChar) {
-        if (10 == base) result = inString.toInt();
-        else if (16 == base) result = strtol(inString.c_str(), 0, 16);
+        if (10 == base)
+          result = inString.toInt();
+        else if (16 == base)
+          result = strtol(inString.c_str(), 0, 16);
         ready = true;
       }
     }
-  }while(!ready);
+  } while (!ready);
   return result;
 }
 void IntelHex::write_preamble(uint8_t eeprom_i2c_address,
@@ -291,12 +293,14 @@ void IntelHex::write_preamble(uint8_t eeprom_i2c_address,
   write_vector(eeprom_i2c_address, destination_start_byte + 8, application_name,
                sizeof(application_name) / sizeof(application_name[0]) - 1);
 
-  uint32_t application_timestamp =  GetValueFromSerial("Application unix timestamp (decimal): ", base10);
+  uint32_t application_timestamp =
+      GetValueFromSerial("Application unix timestamp (decimal): ", base10);
   write_variable(eeprom_i2c_address, destination_start_byte + 18,
                  reinterpret_cast<uint8_t *>(&application_timestamp),
                  sizeof(application_timestamp));
 
-  uint32_t current_time = GetValueFromSerial("Current unix timestamp (decimal): ", base10);
+  uint32_t current_time =
+      GetValueFromSerial("Current unix timestamp (decimal): ", base10);
   write_variable(eeprom_i2c_address, destination_start_byte + 22,
                  reinterpret_cast<uint8_t *>(&current_time),
                  sizeof(current_time));
@@ -305,20 +309,26 @@ void IntelHex::write_preamble(uint8_t eeprom_i2c_address,
   write_variable(eeprom_i2c_address, destination_start_byte + 26,
                  reinterpret_cast<uint8_t *>(&crc), sizeof(crc));
 
-  last_written_file_length_ = static_cast<uint16_t>(GetValueFromSerial("Application size (bytes, decimal): ", base10));
+  last_written_file_length_ = static_cast<uint16_t>(
+      GetValueFromSerial("Application size (bytes, decimal): ", base10));
   write_variable(eeprom_i2c_address, destination_start_byte + 30,
-                 reinterpret_cast<uint8_t *>(&last_written_file_length_), sizeof(last_written_file_length_));
+                 reinterpret_cast<uint8_t *>(&last_written_file_length_),
+                 sizeof(last_written_file_length_));
 }
 
 void IntelHex::write_to_eeprom_i2c(uint8_t eeprom_i2c_address,
                                    uint16_t destination_start_byte) {
 
-  Serial.println("-- Miniboot EEPROM uploader --"); Serial.println("");
-  
+  Serial.println("-- Miniboot EEPROM uploader --");
+  Serial.println("");
+
   write_preamble(eeprom_i2c_address, destination_start_byte);
 
   Serial.println("");
-  Serial.print("Header written. Please switch to binary mode and send a file of byte length "); Serial.print(last_written_file_length_); Serial.println(".") ;
+  Serial.print("Header written. Please switch to binary mode and send a file "
+               "of byte length ");
+  Serial.print(last_written_file_length_);
+  Serial.println(".");
   E2PROM e(eeprom_i2c_address);
 
   uint16_t pos = 32 + destination_start_byte;
