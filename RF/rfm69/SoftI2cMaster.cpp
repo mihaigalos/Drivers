@@ -48,9 +48,9 @@
  *                      .
  * @return true for success else false.
  */
-bool I2cMasterBase::transfer(uint8_t addrRW,
-                             void *buf, size_t nbytes, uint8_t option) {
-  uint8_t* p = (uint8_t*)buf;
+bool I2cMasterBase::transfer(uint8_t addrRW, void *buf, size_t nbytes,
+                             uint8_t option) {
+  uint8_t *p = (uint8_t *)buf;
   if (_state != STATE_REP_START) {
     start();
   }
@@ -78,10 +78,10 @@ bool I2cMasterBase::transfer(uint8_t addrRW,
  * @return true for success else false.
  */
 bool I2cMasterBase::transferContinue(void *buf, size_t nbytes, uint8_t option) {
-  uint8_t* p = (uint8_t*)buf;
+  uint8_t *p = (uint8_t *)buf;
   if (_state == STATE_RX_DATA) {
     for (size_t i = 0; i < nbytes; i++) {
-        p[i] = read(i == (nbytes - 1) && option != I2C_CONTINUE);
+      p[i] = read(i == (nbytes - 1) && option != I2C_CONTINUE);
     }
   } else if (_state == STATE_TX_DATA) {
     for (size_t i = 0; i < nbytes; i++) {
@@ -125,27 +125,27 @@ SoftI2cMaster::SoftI2cMaster(uint8_t sclPin, uint8_t sdaPin) {
  */
 void SoftI2cMaster::begin(uint8_t sclPin, uint8_t sdaPin) {
   uint8_t port;
-  
+
   // Get bit mask and address of scl registers.
-	_sclBit = digitalPinToBitMask(sclPin);
-	port = digitalPinToPort(sclPin);
-	_sclDDR = portModeRegister(port);
-	volatile uint8_t* sclOutReg = portOutputRegister(port);
-	
-	// Get bit mask and address of sda registers.
-	_sdaBit = digitalPinToBitMask(sdaPin);
-	port = digitalPinToPort(sdaPin);
-	_sdaDDR = portModeRegister(port);
+  _sclBit = digitalPinToBitMask(sclPin);
+  port = digitalPinToPort(sclPin);
+  _sclDDR = portModeRegister(port);
+  volatile uint8_t *sclOutReg = portOutputRegister(port);
+
+  // Get bit mask and address of sda registers.
+  _sdaBit = digitalPinToBitMask(sdaPin);
+  port = digitalPinToPort(sdaPin);
+  _sdaDDR = portModeRegister(port);
   _sdaInReg = portInputRegister(port);
-	volatile uint8_t* sdaOutReg = portOutputRegister(port);
-	
-	// Clear PORT bit for scl and sda.
+  volatile uint8_t *sdaOutReg = portOutputRegister(port);
+
+  // Clear PORT bit for scl and sda.
   uint8_t s = SREG;
   noInterrupts();
   *sclOutReg &= ~_sclBit;
   *sdaOutReg &= ~_sdaBit;
   SREG = s;
-  
+
   // Set scl and sda high.
   writeScl(HIGH);
   writeSda(HIGH);
@@ -169,7 +169,8 @@ uint8_t SoftI2cMaster::read(uint8_t last) {
     sclDelay(16);
     writeScl(HIGH);
     sclDelay(12);
-    if (readSda()) b |= 1;
+    if (readSda())
+      b |= 1;
     writeScl(LOW);
   }
   // send ACK or NACK
@@ -194,7 +195,7 @@ void SoftI2cMaster::start() {
   writeScl(LOW);
 }
 //------------------------------------------------------------------------------
-  /*  Issue a stop condition. */
+/*  Issue a stop condition. */
 void SoftI2cMaster::stop(void) {
   writeSda(LOW);
   sclDelay(20);
@@ -226,13 +227,13 @@ bool SoftI2cMaster::write(uint8_t data) {
   writeSda(HIGH);
   writeScl(HIGH);
   sclDelay(16);
-  
+
   // Get ACK or NACK.
   uint8_t rtn = readSda();
-  
+
   // pull scl low.
   writeScl(LOW);
-  
+
   // Pull sda low.
   writeSda(LOW);
   return rtn == 0;

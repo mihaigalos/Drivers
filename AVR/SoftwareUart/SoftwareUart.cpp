@@ -86,56 +86,55 @@ uint8_t uart_read() {
   uint8_t bitPosition = 0x40;
 
   __asm__ volatile(
-            
-        "wait: \n\t"
-            "sbic %6, %1\n\t"
-                "rjmp wait \n\t"
-        "rcall halfDelay \n\t"  
-                        
-        "sbic %6, %1\n\t"
-            "rjmp wait \n\t" 
-        "rcall bitDelayReceive \n\t"
 
-        "read8bits: \n\t"   
-                        
-        "sbic %6, %1\n\t"       // 2cc true, 1cc false
-            "rjmp setBit\n\t"       
-        "rjmp skipBitSet\n\t"   
-                        
-        "setBit:   \n\t"
-            "ori %0, 0x80\n\t" 
+      "wait: \n\t"
+      "sbic %6, %1\n\t"
+      "rjmp wait \n\t"
+      "rcall halfDelay \n\t"
 
-        "skipBitSet: \n\t"
-            "rcall bitDelayReceive \n\t"
-                       
-        "lsr %0 \n\t"
-        "lsr %3 \n\t"
-            
-        "breq eof_read8bits \n\t"
-            "rjmp read8bits \n\t"
-			        
-        // delay routines
-			       
-        "halfDelay: \n\t"
-            "ldi %2, %4 \n\t"
-            "rjmp loop_3cc \n\t"
-        "bitDelayReceive: \n\t"
-            "mov %2, %5 \n\t"
-        "loop_3cc: \n\t"
-            "dec %2 \n\t"            // 1cc
-            "brne loop_3cc \n\t"      // 2cc (true), 1cc (false)
-            "ret \n\t"
-			       
-        // done
-        "eof_read8bits: \n\t" 
-                                     
-		: "=&r"(readValue)
-        : "M"(RX_PIN), "r"(temporary), "r"(bitPosition),
-        "M"(PRESCALE_WAIT_HALF_BIT_RX),
-        "r"(PRESCALE_WAIT_ONE_BIT_RX),
+      "sbic %6, %1\n\t"
+      "rjmp wait \n\t"
+      "rcall bitDelayReceive \n\t"
+
+      "read8bits: \n\t"
+
+      "sbic %6, %1\n\t" // 2cc true, 1cc false
+      "rjmp setBit\n\t"
+      "rjmp skipBitSet\n\t"
+
+      "setBit:   \n\t"
+      "ori %0, 0x80\n\t"
+
+      "skipBitSet: \n\t"
+      "rcall bitDelayReceive \n\t"
+
+      "lsr %0 \n\t"
+      "lsr %3 \n\t"
+
+      "breq eof_read8bits \n\t"
+      "rjmp read8bits \n\t"
+
+      // delay routines
+
+      "halfDelay: \n\t"
+      "ldi %2, %4 \n\t"
+      "rjmp loop_3cc \n\t"
+      "bitDelayReceive: \n\t"
+      "mov %2, %5 \n\t"
+      "loop_3cc: \n\t"
+      "dec %2 \n\t"        // 1cc
+      "brne loop_3cc \n\t" // 2cc (true), 1cc (false)
+      "ret \n\t"
+
+      // done
+      "eof_read8bits: \n\t"
+
+      : "=&r"(readValue)
+      : "M"(RX_PIN), "r"(temporary), "r"(bitPosition),
+        "M"(PRESCALE_WAIT_HALF_BIT_RX), "r"(PRESCALE_WAIT_ONE_BIT_RX),
         "M"(_SFR_IO_ADDR(UART_IN_PORT_MAPPING))
 
-            );
+          );
   return readValue;
 }
 #endif // #ifdef RX_PIN
@@ -147,37 +146,37 @@ void uart_write(uint8_t value) {
 
       "cbi %4, %0 \n\t" // falling edge : start condition
       "rcall bitDelaySend \n\t"
-     
+
       "write8bits: \n\t"
-          "mov %5, %1 \n\t"
-          "andi %1, %2 \n\t"
+      "mov %5, %1 \n\t"
+      "andi %1, %2 \n\t"
       "breq setPinLow \n\t"      // and == 0, meaning LSB was 0, set bit low
       "sbi %4, %0 \n\t"          // and == 1, meaning LSB was 1, set bit high
       "rjmp pinSetFinished \n\t" // .. and jump to pinSetFinished
-      
+
       "setPinLow: \n\t"
-          "cbi %4, %0 \n\t"
-          "nop \n\t" // additional no operation to balance the clock cycle count
-                     // when taking the previous branches
+      "cbi %4, %0 \n\t"
+      "nop \n\t" // additional no operation to balance the clock cycle count
+                 // when taking the previous branches
       "pinSetFinished:"
-          "mov %1, %5 \n\t"
-          "lsr %1 \n\t"
-          "rcall bitDelaySend \n\t"
-          "dec %3 \n\t"
-          "brne write8bits \n\t"
-          "rjmp eof_write8bits \n\t"
+      "mov %1, %5 \n\t"
+      "lsr %1 \n\t"
+      "rcall bitDelaySend \n\t"
+      "dec %3 \n\t"
+      "brne write8bits \n\t"
+      "rjmp eof_write8bits \n\t"
 
       "bitDelaySend: \n\t"
-        "mov %5, %6 \n\t"
+      "mov %5, %6 \n\t"
       "repeat_3cc: \n\t"
-          "dec %5 \n\t"          // 1cc
-          "brne repeat_3cc \n\t" // 2cc (true), 1cc (false)
-          "ret \n\t"
-      
+      "dec %5 \n\t"          // 1cc
+      "brne repeat_3cc \n\t" // 2cc (true), 1cc (false)
+      "ret \n\t"
+
       // done
       "eof_write8bits: \n\t"
-          "sbi %4, %0 \n\t" // stop bit
-          "rcall bitDelaySend \n\t"
+      "sbi %4, %0 \n\t" // stop bit
+      "rcall bitDelaySend \n\t"
       :
       : "M"(TX_PIN), "r"(value), "M"(0x01), "r"(bitsRemaining),
         "M"(_SFR_IO_ADDR(UART_OUT_PORT_MAPPING)), "r"(temporary),

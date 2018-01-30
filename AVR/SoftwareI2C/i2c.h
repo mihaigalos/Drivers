@@ -21,7 +21,7 @@ Copyright Mihai Galos 2017
 #elif SPEED_KHZ == 300
 #define MANUAL_CLK_OFFSET_USEC                                                 \
   +0.97 // manual fine-tuning, can be 0. This is to compensate for the bit
-        // shifts inside the sending and receiving methods
+// shifts inside the sending and receiving methods
 #elif SPEED_KHZ == 400
 #define MANUAL_CLK_OFFSET_USEC +0.63
 #else

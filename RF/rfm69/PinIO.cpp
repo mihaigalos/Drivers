@@ -25,23 +25,22 @@
  * @details  Two Wire Interface library.
  * @{
  */
+#include <Arduino.h>
 #include <PinIO.h>
 #include <util/atomic.h>
-#include <Arduino.h>
 //==============================================================================
 /** Constructor
  * @param[in] pin Pin assigned to this object.
  */
-PinIO::PinIO(uint8_t pin) {
-  begin(pin);
-}
+PinIO::PinIO(uint8_t pin) { begin(pin); }
 //------------------------------------------------------------------------------
 /** Initialize pin bit mask and port address.
  * @param[in] pin Arduino board pin number.
  * @return true for success or false if invalid pin number.
  */
 bool PinIO::begin(uint8_t pin) {
-  if (pin >= NUM_DIGITAL_PINS) return false;
+  if (pin >= NUM_DIGITAL_PINS)
+    return false;
   uint8_t port = digitalPinToPort(pin);
   pinReg_ = portInputRegister(port);
   bit_ = digitalPinToBitMask(pin);
