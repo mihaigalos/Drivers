@@ -25,13 +25,11 @@
 #define columnCount 31
 #define bytesPercolumn 8
 
-static uchar replyBuf[columnCount * bytesPercolumn] = "Hello, USB!";
+static uchar replyBuf[bytesPercolumn * columnCount] = "Hello, USB!";
 static uchar dataReceived = 0, dataLength = 0; // for USB_DATA_IN
 
-static uint16_t offset = 0;
-
 void fillBufferFromFlash() {
-
+	uint16_t offset = 0;
 	for (uint16_t i = 0; i < sizeof(replyBuf); ++i) {
 		replyBuf[i] = pgm_read_byte_near(i + offset);
 	}
@@ -51,7 +49,7 @@ USB_PUBLIC uchar usbFunctionSetup(uchar data[8]) {
 		PORTD |= (1 << 0) | (1 << 1); // turn LED off
 		return 0;
 	case USB_DATA_OUT: // send data to PC
-		fillBufferFromFlash();
+		//fillBufferFromFlash();
 		usbMsgPtr = replyBuf;
 		return sizeof(replyBuf);
 	case USB_DATA_WRITE: // modify reply buffer
@@ -91,7 +89,7 @@ int main() {
 	DDRD = (1 << 1 | 1 << 0); // PB0 as output
 
 //wdt_enable (WDTO_1S); // enable 1s watchdog timer
-
+	fillBufferFromFlash();
 	usbInit();
 
 	usbDeviceDisconnect(); // enforce re-enumeration
