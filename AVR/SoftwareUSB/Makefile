@@ -6,7 +6,7 @@ HEX = software_usb.hex
 CC = avr-g++
 OBJCOPY = avr-objcopy
 
-CFLAGS += -funsigned-char -funsigned-bitfields -O1 -ffunction-sections -fdata-sections
+CFLAGS += -funsigned-char -funsigned-bitfields -Os -ffunction-sections -fdata-sections
 CFLAGS += -fpack-struct -fshort-enums -g2 -Wall
 CFLAGS += -mmcu=$(MCU)  -c -std=c++11 -MD -MP -MF
 
@@ -16,7 +16,7 @@ OBJFLAGS = -j .text -j .data -O ihex
 
 OBJECTS = usbdrv/usbdrvasm.o usbdrv/usbdrv.o usbdrv/oddebug.o main.o
 
-all: $(HEX) $(EXE)
+all: $(EXE) $(HEX)
 
 $(EXE): usbtest.cpp
 	@echo
@@ -27,6 +27,8 @@ clean:
 
 %.hex: %.elf
 	$(OBJCOPY) $(OBJFLAGS) $< $@
+	@echo
+	avr-size *.elf
 
 software_usb.elf: $(OBJECTS)
 	@echo

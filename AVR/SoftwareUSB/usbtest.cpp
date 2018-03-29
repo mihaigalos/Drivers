@@ -213,30 +213,30 @@ int main(int argc, char **argv) {
 	if (strcmp(argv[1], "on") == 0) {
 		nBytes = usb_control_msg(handle,
 				USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
-				static_cast<int>(USBRequest::USB_LED_ON), 0, 0, (char *) buffer,
+				static_cast<int>(USBRequest::LED_ON), 0, 0, (char *) buffer,
 				sizeof(buffer), 5000);
 	} else if (strcmp(argv[1], "off") == 0) {
 		nBytes = usb_control_msg(handle,
 				USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
-				static_cast<int>(USBRequest::USB_LED_OFF), 0, 0,
-				(char *) buffer, sizeof(buffer), 5000);
+				static_cast<int>(USBRequest::LED_OFF), 0, 0, (char *) buffer,
+				sizeof(buffer), 5000);
 	} else if (strcmp(argv[1], "out") == 0) {
 
 		nBytes = usb_control_msg(handle,
 				USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
-				static_cast<int>(USBRequest::USB_DATA_OUT), 0, 0,
-				(char *) buffer, sizeof(buffer), 5000);
-//		printf("Got %d bytes: %s\n", nBytes, buffer);
-		printReceivedBytes(nBytes, buffer);
+				static_cast<int>(USBRequest::DATA_OUT), 0, 0, (char *) buffer,
+				sizeof(buffer), 5000);
+		printf("Got %d bytes: %s\n", nBytes, buffer);
+		//printReceivedBytes(nBytes, buffer);
 	} else if (strcmp(argv[1], "write") == 0) {
 		nBytes = usb_control_msg(handle,
 				USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
-				static_cast<int>(USBRequest::USB_DATA_WRITE), 'T' + ('E' << 8),
+				static_cast<int>(USBRequest::DATA_WRITE), 'T' + ('E' << 8),
 				'S' + ('T' << 8), (char *) buffer, sizeof(buffer), 5000);
 	} else if (strcmp(argv[1], "in") == 0 && argc > 2) {
 		nBytes = usb_control_msg(handle,
 				USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_OUT,
-				static_cast<int>(USBRequest::USB_DATA_IN), 0, 0, argv[2],
+				static_cast<int>(USBRequest::DATA_IN), 0, 0, argv[2],
 				strlen(argv[2]) + 1, 5000);
 	}
 

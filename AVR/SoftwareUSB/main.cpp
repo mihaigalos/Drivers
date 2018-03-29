@@ -18,15 +18,13 @@
 
 #include "i_usbRequest.h"
 
-
 #define columnCount 31
 #define bytesPercolumn 8
 
 static uchar replyBuf[bytesPercolumn * columnCount] = "Hello, USB!";
 static uchar dataReceived = 0, dataLength = 0; // for USB_DATA_IN
 
-void fillBufferFromFlash() {
-	uint16_t offset = 0;
+void fillBufferFromFlash(uint16_t offset = 0) {
 	for (uint16_t i = 0; i < sizeof(replyBuf); ++i) {
 		replyBuf[i] = pgm_read_byte_near(i + offset);
 	}
@@ -36,26 +34,27 @@ void fillBufferFromFlash() {
 
 // this gets called when custom control message is received
 USB_PUBLIC uchar usbFunctionSetup(uchar data[8]) {
-	usbRequest_t *rq = reinterpret_cast<usbRequest_t *> (data); // cast data to correct type
+	usbRequest_t *rq = reinterpret_cast<usbRequest_t *>(data); // cast data to correct type
 
 	switch (static_cast<USBRequest>(rq->bRequest)) { // custom command is in the bRequest field
-	case USBRequest::USB_LED_ON:
-		PORTD &= ~(1 << 0) & ~(1 << 1); // turn LED on
+	case USBRequest::LED_ON:
+		PORTD &= ~(1 << 1); // turn LED on
 		return 0;
-	case USBRequest::USB_LED_OFF:
-		PORTD |= (1 << 0) | (1 << 1); // turn LED off
+	case USBRequest::LED_OFF:
+		PORTD |= (1 << 1); // turn LED off
 		return 0;
-	case USBRequest::USB_DATA_OUT: // send data to PC
+	case USBRequest::DATA_OUT: // send data to PC
 		//fillBufferFromFlash();
 		usbMsgPtr = replyBuf;
 		return sizeof(replyBuf);
-	case USBRequest::USB_DATA_WRITE: // modify reply buffer
+	case USBRequest::DATA_WRITE: // modify reply buffer
 		replyBuf[7] = rq->wValue.bytes[0];
 		replyBuf[8] = rq->wValue.bytes[1];
 		replyBuf[9] = rq->wIndex.bytes[0];
 		replyBuf[10] = rq->wIndex.bytes[1];
 		return 0;
-	case USBRequest::USB_DATA_IN: // receive data from PC
+	case USBRequest::DATA_IN: // receive data from PC
+
 		dataLength = (uchar) rq->wLength.word;
 		dataReceived = 0;
 
@@ -71,7 +70,6 @@ USB_PUBLIC uchar usbFunctionSetup(uchar data[8]) {
 // This gets called when data is sent from PC to the device
 USB_PUBLIC uchar usbFunctionWrite(uchar *data, uchar len) {
 	uchar i;
-
 	for (i = 0; dataReceived < dataLength && i < len; i++, dataReceived++)
 		replyBuf[dataReceived] = data[i];
 
@@ -83,10 +81,10 @@ extern "C" void USB_INTR_VECTOR(void);
 int main() {
 	uchar i;
 
-	DDRD = (1 << 1 | 1 << 0); // PB0 as output
-
+	DDRD = (1 << 0 | 1 << 1); // PB0 as output
+	PORTD = 0xFE;
 //wdt_enable (WDTO_1S); // enable 1s watchdog timer
-	fillBufferFromFlash();
+//	fillBufferFromFlash();
 	usbInit();
 
 	usbDeviceDisconnect(); // enforce re-enumeration
