@@ -1,7 +1,7 @@
 #pragma once
 
-constexpr uint16_t columnCount { 30 };
-constexpr uint16_t bytesPercolumn { 8 };
+constexpr uint16_t columnCount { 15 };
+constexpr uint16_t bytesPercolumn { 16 };
 
 constexpr uint16_t kBufferSize { bytesPercolumn * columnCount };
 

@@ -202,7 +202,7 @@ int main(int argc, char **argv) {
 		printf("usbtext.exe out\n");
 		printf("usbtext.exe write\n");
 		printf("usbtext.exe in <string>\n");
-		printf("usbtext.exe flashdump <decimal address>\n");
+		printf("usbtext.exe flashdump <direct hex address literals>\n");
 		exit(1);
 	}
 	auto start = std::chrono::high_resolution_clock::now();
@@ -253,7 +253,7 @@ int main(int argc, char **argv) {
 
 			for (uint16_t i = 0; i < 3; ++i) {
 
-				sprintf(address_dec, "%d", i * kBufferSize);
+				sprintf(address_dec, "%x", i * kBufferSize);
 
 				nBytes = usb_control_msg(handle,
 						USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_OUT,

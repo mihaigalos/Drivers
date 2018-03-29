@@ -65,6 +65,7 @@ USB_PUBLIC uchar usbFunctionSetup(uchar data[8]) {
 }
 
 static inline void handleFunctionWrite() {
+
 	int startOffset = (int) strtol(reinterpret_cast<const char*>(&buffer[0]),
 			NULL, 16);
 
