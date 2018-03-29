@@ -15,6 +15,7 @@
 #include <iostream>
 #include <iomanip>
 #include <chrono>
+#include <thread>
 #include <ctime>
 
 #include <cmath>
@@ -264,6 +265,9 @@ int main(int argc, char **argv) {
 						static_cast<int>(USBRequest::DATA_OUT), 0, 0,
 						(char *) buffer, sizeof(buffer), 5000);
 				printReceivedBytes(nBytes, buffer, "", false);
+
+				std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
 			}
 
 		}
