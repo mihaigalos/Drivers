@@ -1,8 +1,7 @@
 /**
- * Project: AVR ATtiny USB Tutorial at http://codeandlife.com/
- * Author: Joonas Pihlajamaa, joonas.pihlajamaa@iki.fi
- * Based on V-USB example code by Christian Starkjohann
- * Copyright: (C) 2012 by Joonas Pihlajamaa
+ * Author: Mihai Galos, Joonas Pihlajamaa
+ * Inspired by http://codeandlife.com
+ * Inspired by V-USB example code by Christian Starkjohann
  * License: GNU GPL v3 (see License.txt)
  */
 #include <stdio.h>
@@ -18,6 +17,7 @@
 #include <chrono>
 #include <ctime>
 
+#include <cmath>
 #include <functional>
 
 #include "i_usbRequest.h"
@@ -124,51 +124,51 @@ static usb_dev_handle * usbOpenDevice(int vendor, char *vendorName, int product,
 	return NULL;
 }
 
-void printReceivedBytes(int nBytes, char buffer[], std::string separator = "") {
-	std::cout << "Got " << nBytes << " bytes: " << std::endl;
+void printReceivedBytes(int nBytes, char buffer[], std::string separator = "",
+		bool print_bytecount = true) {
+	if (print_bytecount)
+		std::cout << "Got " << nBytes << " bytes: " << std::endl;
 	const uint16_t kIntelHexByteCount = 0x10;
 	const uint16_t kAddressIncrement = 0x10;
 	uint16_t crc = kIntelHexByteCount;
 
 	std::cout << std::uppercase << std::hex;
 
-	for (int i = 0; i < nBytes; ++i) {
+	auto printCrc = [&](uint16_t i) {
+		crc = -crc;
+		crc = static_cast<uint8_t>(crc);
+
+		std::cout << crc << std::endl;
+		crc = i;
+		crc += kAddressIncrement;
+	};
+
+	auto printNumberOfBytes =
+			[&] (uint16_t i) {
+				uint16_t div16 = static_cast<uint16_t>(i / kAddressIncrement)*kAddressIncrement;
+				std::cout << ":10";
+
+				if (!(0xF000 & div16))
+				std::cout << "0";
+				if (!(0x0F00 & div16))
+				std::cout << "0";
+				if (!(0x00F0 & div16))
+				std::cout << "0";
+
+				std::cout << div16;
+			};
+
+	auto printRecordType = [&] {
+		std::cout<<"00";
+	};
+
+	for (uint16_t i = 0; i < nBytes; ++i) {
 
 		if (0 == i % 16) {
 
-			auto printCrc = [&] {
-				if (i > 0) {
-
-					crc = -crc;
-					crc = static_cast<uint8_t>(crc);
-
-					std::cout << crc << std::endl;
-					crc = i;
-					crc += kAddressIncrement;
-				}
-			};
-
-			auto printNumberOfBytes =
-					[&] {
-						uint16_t div16 = static_cast<uint16_t>(i / kAddressIncrement)*kAddressIncrement;
-						std::cout << ":10";
-
-						if (!(0xF000 & div16))
-						std::cout << "0";
-						if (!(0x0F00 & div16))
-						std::cout << "0";
-						if (!(0x00F0 & div16))
-						std::cout << "0";
-
-						std::cout << div16;
-					};
-
-			auto printRecordType = [&] {
-				std::cout<<"00";
-			};
-
-			printCrc();
-			printNumberOfBytes();
+			if (i > 0)
+				printCrc(i);
+			printNumberOfBytes(i);
 			printRecordType();
 
 		}
@@ -183,7 +183,10 @@ void printReceivedBytes(int nBytes, char buffer[], std::string separator = "") {
 		//std::cout << std::endl << "    crc:" << std::hex << crc << std::endl;
 
 	}
-	std::cout << std::dec << std::nouppercase << std::endl;
+
+	printCrc(1);
+
+	std::cout << std::dec << std::nouppercase;
 }
 
 int main(int argc, char **argv) {
@@ -198,6 +201,7 @@ int main(int argc, char **argv) {
 		printf("usbtext.exe out\n");
 		printf("usbtext.exe write\n");
 		printf("usbtext.exe in <string>\n");
+		printf("usbtext.exe flashdump <decimal address>\n");
 		exit(1);
 	}
 	auto start = std::chrono::high_resolution_clock::now();
@@ -226,18 +230,44 @@ int main(int argc, char **argv) {
 				USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
 				static_cast<int>(USBRequest::DATA_OUT), 0, 0, (char *) buffer,
 				sizeof(buffer), 5000);
-		printf("Got %d bytes: %s\n", nBytes, buffer);
-		//printReceivedBytes(nBytes, buffer);
+//		printf("Got %d bytes: %s\n", nBytes, buffer);
+		printReceivedBytes(nBytes, buffer);
 	} else if (strcmp(argv[1], "write") == 0) {
 		nBytes = usb_control_msg(handle,
 				USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
 				static_cast<int>(USBRequest::DATA_WRITE), 'T' + ('E' << 8),
 				'S' + ('T' << 8), (char *) buffer, sizeof(buffer), 5000);
-	} else if (strcmp(argv[1], "in") == 0 && argc > 2) {
-		nBytes = usb_control_msg(handle,
-				USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_OUT,
-				static_cast<int>(USBRequest::DATA_IN), 0, 0, argv[2],
-				strlen(argv[2]) + 1, 5000);
+	} else if (strcmp(argv[1], "flashdump") == 0) {
+
+		if (argc > 2) {
+			nBytes = usb_control_msg(handle,
+					USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_OUT,
+					static_cast<int>(USBRequest::FLASH_DUMP_FROM_ADDRESS), 0, 0,
+					argv[2], strlen(argv[2]) + 1, 5000);
+		} else {
+			char address_dec[6] = "0";
+			constexpr double atmega328p_flash_size = 32 * 1024;
+			constexpr uint16_t repeat_count = static_cast<uint16_t>(std::ceil(
+					atmega328p_flash_size / static_cast<double>(kBufferSize)));
+
+			for (uint16_t i = 0; i < 3; ++i) {
+
+				sprintf(address_dec, "%d", i * kBufferSize);
+
+				nBytes = usb_control_msg(handle,
+						USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_OUT,
+						static_cast<int>(USBRequest::FLASH_DUMP_FROM_ADDRESS),
+						0, 0, address_dec, strlen(address_dec) + 1, 5000);
+
+				nBytes = usb_control_msg(handle,
+						USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
+						static_cast<int>(USBRequest::DATA_OUT), 0, 0,
+						(char *) buffer, sizeof(buffer), 5000);
+				printReceivedBytes(nBytes, buffer, "", false);
+			}
+
+		}
+
 	}
 
 	if (nBytes < 0)
