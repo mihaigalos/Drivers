@@ -125,36 +125,56 @@ static usb_dev_handle * usbOpenDevice(int vendor, char *vendorName, int product,
 	return NULL;
 }
 
-void printReceivedBytes(int nBytes, char buffer[], std::string separator = "",
-		bool print_bytecount = true) {
+void printReceivedBytes(uint16_t start_address, uint16_t nBytes, char buffer[],
+		std::string separator = "", bool print_bytecount = true) {
 	if (print_bytecount)
 		std::cout << "Got " << nBytes << " bytes: " << std::endl;
 	const uint16_t kIntelHexByteCount = 0x10;
 	const uint16_t kAddressIncrement = 0x10;
+
 	uint16_t crc = kIntelHexByteCount;
+	crc += static_cast<uint16_t>(static_cast<double>(start_address)
+			/ static_cast<double>(columnCount)) * columnCount;
+
+	bool is_added_address { false };
 
 	std::cout << std::uppercase << std::hex;
 
-	auto printCrc = [&](uint16_t i) {
+	auto printCrc = [&](uint16_t iteration_mod_column_count) {
 		crc = -crc;
 		crc = static_cast<uint8_t>(crc);
 
 		std::cout << crc << std::endl;
-		crc = i;
+
+		crc = iteration_mod_column_count;
 		crc += kAddressIncrement;
 	};
 
 	auto printNumberOfBytes =
 			[&] (uint16_t i) {
-				uint16_t div16 = static_cast<uint16_t>(i / kAddressIncrement)*kAddressIncrement;
+				uint16_t div16 = static_cast<uint16_t>(static_cast<double>(i+start_address) / static_cast<double>(kAddressIncrement))*kAddressIncrement;
+
+//				if(!is_added_address) {
+//
+//					std::cout << "	Adding :"<<static_cast<uint16_t>(static_cast<double>(i+start_address) / static_cast<double>(kBufferSize))*kAddressIncrement<<std::endl;
+//
+//					crc += static_cast<uint16_t>(static_cast<double>(i+start_address) / static_cast<double>(kBufferSize))*kAddressIncrement;
+//					is_added_address = true;
+//				}
+
 				std::cout << ":10";
 
 				if (!(0xF000 & div16))
-				std::cout << "0";
-				if (!(0x0F00 & div16))
-				std::cout << "0";
-				if (!(0x00F0 & div16))
-				std::cout << "0";
+				{
+					std::cout << "0";
+					if (!(0x0F00 & div16))
+					{
+						std::cout << "0";
+						if (!(0x00F0 & div16)) {
+							std::cout << "0";
+						}
+					}
+				}
 
 				std::cout << div16;
 			};
@@ -181,7 +201,7 @@ void printReceivedBytes(int nBytes, char buffer[], std::string separator = "",
 			std::cout << "0";
 		std::cout << value;
 		std::cout << separator;
-		//std::cout << std::endl << "    crc:" << std::hex << crc << std::endl;
+//		std::cout << std::endl << "    crc:" << std::hex << crc << std::endl;
 
 	}
 
@@ -232,7 +252,7 @@ int main(int argc, char **argv) {
 				static_cast<int>(USBRequest::DATA_OUT), 0, 0, (char *) buffer,
 				sizeof(buffer), 5000);
 //		printf("Got %d bytes: %s\n", nBytes, buffer);
-		printReceivedBytes(nBytes, buffer);
+		printReceivedBytes(0, nBytes, buffer);
 	} else if (strcmp(argv[1], "write") == 0) {
 		nBytes = usb_control_msg(handle,
 				USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
@@ -252,8 +272,8 @@ int main(int argc, char **argv) {
 					atmega328p_flash_size / static_cast<double>(kBufferSize)));
 
 			for (uint16_t i = 0; i < 3; ++i) {
-
-				sprintf(address_dec, "%x", i * kBufferSize);
+				uint16_t offset = i * kBufferSize;
+				sprintf(address_dec, "%x", offset);
 
 				nBytes = usb_control_msg(handle,
 						USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_OUT,
@@ -264,7 +284,7 @@ int main(int argc, char **argv) {
 						USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
 						static_cast<int>(USBRequest::DATA_OUT), 0, 0,
 						(char *) buffer, sizeof(buffer), 5000);
-				printReceivedBytes(nBytes, buffer, "", false);
+				printReceivedBytes(offset, nBytes, buffer, "", false);
 
 				std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
