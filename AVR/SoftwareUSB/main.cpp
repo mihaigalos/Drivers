@@ -9,18 +9,15 @@
 #include <avr/interrupt.h>
 #include <avr/wdt.h>
 
-#include "usbdrv.h"
+#include "usbdrv/usbdrv.h"
 
 #define F_CPU 16000000L
 #include <util/delay.h>
 
 #include <stdint.h>
 
-#define USB_LED_OFF 0
-#define USB_LED_ON  1
-#define USB_DATA_OUT 2
-#define USB_DATA_WRITE 3
-#define USB_DATA_IN 4
+#include "i_usbRequest.h"
+
 
 #define columnCount 31
 #define bytesPercolumn 8
@@ -39,26 +36,26 @@ void fillBufferFromFlash() {
 
 // this gets called when custom control message is received
 USB_PUBLIC uchar usbFunctionSetup(uchar data[8]) {
-	usbRequest_t *rq = (void *) data; // cast data to correct type
+	usbRequest_t *rq = reinterpret_cast<usbRequest_t *> (data); // cast data to correct type
 
-	switch (rq->bRequest) { // custom command is in the bRequest field
-	case USB_LED_ON:
+	switch (static_cast<USBRequest>(rq->bRequest)) { // custom command is in the bRequest field
+	case USBRequest::USB_LED_ON:
 		PORTD &= ~(1 << 0) & ~(1 << 1); // turn LED on
 		return 0;
-	case USB_LED_OFF:
+	case USBRequest::USB_LED_OFF:
 		PORTD |= (1 << 0) | (1 << 1); // turn LED off
 		return 0;
-	case USB_DATA_OUT: // send data to PC
+	case USBRequest::USB_DATA_OUT: // send data to PC
 		//fillBufferFromFlash();
 		usbMsgPtr = replyBuf;
 		return sizeof(replyBuf);
-	case USB_DATA_WRITE: // modify reply buffer
+	case USBRequest::USB_DATA_WRITE: // modify reply buffer
 		replyBuf[7] = rq->wValue.bytes[0];
 		replyBuf[8] = rq->wValue.bytes[1];
 		replyBuf[9] = rq->wIndex.bytes[0];
 		replyBuf[10] = rq->wIndex.bytes[1];
 		return 0;
-	case USB_DATA_IN: // receive data from PC
+	case USBRequest::USB_DATA_IN: // receive data from PC
 		dataLength = (uchar) rq->wLength.word;
 		dataReceived = 0;
 
@@ -81,7 +78,7 @@ USB_PUBLIC uchar usbFunctionWrite(uchar *data, uchar len) {
 	return (dataReceived == dataLength); // 1 if we received it all, 0 if not
 }
 
-void USB_INTR_VECTOR(void);
+extern "C" void USB_INTR_VECTOR(void);
 
 int main() {
 	uchar i;

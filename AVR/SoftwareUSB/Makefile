@@ -1,51 +1,45 @@
-# WinAVR cross-compiler toolchain is used here
-CC = avr-gcc
+MCU = atmega328p
+
+EXE = usbtest.exe
+HEX = software_usb.hex
+
+CC = avr-g++
 OBJCOPY = avr-objcopy
-DUDE = avrdude
 
-# If you are not using atmega328p and the USBtiny programmer, 
-# update the lines below to match your configuration
-CFLAGS = -std=c11 -Wall -Os -Iusbdrv -mmcu=atmega328p
+CFLAGS += -funsigned-char -funsigned-bitfields -O1 -ffunction-sections -fdata-sections
+CFLAGS += -fpack-struct -fshort-enums -g2 -Wall
+CFLAGS += -mmcu=$(MCU)  -c -std=c++11 -MD -MP -MF
+
+LDFLAGS += -Wl,-Map="memory_map.map" -Wl,--start-group -Wl,-lm  -Wl,--end-group -Wl,--gc-sections  -mmcu=$(MCU)
+
 OBJFLAGS = -j .text -j .data -O ihex
-DUDEFLAGS = -p atmega328p -c usbtiny -v
 
-# Object files for the firmware (usbdrv/oddebug.o not strictly needed I think)
-OBJECTS = usbdrv/usbdrv.o usbdrv/oddebug.o usbdrv/usbdrvasm.o main.o
+OBJECTS = usbdrv/usbdrvasm.o usbdrv/usbdrv.o usbdrv/oddebug.o main.o
 
-# Command-line client
-CMDLINE = usbtest.exe
+all: $(HEX) $(EXE)
 
-# By default, build the firmware and command-line client, but do not flash
-all: main.hex $(CMDLINE)
+$(EXE): usbtest.cpp
+	@echo
+	g++ -std=c++1y -I ./libusb/include -O -Wall usbtest.cpp ./libusb/lib/dynamic/libusb_dyn.c -o $@
 
-# With this, you can flash the firmware by just typing "make flash" on command-line
-flash: main.hex
-	$(DUDE) $(DUDEFLAGS) -U flash:w:$<
-
-# One-liner to compile the command-line client from usbtest.c
-$(CMDLINE): usbtest.cpp
-	g++ -std=c++1y -I ./libusb/include -O -Wall usbtest.cpp ./libusb/lib/dynamic/libusb_dyn.c -o usbtest.exe
-
-# Housekeeping if you want it
 clean:
-	$(RM) *.o *.hex *.elf usbdrv/*.o *.exe
+	$(RM)  *.d *.elf *.hex *.map *.o usbdrv/*.d usbdrv/*.o *.exe
 
-# From .elf file to .hex
 %.hex: %.elf
 	$(OBJCOPY) $(OBJFLAGS) $< $@
 
-# Main.elf requires additional objects to the firmware, not just main.o
-main.elf: $(OBJECTS)
-	$(CC) $(CFLAGS) $(OBJECTS) -o $@
+software_usb.elf: $(OBJECTS)
+	@echo
+	$(CC) $(LDFLAGS) $(OBJECTS) -o $@
 
-# Without this dependance, .o files will not be recompiled if you change 
-# the config! I spent a few hours debugging because of this...
-$(OBJECTS): usbdrv/usbconfig-prototype.h
+%.o: %.c
+	@echo
+	$(CC) $(CFLAGS) "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -c $< -o $@
 
-# From C source to .o object file
-%.o: %.c	
-	$(CC) $(CFLAGS) -c $< -o $@
+%.o: %.cpp
+	@echo
+	$(CC) $(CFLAGS) "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -c $< -o $@
 
-# From assembler source to .o object file
 %.o: %.S
-	$(CC) $(CFLAGS) -x assembler-with-cpp -c $< -o $@
+	@echo
+	$(CC) -mmcu=$(MCU) -Wa,-gdwarf2 -x assembler-with-cpp -c -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)" -Wa,-g    $< -o $@

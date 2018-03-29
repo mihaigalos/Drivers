@@ -13,6 +13,11 @@
 #include "usbconfig-prototype.h"
 #include "usbportability.h"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 /*
  Hardware Prerequisites:
  =======================
@@ -314,7 +319,7 @@ extern unsigned usbCrc16(unsigned data, uchar len);
  * data. We enforce 16 bit calling conventions for compatibility with IAR's
  * tiny memory model.
  */
-extern unsigned usbCrc16Append(unsigned data, uchar len);
+extern "C" unsigned usbCrc16Append(unsigned data, uchar len);
 #define usbCrc16Append(data, len)    usbCrc16Append((unsigned)(data), len)
 /* This function is equivalent to usbCrc16() above, except that it appends
  * the 2 bytes CRC (lowbyte first) in the 'data' buffer after reading 'len'
@@ -727,5 +732,9 @@ typedef struct usbRequest {
 #define USBRQ_HID_SET_PROTOCOL  0x0b
 
 /* ------------------------------------------------------------------------- */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __usbdrv_h_included__ */

@@ -11,6 +11,12 @@
 #ifndef __oddebug_h_included__
 #define __oddebug_h_included__
 
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 /*
 General Description:
 This module implements a function for debug logs on the serial line of the
@@ -116,6 +122,10 @@ static inline void  odDebugInit(void)
 }
 #else
 #   define odDebugInit()
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 /* ------------------------------------------------------------------------- */

@@ -20,12 +20,7 @@
 
 #include <functional>
 
-// same as in main.c
-#define USB_LED_OFF 0
-#define USB_LED_ON  1
-#define USB_DATA_OUT 2
-#define USB_DATA_WRITE 3
-#define USB_DATA_IN 4
+#include "i_usbRequest.h"
 
 // used to get descriptor strings for device identification 
 static int usbGetDescriptorString(usb_dev_handle *dev, int index, int langid,
@@ -218,27 +213,31 @@ int main(int argc, char **argv) {
 	if (strcmp(argv[1], "on") == 0) {
 		nBytes = usb_control_msg(handle,
 				USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
-				USB_LED_ON, 0, 0, (char *) buffer, sizeof(buffer), 5000);
+				static_cast<int>(USBRequest::USB_LED_ON), 0, 0, (char *) buffer,
+				sizeof(buffer), 5000);
 	} else if (strcmp(argv[1], "off") == 0) {
 		nBytes = usb_control_msg(handle,
 				USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
-				USB_LED_OFF, 0, 0, (char *) buffer, sizeof(buffer), 5000);
+				static_cast<int>(USBRequest::USB_LED_OFF), 0, 0,
+				(char *) buffer, sizeof(buffer), 5000);
 	} else if (strcmp(argv[1], "out") == 0) {
 
 		nBytes = usb_control_msg(handle,
 				USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
-				USB_DATA_OUT, 0, 0, (char *) buffer, sizeof(buffer), 5000);
+				static_cast<int>(USBRequest::USB_DATA_OUT), 0, 0,
+				(char *) buffer, sizeof(buffer), 5000);
 //		printf("Got %d bytes: %s\n", nBytes, buffer);
 		printReceivedBytes(nBytes, buffer);
 	} else if (strcmp(argv[1], "write") == 0) {
 		nBytes = usb_control_msg(handle,
 				USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
-				USB_DATA_WRITE, 'T' + ('E' << 8), 'S' + ('T' << 8),
-				(char *) buffer, sizeof(buffer), 5000);
+				static_cast<int>(USBRequest::USB_DATA_WRITE), 'T' + ('E' << 8),
+				'S' + ('T' << 8), (char *) buffer, sizeof(buffer), 5000);
 	} else if (strcmp(argv[1], "in") == 0 && argc > 2) {
 		nBytes = usb_control_msg(handle,
 				USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_OUT,
-				USB_DATA_IN, 0, 0, argv[2], strlen(argv[2]) + 1, 5000);
+				static_cast<int>(USBRequest::USB_DATA_IN), 0, 0, argv[2],
+				strlen(argv[2]) + 1, 5000);
 	}
 
 	if (nBytes < 0)

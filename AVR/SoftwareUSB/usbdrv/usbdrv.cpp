@@ -421,7 +421,7 @@ static inline usbMsgLen_t usbDriverSetup(usbRequest_t *rq) {
  * them accordingly.
  */
 static inline void usbProcessRx(uchar *data, uchar len) {
-	usbRequest_t *rq = (void *) data;
+	usbRequest_t *rq = reinterpret_cast<usbRequest_t *>(data);
 
 	/* usbRxToken can be:
 	 * 0x2d 00101101 (USBPID_SETUP for setup data)
