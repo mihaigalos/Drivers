@@ -140,8 +140,6 @@ void printReceivedBytes(uint16_t start_address, uint16_t nBytes, char buffer[],
 	crc += start_offset >> 8;
 	crc += static_cast<uint8_t>(start_offset);
 
-	bool is_added_address { false };
-
 	std::cout << std::uppercase << std::hex;
 
 	auto printCrc = [&](uint16_t iteration_mod_column_count) {
