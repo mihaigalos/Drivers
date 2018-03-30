@@ -137,7 +137,8 @@ void printReceivedBytes(uint16_t start_address, uint16_t nBytes, char buffer[],
 			static_cast<uint16_t>(static_cast<double>(start_address)
 					/ static_cast<double>(columnCount)) * columnCount;
 
-	crc += start_offset;
+	crc += start_offset >> 8;
+	crc += static_cast<uint8_t>(start_offset);
 
 	bool is_added_address { false };
 
@@ -164,14 +165,6 @@ void printReceivedBytes(uint16_t start_address, uint16_t nBytes, char buffer[],
 	auto printNumberOfBytes =
 			[&] (uint16_t i) {
 				uint16_t div16 = static_cast<uint16_t>(static_cast<double>(i+start_address) / static_cast<double>(kAddressIncrement))*kAddressIncrement;
-
-//				if(!is_added_address) {
-//
-//					std::cout << "	Adding :"<<static_cast<uint16_t>(static_cast<double>(i+start_address) / static_cast<double>(kBufferSize))*kAddressIncrement<<std::endl;
-//
-//					crc += static_cast<uint16_t>(static_cast<double>(i+start_address) / static_cast<double>(kBufferSize))*kAddressIncrement;
-//					is_added_address = true;
-//				}
 
 				std::cout << ":10";
 
@@ -282,7 +275,7 @@ int main(int argc, char **argv) {
 			constexpr uint16_t repeat_count = static_cast<uint16_t>(std::ceil(
 					atmega328p_flash_size / static_cast<double>(kBufferSize)));
 
-			for (uint16_t i = 0; i < 3; ++i) {
+			for (uint16_t i = 0; i < repeat_count; ++i) {
 				uint16_t offset = i * kBufferSize;
 				sprintf(address_dec, "%x", offset);
 
@@ -296,8 +289,6 @@ int main(int argc, char **argv) {
 						static_cast<int>(USBRequest::DATA_OUT), 0, 0,
 						(char *) buffer, sizeof(buffer), 5000);
 				printReceivedBytes(offset, nBytes, buffer, "", false);
-
-				std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
 			}
 
