@@ -133,8 +133,11 @@ void printReceivedBytes(uint16_t start_address, uint16_t nBytes, char buffer[],
 	const uint16_t kAddressIncrement = 0x10;
 
 	uint16_t crc = kIntelHexByteCount;
-	crc += static_cast<uint16_t>(static_cast<double>(start_address)
-			/ static_cast<double>(columnCount)) * columnCount;
+	uint16_t start_offset =
+			static_cast<uint16_t>(static_cast<double>(start_address)
+					/ static_cast<double>(columnCount)) * columnCount;
+
+	crc += start_offset;
 
 	bool is_added_address { false };
 
@@ -144,10 +147,18 @@ void printReceivedBytes(uint16_t start_address, uint16_t nBytes, char buffer[],
 		crc = -crc;
 		crc = static_cast<uint8_t>(crc);
 
+		if (crc < 16)
+		std::cout << "0";
+
 		std::cout << crc << std::endl;
 
-		crc = iteration_mod_column_count;
-		crc += kAddressIncrement;
+		crc = kAddressIncrement;
+
+		uint16_t foo = iteration_mod_column_count + start_offset;
+
+		crc += foo>>8;
+		crc += static_cast<uint8_t>(foo);
+
 	};
 
 	auto printNumberOfBytes =
