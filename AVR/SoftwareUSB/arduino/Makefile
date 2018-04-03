@@ -14,16 +14,16 @@ LDFLAGS += -Wl,-Map="memory_map.map" -Wl,--start-group -Wl,-lm  -Wl,--end-group 
 
 OBJFLAGS = -j .text -j .data -O ihex
 
-OBJECTS = usbdrv/usbdrvasm.o usbdrv/usbdrv.o usbdrv/oddebug.o main.o
+OBJECTS = usbdrvasm.o usbdrv.o oddebug.o
 
 all: $(EXE) $(HEX)
 
-$(EXE): usbtest.cpp
+$(EXE): usbtest.cxx
 	@echo
-	g++ -std=c++1y -I ./libusb/include -O -Wall usbtest.cpp ./libusb/lib/dynamic/libusb_dyn.c -o $@
+	g++ -std=c++1y -I ./libusb/include -O -Wall usbtest.cxx ./libusb/lib/dynamic/libusb_dyn.c -o $@
 
 clean:
-	$(RM)  *.d *.elf *.hex *.map *.o usbdrv/*.d usbdrv/*.o *.exe
+	$(RM)  *.d *.elf *.hex *.map *.o *.d *.o *.exe
 
 %.hex: %.elf
 	$(OBJCOPY) $(OBJFLAGS) $< $@
