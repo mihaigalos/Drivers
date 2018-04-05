@@ -92,8 +92,7 @@ USB_PUBLIC uchar usbFunctionWrite(uchar *data, uchar len) {
 SoftwareUSB::SoftwareUSB (){
   dataReceived =0;
   dataLength=0;
-	DDRD = (1 << 0 | 1 << 1); // PB0 as output
-	PORTD = 0xFE;
+
 //wdt_enable (WDTO_1S); // enable 1s watchdog timer
 //	fillBufferFromFlash();
 	usbInit();
