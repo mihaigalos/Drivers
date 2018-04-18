@@ -16,11 +16,20 @@ OBJFLAGS = -j .text -j .data -O ihex
 
 OBJECTS = usbdrvasm.o usbdrv.o oddebug.o
 
+UNAME := $(shell uname)
+
+ifeq ($(UNAME), Linux)
+  COMPILE_COMMAND = g++ -std=c++11 -lusb -O -Wall usbtest.cxx -o usbtest.bin
+else
+  COMPILE_COMMAND = g++ -std=c++1y -I ./libusb/include -O -Wall usbtest.cxx ./libusb/lib/dynamic/libusb_dyn.c -o $@
+endif
+
+
 all: $(EXE) $(HEX)
 
 $(EXE): usbtest.cxx
 	@echo
-	g++ -std=c++1y -I ./libusb/include -O -Wall usbtest.cxx ./libusb/lib/dynamic/libusb_dyn.c -o $@
+	$(COMPILE_COMMAND)
 
 clean:
 	$(RM)  *.d *.elf *.hex *.map *.o *.d *.o *.exe
