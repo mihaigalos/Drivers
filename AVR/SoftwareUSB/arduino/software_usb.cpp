@@ -135,9 +135,11 @@ USB_PUBLIC uchar SoftwareUSB::usbFunctionSetup(uchar data[8]) {
 
 	switch (static_cast<USBRequest>(rq->bRequest)) { // custom command is in the bRequest field
 	case USBRequest::LED_ON:
+		DDRD  |= (1 << 1);
 		PORTD &= ~(1 << 1); // turn LED on
 		return 0;
 	case USBRequest::LED_OFF:
+		DDRD  |= (1 << 1);
 		PORTD |= (1 << 1); // turn LED off
 		return 0;
 	case USBRequest::DATA_OUT: // send data to PC
