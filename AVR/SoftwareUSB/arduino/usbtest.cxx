@@ -222,7 +222,6 @@ int main(int argc, char **argv) {
 		printf("usbtext.exe on\n");
 		printf("usbtext.exe off\n");
 		printf("usbtext.exe out\n");
-		printf("usbtext.exe write\n");
 		printf("usbtext.exe in <string>\n");
 		printf("usbtext.exe flashdump <direct hex address literals>\n");
     printf("usbtext.exe reset\n");
@@ -254,13 +253,21 @@ int main(int argc, char **argv) {
 				USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
 				static_cast<int>(USBRequest::DATA_OUT), 0, 0, (char *) buffer,
 				sizeof(buffer), 5000);
-//		printf("Got %d bytes: %s\n", nBytes, buffer);
-		printReceivedBytes(0, nBytes, buffer);
-	} else if (strcmp(argv[1], "write") == 0) {
+		printf("Got %d bytes: %s\n", nBytes, buffer);
+		//printReceivedBytes(0, nBytes, buffer);
+	} else if (strcmp(argv[1], "inOOOOOLD") == 0) {
 		nBytes = usb_control_msg(handle,
 				USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
 				static_cast<int>(USBRequest::DATA_WRITE), 'T' + ('E' << 8),
 				'S' + ('T' << 8), (char *) buffer, sizeof(buffer), 5000);
+	} else if (strcmp(argv[1], "in") == 0) {
+    
+    strncpy(buffer, "This is an awesome test.", 26);
+    
+		nBytes = usb_control_msg(handle,
+				USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
+				static_cast<int>(USBRequest::DATA_WRITE), 0,
+				0, (char *) buffer, sizeof(buffer), 5000);
 	} else if (strcmp(argv[1], "flashdump") == 0) {
 
 		if (argc > 2) {

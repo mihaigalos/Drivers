@@ -1,10 +1,11 @@
 #pragma once
 
-#include "i_usbRequest.h"
-#include "usbdrv.h"
+#include <stdint.h>
 
-extern uchar buffer[kBufferSize];
-extern uchar dataReceived, dataLength; // for USB_DATA_IN
+#ifndef USB_PUBLIC
+  #define USB_PUBLIC
+#endif
+  
 
 class SoftwareUSB{
 
@@ -12,20 +13,18 @@ public:
 
   SoftwareUSB ();
   void spin();
-  uchar* getBuffer();
-  uchar getBufferLength();
+  uint8_t* getBuffer();
+  uint8_t getBufferLength();
 
-private:
-
-  void fillBufferFromFlash(uint16_t offset = 0);
+  static void fillBufferFromFlash(uint16_t offset = 0);
 
   // this gets called when custom control message is received
-  USB_PUBLIC uchar usbFunctionSetup(uchar data[8]);
+  static USB_PUBLIC uint8_t usbFunctionSetup(uint8_t data[8]);
 
-  inline void handleFunctionWrite();
+  static inline void handleFunctionWrite();
 
   // This gets called when data is sent from PC to the device
-  USB_PUBLIC uchar usbFunctionWrite(uchar *data, uchar len);
+  static USB_PUBLIC uint8_t usbFunctionWrite(uint8_t *data, uint8_t len);
 
 
 };

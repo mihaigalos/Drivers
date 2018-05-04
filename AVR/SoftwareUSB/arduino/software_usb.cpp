@@ -16,86 +16,21 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#include "software_usb.h"
 #include "i_usbRequest.h"
+#include "usbdrv.h"
+#include "software_usb.h"
+
 
 extern "C" void USB_INTR_VECTOR(void);
 
-uchar buffer[kBufferSize] {"Hello, USB!"};
-uchar dataReceived, dataLength; // for USB_DATA_IN
+uint8_t buffer[kBufferSize] {"Hello, USB!"};
+uint8_t dataReceived, dataLength; // for USB_DATA_IN
 
 [[noreturn]]
 void reset_microcontroller(){
     void(*resetFunc) (void) = 0;
     resetFunc();
 }
-
-void fillBufferFromFlash(uint16_t offset = 0) {
-	for (uint16_t i = 0; i < sizeof(buffer); ++i) {
-		buffer[i] = pgm_read_byte_near(i + offset);
-	}
-	offset += sizeof(buffer);
-}
-
-// this gets called when custom control message is received
-USB_PUBLIC uchar usbFunctionSetup(uchar data[8]) {
-	usbRequest_t *rq = reinterpret_cast<usbRequest_t *>(data); // cast data to correct type
-
-	switch (static_cast<USBRequest>(rq->bRequest)) { // custom command is in the bRequest field
-	case USBRequest::LED_ON:
-		PORTD &= ~(1 << 1); // turn LED on
-		return 0;
-	case USBRequest::LED_OFF:
-		PORTD |= (1 << 1); // turn LED off
-		return 0;
-	case USBRequest::DATA_OUT: // send data to PC
-		//fillBufferFromFlash();
-		usbMsgPtr = buffer;
-		return sizeof(buffer);
-	case USBRequest::DATA_WRITE: // modify reply buffer
-		buffer[7] = rq->wValue.bytes[0];
-		buffer[8] = rq->wValue.bytes[1];
-		buffer[9] = rq->wIndex.bytes[0];
-		buffer[10] = rq->wIndex.bytes[1];
-		return 0;
-
-	case USBRequest::FLASH_DUMP_FROM_ADDRESS: // receive data from PC
-
-		dataLength = (uchar) rq->wLength.word;
-		dataReceived = 0;
-
-		if (dataLength > sizeof(buffer)) // limit to buffer size
-			dataLength = sizeof(buffer);
-
-		return USB_NO_MSG; // usbFunctionWrite will be called now
-
-  case USBRequest::RESET:
-    reset_microcontroller();
-	}
-
-	return 0; // should not get here
-}
-
-void handleFunctionWrite() {
-
-	int startOffset = (int) strtol(reinterpret_cast<const char*>(&buffer[0]),
-			NULL, 16);
-
-	fillBufferFromFlash(startOffset);
-
-}
-
-// This gets called when data is sent from PC to the device
-USB_PUBLIC uchar usbFunctionWrite(uchar *data, uchar len) {
-	uchar i;
-	for (i = 0; dataReceived < dataLength && i < len; i++, dataReceived++)
-		buffer[dataReceived] = data[i];
-
-	handleFunctionWrite();
-
-	return (dataReceived == dataLength); // 1 if we received it all, 0 if not
-}
-
 
 SoftwareUSB::SoftwareUSB (){
   dataReceived =0;
@@ -106,7 +41,7 @@ SoftwareUSB::SoftwareUSB (){
 	usbInit();
 
 	usbDeviceDisconnect(); // enforce re-enumeration
-	for (uchar i = 0; i < 250; i++) { // wait 500 ms
+	for (uint8_t i = 0; i < 250; i++) { // wait 500 ms
 		wdt_reset(); // keep the watchdog happy
 		_delay_ms(2);
 	}
@@ -138,7 +73,7 @@ void SoftwareUSB::fillBufferFromFlash(uint16_t offset = 0) {
 }
 
 // this gets called when custom control message is received
-USB_PUBLIC uchar SoftwareUSB::usbFunctionSetup(uchar data[8]) {
+USB_PUBLIC uint8_t SoftwareUSB::usbFunctionSetup(uint8_t data[8]) {
 	usbRequest_t *rq = reinterpret_cast<usbRequest_t *>(data); // cast data to correct type
 
 	switch (static_cast<USBRequest>(rq->bRequest)) { // custom command is in the bRequest field
@@ -155,14 +90,8 @@ USB_PUBLIC uchar SoftwareUSB::usbFunctionSetup(uchar data[8]) {
 		usbMsgPtr = buffer;
 		return sizeof(buffer);
 	case USBRequest::DATA_WRITE: // modify reply buffer
-		buffer[7] = rq->wValue.bytes[0];
-		buffer[8] = rq->wValue.bytes[1];
-		buffer[9] = rq->wIndex.bytes[0];
-		buffer[10] = rq->wIndex.bytes[1];
-		return 0;
-
 	case USBRequest::FLASH_DUMP_FROM_ADDRESS: // receive data from PC
-		dataLength = (uchar) rq->wLength.word;
+		dataLength = (uint8_t) rq->wLength.word;
 		dataReceived = 0;
 
 		if (dataLength > sizeof(buffer)) // limit to buffer size
@@ -183,17 +112,17 @@ void SoftwareUSB::handleFunctionWrite() {
 
 }
 
-uchar* SoftwareUSB::getBuffer() {
+uint8_t* SoftwareUSB::getBuffer() {
   return &buffer[0];
 }
 
-uchar SoftwareUSB::getBufferLength() {
+uint8_t SoftwareUSB::getBufferLength() {
   return dataLength;
 }
 
 // This gets called when data is sent from PC to the device
-USB_PUBLIC uchar SoftwareUSB::usbFunctionWrite(uchar *data, uchar len) {
-	uchar i;
+USB_PUBLIC uint8_t SoftwareUSB::usbFunctionWrite(uint8_t *data, uint8_t len) {
+	uint8_t i;
 	for (i = 0; dataReceived < dataLength && i < len; i++, dataReceived++)
 		buffer[dataReceived] = data[i];
 
