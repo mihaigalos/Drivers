@@ -24,6 +24,11 @@ extern "C" void USB_INTR_VECTOR(void);
 uchar buffer[kBufferSize] {"Hello, USB!"};
 uchar dataReceived, dataLength; // for USB_DATA_IN
 
+[[noreturn]]
+void reset_microcontroller(){
+    void(*resetFunc) (void) = 0;
+    resetFunc();
+}
 
 void fillBufferFromFlash(uint16_t offset = 0) {
 	for (uint16_t i = 0; i < sizeof(buffer); ++i) {
@@ -63,6 +68,9 @@ USB_PUBLIC uchar usbFunctionSetup(uchar data[8]) {
 			dataLength = sizeof(buffer);
 
 		return USB_NO_MSG; // usbFunctionWrite will be called now
+
+  case USBRequest::RESET:
+    reset_microcontroller();
 	}
 
 	return 0; // should not get here
@@ -135,12 +143,12 @@ USB_PUBLIC uchar SoftwareUSB::usbFunctionSetup(uchar data[8]) {
 
 	switch (static_cast<USBRequest>(rq->bRequest)) { // custom command is in the bRequest field
 	case USBRequest::LED_ON:
-		DDRD  |= (1 << 1);
-		PORTD &= ~(1 << 1); // turn LED on
+    DDRD  |= (1 << 1);
+    PORTD &= ~(1 << 1); // turn LED on
 		return 0;
 	case USBRequest::LED_OFF:
-		DDRD  |= (1 << 1);
-		PORTD |= (1 << 1); // turn LED off
+    DDRD  |= (1 << 1);
+    PORTD |= (1 << 1); // turn LED off
 		return 0;
 	case USBRequest::DATA_OUT: // send data to PC
 		//fillBufferFromFlash();
@@ -154,7 +162,6 @@ USB_PUBLIC uchar SoftwareUSB::usbFunctionSetup(uchar data[8]) {
 		return 0;
 
 	case USBRequest::FLASH_DUMP_FROM_ADDRESS: // receive data from PC
-
 		dataLength = (uchar) rq->wLength.word;
 		dataReceived = 0;
 
@@ -174,6 +181,14 @@ void SoftwareUSB::handleFunctionWrite() {
 
 	fillBufferFromFlash(startOffset);
 
+}
+
+uchar* SoftwareUSB::getBuffer() {
+  return &buffer[0];
+}
+
+uchar SoftwareUSB::getBufferLength() {
+  return dataLength;
 }
 
 // This gets called when data is sent from PC to the device

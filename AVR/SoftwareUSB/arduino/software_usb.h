@@ -12,6 +12,8 @@ public:
 
   SoftwareUSB ();
   void spin();
+  uchar* getBuffer();
+  uchar getBufferLength();
 
 private:
 
