@@ -453,10 +453,11 @@ static inline void usbProcessRx(uint8_t *data, uint8_t len) {
 #if USB_CFG_IMPLEMENT_FN_READ || USB_CFG_IMPLEMENT_FN_WRITE
 		if(replyLen == USB_NO_MSG) { /* use user-supplied read/write function */
 			/* do some conditioning on replyLen, but on IN transfers only */
-			if((rq->bmRequestType & USBRQ_DIR_MASK) != USBRQ_DIR_HOST_TO_DEVICE) {
+      
+    	if((rq->bmRequestType & USBRQ_DIR_MASK) != USBRQ_DIR_HOST_TO_DEVICE) {
 				if(sizeof(replyLen) < sizeof(rq->wLength.word)) { /* help compiler with optimizing */
 					replyLen = rq->wLength.bytes[0];
-				} else {
+        } else {
 					replyLen = rq->wLength.word;
 				}
 			}
@@ -494,7 +495,7 @@ static uint8_t usbDeviceRead(uint8_t *data, uint8_t len) {
 	if (len > 0) { /* don't bother app with 0 sized reads */
 #if USB_CFG_IMPLEMENT_FN_READ
 		if(usbMsgFlags & USB_FLG_USE_USER_RW) {
-			len = usbFunctionRead(data, len);
+			len = SoftwareUSB::usbFunctionRead(data, len);
 		} else
 #endif
 		{
@@ -585,7 +586,7 @@ USB_PUBLIC void usbPoll(void) {
 	}
 	if (usbTxLen & 0x10) { /* transmit system idle */
 		if (usbMsgLen != USB_NO_MSG) { /* transmit data pending? */
-			usbBuildTxBlock();
+      usbBuildTxBlock();
 		}
 	}
 	for (i = 20; i > 0; i--) {

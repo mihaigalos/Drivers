@@ -215,7 +215,7 @@ void printReceivedBytes(uint16_t start_address, uint16_t nBytes, char buffer[],
 int main(int argc, char **argv) {
 	usb_dev_handle *handle = NULL;
 	int nBytes = 0;
-	char buffer[255];
+	char buffer[254];
 
 	if (argc < 2) {
 		printf("Usage:\n");
@@ -262,12 +262,12 @@ int main(int argc, char **argv) {
 				'S' + ('T' << 8), (char *) buffer, sizeof(buffer), 5000);
 	} else if (strcmp(argv[1], "in") == 0) {
     
-    strncpy(buffer, "This is an awesome test.", 26);
+    char buffer2 [] = "This is an awesome test.";
     
 		nBytes = usb_control_msg(handle,
-				USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
+				USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_OUT,
 				static_cast<int>(USBRequest::DATA_WRITE), 0,
-				0, (char *) buffer, sizeof(buffer), 5000);
+				0, (char *) buffer2, strlen(buffer2)+1, 5000);
 	} else if (strcmp(argv[1], "flashdump") == 0) {
 
 		if (argc > 2) {
@@ -276,19 +276,19 @@ int main(int argc, char **argv) {
 					static_cast<int>(USBRequest::FLASH_DUMP_FROM_ADDRESS), 0, 0,
 					argv[2], strlen(argv[2]) + 1, 5000);
 		} else {
-			char address_dec[6] = "0";
+			char address_hex[6] = "0";
 			constexpr double atmega328p_flash_size = 32 * 1024;
 			constexpr uint16_t repeat_count = static_cast<uint16_t>(std::ceil(
 					atmega328p_flash_size / static_cast<double>(kBufferSize)));
 
 			for (uint16_t i = 0; i < repeat_count; ++i) {
 				uint16_t offset = i * kBufferSize;
-				sprintf(address_dec, "%x", offset);
+				sprintf(address_hex, "%x", offset);
 
 				nBytes = usb_control_msg(handle,
 						USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_OUT,
 						static_cast<int>(USBRequest::FLASH_DUMP_FROM_ADDRESS),
-						0, 0, address_dec, strlen(address_dec) + 1, 5000);
+						0, 0, address_hex, strlen(address_hex) + 1, 5000);
 
 				nBytes = usb_control_msg(handle,
 						USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
