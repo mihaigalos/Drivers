@@ -261,13 +261,17 @@ int main(int argc, char **argv) {
 				static_cast<int>(USBRequest::DATA_WRITE), 'T' + ('E' << 8),
 				'S' + ('T' << 8), (char *) buffer, sizeof(buffer), 5000);
 	} else if (strcmp(argv[1], "in") == 0) {
-    
-    char buffer2 [] = "This is an awesome test.";
-    
-		nBytes = usb_control_msg(handle,
+     if (argc > 2) {
+			nBytes = usb_control_msg(handle,
+					USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_OUT,
+					static_cast<int>(USBRequest::FLASH_DUMP_FROM_ADDRESS), 0, 0,
+					argv[2], strlen(argv[2]) + 1, 5000);
+
+      nBytes = usb_control_msg(handle,
 				USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_OUT,
 				static_cast<int>(USBRequest::DATA_WRITE), 0,
-				0, (char *) buffer2, strlen(buffer2)+1, 5000);
+				0, argv[2], strlen(argv[2]) + 1, 5000);
+		}
 	} else if (strcmp(argv[1], "flashdump") == 0) {
 
 		if (argc > 2) {

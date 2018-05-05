@@ -27,6 +27,7 @@ uint8_t dataReceived, dataLength; // for USB_DATA_IN
 
 TFunc_void_puint8_uint8 SoftwareUSB::callback_on_usb_data_receive_;
 bool SoftwareUSB::is_dumping_flash_;
+bool SoftwareUSB::is_callback_perform_;
 
 [[noreturn]]
 void reset_microcontroller(){
@@ -61,7 +62,10 @@ void SoftwareUSB::spin() {
 
   wdt_reset(); // keep the watchdog happy
   usbPoll();
-
+  if(is_callback_perform_){
+    is_callback_perform_= false;
+    callback_on_usb_data_receive_(buffer, dataLength);
+  }
 }
 
 void SoftwareUSB::fillBufferFromFlash(uint16_t offset = 0) {
@@ -127,7 +131,7 @@ USB_PUBLIC uint8_t SoftwareUSB::usbFunctionWrite(uint8_t *data, uint8_t len) {
   if(is_dumping_flash_){
     handleFunctionWrite();
   }else if(is_fully_received && nullptr != callback_on_usb_data_receive_){
-    callback_on_usb_data_receive_(buffer, dataLength);
+    is_callback_perform_ = true;
   }
 
 	return is_fully_received; // 1 if we received it all, 0 if not
