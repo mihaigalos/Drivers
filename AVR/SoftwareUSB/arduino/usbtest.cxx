@@ -234,11 +234,13 @@ int main(int argc, char **argv) {
   cout << "Usage:" << endl;
   cout << "  exit" << endl;
   cout << "  flashdump <direct hex address literals>" << endl;
-  cout << "  in <string>" << endl;
+  cout << "  in <string>: send to usb device" << endl;
+  cout << "     in s<string>: send over radio" << endl;
+  cout << "     in r: receiveover radio" << endl;
   cout << "  list" << endl;
-  cout << "  on" << endl;
   cout << "  off" << endl;
-  cout << "  out" << endl;
+  cout << "  on" << endl;
+  cout << "  out: read from usb device" << endl;
   cout << "  use <device index>" << endl;
   cout << "  reset" << endl << endl;
 
@@ -268,7 +270,7 @@ int main(int argc, char **argv) {
                                            USB_ENDPOINT_IN,
                                static_cast<int>(USBRequest::DATA_OUT), 0, 0,
                                (char *)buffer, sizeof(buffer), 5000);
-      printf("Got %d bytes: %s\n", nBytes, buffer);
+      cout << "Got " << nBytes << " bytes: " << buffer << endl;
       // printReceivedBytes(0, nBytes, buffer);
     } else if ("inOOOOOLD" == command_with_parameters[0]) {
       nBytes = usb_control_msg(
@@ -276,16 +278,12 @@ int main(int argc, char **argv) {
           static_cast<int>(USBRequest::DATA_WRITE), 'T' + ('E' << 8),
           'S' + ('T' << 8), (char *)buffer, sizeof(buffer), 5000);
     } else if ("in" == command_with_parameters[0]) {
-      if (argc > 2) {
+      if (2 == command_with_parameters.size()) {
         nBytes = usb_control_msg(
             handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_OUT,
-            static_cast<int>(USBRequest::FLASH_DUMP_FROM_ADDRESS), 0, 0,
-            argv[2], strlen(argv[2]) + 1, 5000);
-
-        nBytes = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE |
-                                             USB_ENDPOINT_OUT,
-                                 static_cast<int>(USBRequest::DATA_WRITE), 0, 0,
-                                 argv[2], strlen(argv[2]) + 1, 5000);
+            static_cast<int>(USBRequest::DATA_WRITE), 0, 0,
+            const_cast<char *>(command_with_parameters.at(1).c_str()),
+            command_with_parameters.at(1).length() + 1, 5000);
       }
     } else if ("flashdump" == command_with_parameters[0]) {
 
@@ -293,7 +291,8 @@ int main(int argc, char **argv) {
         nBytes = usb_control_msg(
             handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_OUT,
             static_cast<int>(USBRequest::FLASH_DUMP_FROM_ADDRESS), 0, 0,
-            argv[2], strlen(argv[2]) + 1, 5000);
+            const_cast<char *>(command_with_parameters.at(1).c_str()),
+            command_with_parameters.at(1).length() + 1, 5000);
       } else {
         char address_hex[6] = "0";
         constexpr double atmega328p_flash_size = 32 * 1024;
@@ -333,15 +332,19 @@ int main(int argc, char **argv) {
         throw std::runtime_error("Could not find USB device!");
       } else {
 
-        cout << "Found \033[1;36m" << device_handles.size()
-             << "\033[0m devices." << endl;
+        cout << "Found \033[1;36m" << device_handles.size() << "\033[0m device";
 
+        if (1 < device_handles.size()) {
+          cout << "s";
+        }
+
+        cout << "." << endl;
         for (uint8_t i = 0; i < device_handles.size(); ++i) {
           cout << to_string(static_cast<long long>(i)) << ": " << hex
                << device_handles.at(i) << dec << endl;
         }
-        
-        if(nullptr == handle && device_handles.size() > 0){
+
+        if (nullptr == handle && device_handles.size() > 0) {
           handle = device_handles.at(0);
         }
       }
