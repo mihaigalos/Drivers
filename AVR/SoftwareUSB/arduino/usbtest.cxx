@@ -340,6 +340,10 @@ int main(int argc, char **argv) {
           cout << to_string(static_cast<long long>(i)) << ": " << hex
                << device_handles.at(i) << dec << endl;
         }
+        
+        if(nullptr == handle && device_handles.size() > 0){
+          handle = device_handles.at(0);
+        }
       }
 
     } else if ("use" == command_with_parameters[0]) {
