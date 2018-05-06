@@ -136,3 +136,9 @@ USB_PUBLIC uint8_t SoftwareUSB::usbFunctionWrite(uint8_t *data, uint8_t len) {
 
 	return is_fully_received; // 1 if we received it all, 0 if not
 }
+
+void SoftwareUSB::copyToUSBBuffer(uint8_t *data, uint8_t len){
+  for(uint8_t i = 0; i<len && i<kBufferSize;++i){
+    buffer[i] = data[i];
+  }
+}

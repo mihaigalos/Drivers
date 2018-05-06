@@ -20,8 +20,13 @@
 
 #include <cmath>
 #include <functional>
+#include <vector>
+#include <sstream>
+#include <iterator>
 
 #include "i_usbRequest.h"
+
+using namespace std;
 
 // used to get descriptor strings for device identification 
 static int usbGetDescriptorString(usb_dev_handle *dev, int index, int langid,
@@ -62,14 +67,22 @@ static int usbGetDescriptorString(usb_dev_handle *dev, int index, int langid,
 	return i - 1;
 }
 
-static usb_dev_handle * usbOpenDevice(int vendor, char *vendorName, int product,
+void onExit(const vector<usb_dev_handle*>& handles){
+  for(auto & handle : handles){
+    usb_close(handle);
+  }
+}
+
+static vector<usb_dev_handle*> usbOpenDevice(int vendor, char *vendorName, int product,
 		char *productName) {
 	struct usb_bus *bus;
 	struct usb_device *dev;
 	char devVendor[256], devProduct[256];
 
 	usb_dev_handle * handle = NULL;
-
+  vector<usb_dev_handle*> result;
+  
+  
 	usb_init();
 	usb_find_busses();
 	usb_find_devices();
@@ -82,17 +95,14 @@ static usb_dev_handle * usbOpenDevice(int vendor, char *vendorName, int product,
 
 			// we need to open the device in order to query strings 
 			if (!(handle = usb_open(dev))) {
-				fprintf(stderr, "Warning: cannot open USB device: %s\n",
-						usb_strerror());
+				cerr<<"Warning: cannot open USB device: "<< usb_strerror() << endl;
 				continue;
 			}
 
 			// get vendor name 
 			if (usbGetDescriptorString(handle, dev->descriptor.iManufacturer,
 					0x0409, devVendor, sizeof(devVendor)) < 0) {
-				fprintf(stderr,
-						"Warning: cannot query manufacturer for device: %s\n",
-						usb_strerror());
+				cerr<<"Warning: cannot query manufacturer for device: " << usb_strerror() << endl;
 				usb_close(handle);
 				continue;
 			}
@@ -100,35 +110,31 @@ static usb_dev_handle * usbOpenDevice(int vendor, char *vendorName, int product,
 			// get product name 
 			if (usbGetDescriptorString(handle, dev->descriptor.iProduct, 0x0409,
 					devProduct, sizeof(devVendor)) < 0) {
-				fprintf(stderr,
-						"Warning: cannot query product for device: %s\n",
-						usb_strerror());
+				cerr<<"Warning: cannot query product for device: " << usb_strerror() << endl;
 				usb_close(handle);
 				continue;
 			}
 
-			fprintf(stdout, "Found vendor: %s\n", devVendor);
-			fprintf(stdout, "Found product: %s\n\n", devProduct);
+			cout << "Found vendor: " << devVendor << endl;
+			cout << "Found product: "<< devProduct<< endl <<endl;
 
-			if (/*strcmp(devVendor, vendorName) == 0 && */
-			strcmp(devProduct, productName) == 0)
-				return handle;
+			if ( string(devProduct) == string(productName) )
+				//return handle;
+        result.push_back(handle);
 			else {
 				usb_close(handle);
-				fprintf(stderr,
-						"Cannot find usb device from : \nVendor: %s\nProduct: %s\n\n",
-						vendorName, productName);
+				cerr<<"Cannot find usb device from : \nVendor: "<<vendorName<<endl<<"Product: "<<productName <<endl;
 			}
 		}
 	}
 
-	return NULL;
+	return result;
 }
 
 void printReceivedBytes(uint16_t start_address, uint16_t nBytes, char buffer[],
-		std::string separator = "", bool print_bytecount = true) {
+		string separator = "", bool print_bytecount = true) {
 	if (print_bytecount)
-		std::cout << "Got " << nBytes << " bytes: " << std::endl;
+		cout << "Got " << nBytes << " bytes: " << endl;
 	const uint16_t kIntelHexByteCount = 0x10;
 	const uint16_t kAddressIncrement = 0x10;
 
@@ -140,16 +146,16 @@ void printReceivedBytes(uint16_t start_address, uint16_t nBytes, char buffer[],
 	crc += start_offset >> 8;
 	crc += static_cast<uint8_t>(start_offset);
 
-	std::cout << std::uppercase << std::hex;
+	cout << uppercase << hex;
 
 	auto printCrc = [&](uint16_t iteration_mod_column_count) {
 		crc = -crc;
 		crc = static_cast<uint8_t>(crc);
 
 		if (crc < 16)
-		std::cout << "0";
+		cout << "0";
 
-		std::cout << crc << std::endl;
+		cout << crc << endl;
 
 		crc = kAddressIncrement;
 
@@ -164,25 +170,25 @@ void printReceivedBytes(uint16_t start_address, uint16_t nBytes, char buffer[],
 			[&] (uint16_t i) {
 				uint16_t div16 = static_cast<uint16_t>(static_cast<double>(i+start_address) / static_cast<double>(kAddressIncrement))*kAddressIncrement;
 
-				std::cout << ":10";
+				cout << ":10";
 
 				if (!(0xF000 & div16))
 				{
-					std::cout << "0";
+					cout << "0";
 					if (!(0x0F00 & div16))
 					{
-						std::cout << "0";
+						cout << "0";
 						if (!(0x00F0 & div16)) {
-							std::cout << "0";
+							cout << "0";
 						}
 					}
 				}
 
-				std::cout << div16;
+				cout << div16;
 			};
 
 	auto printRecordType = [&] {
-		std::cout<<"00";
+		cout<<"00";
 	};
 
 	for (uint16_t i = 0; i < nBytes; ++i) {
@@ -200,54 +206,66 @@ void printReceivedBytes(uint16_t start_address, uint16_t nBytes, char buffer[],
 		crc += value;
 
 		if (value < 16)
-			std::cout << "0";
-		std::cout << value;
-		std::cout << separator;
-//		std::cout << std::endl << "    crc:" << std::hex << crc << std::endl;
+			cout << "0";
+		cout << value;
+		cout << separator;
+//		cout << endl << "    crc:" << hex << crc << endl;
 
 	}
 
 	printCrc(1);
 
-	std::cout << std::dec << std::nouppercase;
+	cout << dec << nouppercase;
+}
+
+vector<string> tokenize_string(const string& s){
+  std::stringstream ss(s);
+  std::istream_iterator<std::string> begin(ss);
+  std::istream_iterator<std::string> end;
+  std::vector<std::string> vstrings(begin, end);
+  
+  return vstrings;
 }
 
 int main(int argc, char **argv) {
 	usb_dev_handle *handle = NULL;
 	int nBytes = 0;
 	char buffer[254];
+	
+  cout<< "Usage:"<<endl;
+  cout<<"  exit"<<endl;
+  cout<<"  flashdump <direct hex address literals>"<<endl;
+  cout<<"  in <string>"<<endl;
+  cout<<"  list"<<endl;
+  cout<<"  on"<<endl;
+  cout<<"  off"<<endl;
+  cout<<"  out"<<endl;
+  cout<<"  use <device index>"<<endl;
+  cout<<"  reset"<<endl<<endl;
+  
+  
+  vector<usb_dev_handle *> device_handles;
+  uint8_t desired_device_index = 0;
+  
+  string command = "list";
+  string parameters;
+  
+  do {
+	auto start = chrono::high_resolution_clock::now();
+	auto command_with_parameters = tokenize_string(command);
 
-	if (argc < 2) {
-		printf("Usage:\n");
-		printf("usbtext.exe on\n");
-		printf("usbtext.exe off\n");
-		printf("usbtext.exe out\n");
-		printf("usbtext.exe in <string>\n");
-		printf("usbtext.exe flashdump <direct hex address literals>\n");
-    printf("usbtext.exe reset\n");
-		exit(1);
-	}
-	auto start = std::chrono::high_resolution_clock::now();
-	handle = usbOpenDevice(0x16C0, const_cast<char*>(std::string {
-			"Galos Industries" }.c_str()), 0x05DC,
-			const_cast<char*>(std::string { "DotPhat" }.c_str()));
-
-	if (handle == NULL) {
-		fprintf(stderr, "Could not find USB device!\n");
-		exit(1);
-	}
-
-	if (strcmp(argv[1], "on") == 0) {
+  
+	if ("on" == command_with_parameters[0]) {
 		nBytes = usb_control_msg(handle,
 				USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
 				static_cast<int>(USBRequest::LED_ON), 0, 0, (char *) buffer,
 				sizeof(buffer), 5000);
-	} else if (strcmp(argv[1], "off") == 0) {
+	} else if ("off" == command_with_parameters[0]) {
 		nBytes = usb_control_msg(handle,
 				USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
 				static_cast<int>(USBRequest::LED_OFF), 0, 0, (char *) buffer,
 				sizeof(buffer), 5000);
-	} else if (strcmp(argv[1], "out") == 0) {
+	} else if ("out" == command_with_parameters[0]) {
 
 		nBytes = usb_control_msg(handle,
 				USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
@@ -255,12 +273,12 @@ int main(int argc, char **argv) {
 				sizeof(buffer), 5000);
 		printf("Got %d bytes: %s\n", nBytes, buffer);
 		//printReceivedBytes(0, nBytes, buffer);
-	} else if (strcmp(argv[1], "inOOOOOLD") == 0) {
+	} else if ("inOOOOOLD" == command_with_parameters[0]) {
 		nBytes = usb_control_msg(handle,
 				USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
 				static_cast<int>(USBRequest::DATA_WRITE), 'T' + ('E' << 8),
 				'S' + ('T' << 8), (char *) buffer, sizeof(buffer), 5000);
-	} else if (strcmp(argv[1], "in") == 0) {
+	} else if ("in" == command_with_parameters[0]) {
      if (argc > 2) {
 			nBytes = usb_control_msg(handle,
 					USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_OUT,
@@ -272,7 +290,7 @@ int main(int argc, char **argv) {
 				static_cast<int>(USBRequest::DATA_WRITE), 0,
 				0, argv[2], strlen(argv[2]) + 1, 5000);
 		}
-	} else if (strcmp(argv[1], "flashdump") == 0) {
+	} else if ("flashdump" == command_with_parameters[0]) {
 
 		if (argc > 2) {
 			nBytes = usb_control_msg(handle,
@@ -282,7 +300,7 @@ int main(int argc, char **argv) {
 		} else {
 			char address_hex[6] = "0";
 			constexpr double atmega328p_flash_size = 32 * 1024;
-			constexpr uint16_t repeat_count = static_cast<uint16_t>(std::ceil(
+			constexpr uint16_t repeat_count = static_cast<uint16_t>(ceil(
 					atmega328p_flash_size / static_cast<double>(kBufferSize)));
 
 			for (uint16_t i = 0; i < repeat_count; ++i) {
@@ -304,22 +322,56 @@ int main(int argc, char **argv) {
 
 		}
 
-	} else if (strcmp(argv[1], "reset") == 0){
+	} else if ("reset" == command_with_parameters[0]){
     nBytes = usb_control_msg(handle,
         USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
         static_cast<int>(USBRequest::RESET), 0, 0, (char *) buffer,
         sizeof(buffer), 5000);
-  }
+  } else if ("list" == command_with_parameters[0]){
+    onExit(device_handles);
+    
+    device_handles = usbOpenDevice(0x16C0, const_cast<char*>(string {
+			"Galos Industries" }.c_str()), 0x05DC,
+			const_cast<char*>(string { "DotPhat" }.c_str()));
 
+    if (0 == device_handles.size()) {
+      throw std::runtime_error("Could not find USB device!");
+    } else {
+      
+      cout << "Found \033[1;36m"<<device_handles.size()<<"\033[0m devices."<<endl;
+      
+      for ( uint8_t i = 0;i<device_handles.size(); ++i){
+        cout<< to_string(static_cast<long long>(i)) <<": "<<hex<<device_handles.at(i)<<dec<<endl;
+      }
+    }
+    
+    
+  } else if ("use" == command_with_parameters[0]){
+    desired_device_index = stoi(command_with_parameters[1]);
+    if(desired_device_index < device_handles.size()){
+      handle = device_handles[desired_device_index];
+    } else {
+      cout << "Invalid index!"<<endl;
+    }
+  }
+  
 	if (nBytes < 0)
 		fprintf(stderr, "USB error: %s\n", usb_strerror());
 
-	usb_close(handle);
+	
 
-	auto elapsed = std::chrono::high_resolution_clock::now() - start;
-	long long microseconds = std::chrono::duration_cast
-			< std::chrono::milliseconds > (elapsed).count();
-	std::cout << "CPU time used: " << microseconds << " ms\n";
+	auto elapsed = chrono::high_resolution_clock::now() - start;
+	long long microseconds = chrono::duration_cast
+			< chrono::milliseconds > (elapsed).count();
+	cout << "CPU time used: " << microseconds << " ms\n";
 
+  cout << "> ";
+  getline (std::cin, command);
+  
+  
+  }while("exit" != command);
+  
+  onExit(device_handles);
+  
 	return 0;
 }
