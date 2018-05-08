@@ -24,6 +24,10 @@
 #include <sstream>
 #include <vector>
 
+#include <chrono>  // std::chrono::seconds
+#include <conio.h> // for kbhit
+#include <thread>  // std::this_thread::sleep_for
+
 #include "i_usbRequest.h"
 
 using namespace std;
@@ -226,6 +230,13 @@ vector<string> tokenize_string(const string &s) {
   return vstrings;
 }
 
+void run_until_keypressed(std::function<void()> callable) {
+  do {
+    callable();
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+  } while (!kbhit());
+}
+
 int main(int argc, char **argv) {
   usb_dev_handle *handle = NULL;
   int nBytes = 0;
@@ -251,6 +262,7 @@ int main(int argc, char **argv) {
   string parameters;
 
   do {
+
     auto start = chrono::high_resolution_clock::now();
     auto command_with_parameters = tokenize_string(command);
 
@@ -265,13 +277,24 @@ int main(int argc, char **argv) {
                                static_cast<int>(USBRequest::LED_OFF), 0, 0,
                                (char *)buffer, sizeof(buffer), 5000);
     } else if ("out" == command_with_parameters[0]) {
+      cout << "Looping dump. Press ESC to exit." << endl << endl;
+      auto callable = [&] {
+        nBytes = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE |
+                                             USB_ENDPOINT_IN,
+                                 static_cast<int>(USBRequest::DATA_OUT), 0, 0,
+                                 (char *)buffer, sizeof(buffer), 5000);
+        static string old_buffer;
+        if (string{buffer} != old_buffer) {
+          cout << "Got " << nBytes << " bytes: " << buffer << endl;
+          old_buffer = string{buffer};
+        }
+        // printReceivedBytes(0, nBytes, buffer);
 
-      nBytes = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE |
-                                           USB_ENDPOINT_IN,
-                               static_cast<int>(USBRequest::DATA_OUT), 0, 0,
-                               (char *)buffer, sizeof(buffer), 5000);
-      cout << "Got " << nBytes << " bytes: " << buffer << endl;
-      // printReceivedBytes(0, nBytes, buffer);
+      };
+
+      run_until_keypressed(callable);
+      std::this_thread::sleep_for(std::chrono::seconds(1));
+
     } else if ("inOOOOOLD" == command_with_parameters[0]) {
       nBytes = usb_control_msg(
           handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
@@ -362,11 +385,12 @@ int main(int argc, char **argv) {
       fprintf(stderr, "USB error: %s\n", usb_strerror());
 
     auto elapsed = chrono::high_resolution_clock::now() - start;
-    long long microseconds =
+    long long milliseconds =
         chrono::duration_cast<chrono::milliseconds>(elapsed).count();
-    cout << "CPU time used: " << microseconds << " ms\n";
+    cout << "CPU time used: " << milliseconds << " ms\n";
 
     cout << "> ";
+
     getline(std::cin, command);
 
   } while ("exit" != command);
