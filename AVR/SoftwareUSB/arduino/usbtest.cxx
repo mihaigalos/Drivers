@@ -27,9 +27,10 @@
 #include <chrono>  // std::chrono::seconds
 #include <conio.h> // for kbhit
 #include <thread>  // std::this_thread::sleep_for
+#include <time.h>  // for unix timestamps
 
+#include "eeprom_metadata.h"
 #include "i_usbRequest.h"
-
 using namespace std;
 
 // used to get descriptor strings for device identification
@@ -245,13 +246,15 @@ int main(int argc, char **argv) {
   cout << "Usage:" << endl;
   cout << "  exit" << endl;
   cout << "  flashdump <direct hex address literals>" << endl;
-  cout << "  in <string>: send to usb device" << endl;
-  cout << "     in s<string>: send over radio" << endl;
-  cout << "     in r: receiveover radio" << endl;
+  cout << "  in <predicate - see below>: send to usb device" << endl;
+  cout << "     e: dump eeprom metadata" << endl;
+  cout << "     s<string>: send over radio" << endl;
+  cout << "     r: receive over radio" << endl;
   cout << "  list" << endl;
   cout << "  off" << endl;
   cout << "  on" << endl;
-  cout << "  out: read from usb device" << endl;
+  cout << "  out: looping read from usb device" << endl;
+  cout << "  oute: read and parse eeprom metadata" << endl;
   cout << "  use <device index>" << endl;
   cout << "  reset" << endl << endl;
 
@@ -295,6 +298,70 @@ int main(int argc, char **argv) {
       run_until_keypressed(callable);
       std::this_thread::sleep_for(std::chrono::seconds(1));
 
+    } else if ("oute" == command_with_parameters[0]) {
+      cout << "Read and parsing eeprom metadata:" << endl << endl;
+      nBytes = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE |
+                                           USB_ENDPOINT_IN,
+                               static_cast<int>(USBRequest::DATA_OUT), 0, 0,
+                               (char *)buffer, sizeof(buffer), 5000);
+
+      cout << "Got " << nBytes << " bytes: " << buffer << endl;
+      auto eeprom_metadata = tokenize_string(buffer);
+
+      auto print_version = [](string tokenized_element, string text) {
+        uint16_t one_byte = 0;
+        std::istringstream iss(tokenized_element);
+        iss >> std::hex >> one_byte;
+
+        UVersionInfo version_info;
+        version_info.u_version_info = one_byte;
+
+        auto metadata_version = version_info.s_version_info;
+
+        cout << text;
+        cout << " v" << static_cast<uint16_t>(metadata_version.major) << "."
+             << static_cast<uint16_t>(metadata_version.minor) << "."
+             << static_cast<uint16_t>(metadata_version.patch) << "[Raw: 0x"
+             << hex << one_byte << "]" << dec << endl;
+
+      };
+
+      uint8_t one_byte = 0;
+      std::istringstream iss(eeprom_metadata.at(0));
+      iss >> std::hex >> one_byte;
+
+      print_version(eeprom_metadata.at(0), "Metadata version:");
+      print_version(eeprom_metadata.at(2), "Sofware version: ");
+      print_version(eeprom_metadata.at(7), "Hardware version:");
+
+      auto print_timestamp = [](vector<string> tokenized_elements,
+                                string text) {
+
+        cout << endl << text;
+        time_t epoch = 0;
+        uint8_t i = 0;
+        for (auto &element : tokenized_elements) {
+          uint16_t one_byte = 0;
+          std::istringstream iss(element);
+          iss >> std::hex >> one_byte;
+
+          epoch |= one_byte << (3 - i++) * 8;
+        }
+
+        cout << "\033[1;36m" << std::ctime(&epoch) << "\033[0m"
+             << "[Raw: 0x" << hex << static_cast<uint32_t>(epoch) << dec << "]"
+             << endl;
+      };
+
+      vector<string> software_version_last_updated_timestamp{
+          eeprom_metadata.begin() + 3, eeprom_metadata.begin() + 7};
+      vector<string> hardware_version_timestamp{eeprom_metadata.begin() + 8,
+                                                eeprom_metadata.begin() + 12};
+
+      print_timestamp(software_version_last_updated_timestamp,
+                      "SW Timestamp UTC: ");
+      print_timestamp(hardware_version_timestamp, "HW Timestamp UTC: ");
+
     } else if ("inOOOOOLD" == command_with_parameters[0]) {
       nBytes = usb_control_msg(
           handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
@@ -308,9 +375,9 @@ int main(int argc, char **argv) {
             const_cast<char *>(command_with_parameters.at(1).c_str()),
             command_with_parameters.at(1).length() + 1, 5000);
       }
-    } else if ("clear" == command_with_parameters[0]){
+    } else if ("clear" == command_with_parameters[0]) {
       std::cout << "\x1B[2J\x1B[H";
-    }else if ("flashdump" == command_with_parameters[0]) {
+    } else if ("flashdump" == command_with_parameters[0]) {
 
       if (argc > 2) {
         nBytes = usb_control_msg(
@@ -389,7 +456,7 @@ int main(int argc, char **argv) {
     auto elapsed = chrono::high_resolution_clock::now() - start;
     long long milliseconds =
         chrono::duration_cast<chrono::milliseconds>(elapsed).count();
-    cout << "CPU time used: " << milliseconds << " ms\n";
+    cout << endl << "CPU time used: " << milliseconds << " ms\n";
 
     cout << "> ";
 
