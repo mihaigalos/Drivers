@@ -24,10 +24,11 @@
 #include <sstream>
 #include <vector>
 
-#include <chrono>  // std::chrono::seconds
-#include <conio.h> // for kbhit
-#include <thread>  // std::this_thread::sleep_for
-#include <time.h>  // for unix timestamps
+#include <algorithm> // for std::remove
+#include <chrono>    // std::chrono::seconds
+#include <conio.h>   // for kbhit
+#include <thread>    // std::this_thread::sleep_for
+#include <time.h>    // for unix timestamps
 
 #include "eeprom_metadata.h"
 #include "i_usbRequest.h"
@@ -318,11 +319,13 @@ int main(int argc, char **argv) {
 
         auto metadata_version = version_info.s_version_info;
 
-        cout << text;
-        cout << " v" << static_cast<uint16_t>(metadata_version.major) << "."
+        cout << text << " ";
+        cout << "\033[1;33m"
+             << "\033[1;46m"
+             << "v" << static_cast<uint16_t>(metadata_version.major) << "."
              << static_cast<uint16_t>(metadata_version.minor) << "."
-             << static_cast<uint16_t>(metadata_version.patch) << "[Raw: 0x"
-             << hex << one_byte << "]" << dec << endl;
+             << static_cast<uint16_t>(metadata_version.patch) << "\033[0m"
+             << " [Raw: 0x" << hex << one_byte << "]" << dec << endl;
 
       };
 
@@ -332,10 +335,10 @@ int main(int argc, char **argv) {
 
       print_version(eeprom_metadata.at(0), "Metadata version:");
       print_version(eeprom_metadata.at(2), "Sofware version: ");
-      print_version(eeprom_metadata.at(7), "Hardware version:");
+      print_version(eeprom_metadata.at(8), "Hardware version:");
 
-      auto print_timestamp = [](vector<string> tokenized_elements,
-                                string text) {
+      auto print_timestamp = [](vector<string> &tokenized_elements,
+                                string time_zone_info, string text) {
 
         cout << endl << text;
         time_t epoch = 0;
@@ -348,19 +351,67 @@ int main(int argc, char **argv) {
           epoch |= one_byte << (3 - i++) * 8;
         }
 
-        cout << "\033[1;36m" << std::ctime(&epoch) << "\033[0m"
-             << "[Raw: 0x" << hex << static_cast<uint32_t>(epoch) << dec << "]"
-             << endl;
+        uint16_t uint16_tzi = 0;
+        std::istringstream iss(time_zone_info);
+        iss >> std::hex >> uint16_tzi;
+
+        UTimeZoneInfo tzi;
+        tzi.u_timezone_info = uint16_tzi;
+
+        string utc_sign = tzi.s_timezone_info.timezone_sign ? "+" : "-";
+        auto time_offset = tzi.s_timezone_info.utc_offset;
+
+        if (!tzi.s_timezone_info.timezone_sign)
+          time_offset = -time_offset;
+
+        string is_daylight_saving;
+        if (tzi.s_timezone_info.is_daylight_saving_active &&
+            !tzi.s_timezone_info.is_china_time) {
+          time_offset += 1;
+          is_daylight_saving = " (+1 Daylight saving included)";
+        } else {
+          is_daylight_saving = " No Daylight saving";
+        }
+
+        std::tm myEpoch = *std::gmtime(&epoch);
+        if (tzi.s_timezone_info.is_daylight_saving_active) {
+          myEpoch.tm_hour = myEpoch.tm_hour - tzi.s_timezone_info.utc_offset;
+          if (tzi.s_timezone_info.is_china_time) {
+            --myEpoch.tm_hour;
+          }
+        }
+
+        auto make_time = mktime(&myEpoch);
+        string c_time = std::ctime(&make_time);
+
+        c_time.erase(std::remove(c_time.begin(), c_time.end(), '\n'),
+                     c_time.end());
+
+        cout << "\033[1;36m" << c_time
+
+             << "\033[1;35m"
+             << " UTC" << utc_sign
+             << to_string(static_cast<uint32_t>(time_offset)) << "\033[1;36m"
+             << is_daylight_saving << "."
+             << "\033[0m" << endl
+             << "[Raw hex: " << hex << static_cast<uint32_t>(epoch) << dec
+             << "]";
+
+        cout << endl;
       };
 
       vector<string> software_version_last_updated_timestamp{
-          eeprom_metadata.begin() + 3, eeprom_metadata.begin() + 7};
-      vector<string> hardware_version_timestamp{eeprom_metadata.begin() + 8,
-                                                eeprom_metadata.begin() + 12};
+          eeprom_metadata.begin() + 4, eeprom_metadata.begin() + 8};
+      vector<string> hardware_version_timestamp{eeprom_metadata.begin() + 10,
+                                                eeprom_metadata.begin() + 14};
+
+      auto sofware_timezone_info = eeprom_metadata.at(3);
+      auto hardware_timezone_info = eeprom_metadata.at(9);
 
       print_timestamp(software_version_last_updated_timestamp,
-                      "SW Timestamp UTC: ");
-      print_timestamp(hardware_version_timestamp, "HW Timestamp UTC: ");
+                      sofware_timezone_info, "SW Timestamp : ");
+      print_timestamp(hardware_version_timestamp, hardware_timezone_info,
+                      "HW Timestamp : ");
 
     } else if ("inOOOOOLD" == command_with_parameters[0]) {
       nBytes = usb_control_msg(
