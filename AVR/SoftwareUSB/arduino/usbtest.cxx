@@ -34,6 +34,9 @@
 #include "i_usbRequest.h"
 using namespace std;
 
+constexpr uint16_t vendor_id {0x16C0};
+constexpr uint16_t device_id {0x05DC};
+
 // used to get descriptor strings for device identification
 static int usbGetDescriptorString(usb_dev_handle *dev, int index, int langid,
                                   char *buf, int buflen) {
@@ -142,7 +145,7 @@ static vector<usb_dev_handle *> usbOpenDevice(int vendor, char *vendorName,
 void printReceivedBytes(uint16_t start_address, uint16_t nBytes, char buffer[],
                         string separator = "", bool print_bytecount = true) {
   if (print_bytecount)
-    cout << "Got " << nBytes << " bytes: " << endl;
+    cout << "Got bytes: " << endl;
   const uint16_t kIntelHexByteCount = 0x10;
   const uint16_t kAddressIncrement = 0x10;
 
@@ -215,11 +218,9 @@ void printReceivedBytes(uint16_t start_address, uint16_t nBytes, char buffer[],
       cout << "0";
     cout << value;
     cout << separator;
-    //		cout << endl << "    crc:" << hex << crc << endl;
   }
 
   printCrc(1);
-
   cout << dec << nouppercase;
 }
 
@@ -239,6 +240,26 @@ void run_until_keypressed(std::function<void()> callable) {
   } while (!kbhit());
 }
 
+void looping_dump(usb_dev_handle *handle, char *buffer){
+  cout << "Looping dump. Press ESC to exit." << endl << endl;
+  auto callable = [&] {
+    usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE |
+                                         USB_ENDPOINT_IN,
+                             static_cast<int>(USBRequest::DATA_OUT), 0, 0,
+                             (char *)buffer, sizeof(buffer), 5000);
+    static string old_buffer;
+    if (string{buffer} != old_buffer)
+    {
+      cout << "Got bytes: " << buffer << endl;
+      old_buffer = string{buffer};
+    }
+
+  };
+
+  run_until_keypressed(callable);
+  std::this_thread::sleep_for(std::chrono::seconds(1));
+}
+
 int main(int argc, char **argv) {
   usb_dev_handle *handle = NULL;
   int nBytes = 0;
@@ -248,8 +269,8 @@ int main(int argc, char **argv) {
   cout << "  exit" << endl;
   cout << "  flashdump <direct hex address literals>" << endl;
   cout << "  in <predicate - see below>: send to usb device" << endl;
-  cout << "     e: dump eeprom metadata" << endl;
-  cout << "     s<string>: send over radio" << endl;
+  cout << "     s:[frequence in millisecond multiples of 100ms[:max count]]:<string>: send over radio" << endl;
+  cout << "       example: in s:5:HelloWorld"<<endl;
   cout << "     r: receive over radio" << endl;
   cout << "  list" << endl;
   cout << "  off" << endl;
@@ -281,32 +302,22 @@ int main(int argc, char **argv) {
                                static_cast<int>(USBRequest::LED_OFF), 0, 0,
                                (char *)buffer, sizeof(buffer), 5000);
     } else if ("out" == command_with_parameters[0]) {
-      cout << "Looping dump. Press ESC to exit." << endl << endl;
-      auto callable = [&] {
-        nBytes = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE |
-                                             USB_ENDPOINT_IN,
-                                 static_cast<int>(USBRequest::DATA_OUT), 0, 0,
-                                 (char *)buffer, sizeof(buffer), 5000);
-        static string old_buffer;
-        if (string{buffer} != old_buffer) {
-          cout << "Got " << nBytes << " bytes: " << buffer << endl;
-          old_buffer = string{buffer};
-        }
-        // printReceivedBytes(0, nBytes, buffer);
-
-      };
-
-      run_until_keypressed(callable);
-      std::this_thread::sleep_for(std::chrono::seconds(1));
-
+      looping_dump(handle, buffer);
     } else if ("oute" == command_with_parameters[0]) {
+
+      nBytes = usb_control_msg(
+            handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_OUT,
+            static_cast<int>(USBRequest::DATA_WRITE), 0, 0,
+            const_cast<char *>("e"),
+            2, 5000);
+
       cout << "Read and parsing eeprom metadata:" << endl << endl;
       nBytes = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE |
                                            USB_ENDPOINT_IN,
                                static_cast<int>(USBRequest::DATA_OUT), 0, 0,
                                (char *)buffer, sizeof(buffer), 5000);
 
-      cout << "Got " << nBytes << " bytes: " << buffer << endl;
+      cout << "Got bytes: " << buffer << endl;
       auto eeprom_metadata = tokenize_string(buffer);
 
       auto print_version = [](string tokenized_element, string text) {
@@ -413,11 +424,6 @@ int main(int argc, char **argv) {
       print_timestamp(hardware_version_timestamp, hardware_timezone_info,
                       "HW Timestamp : ");
 
-    } else if ("inOOOOOLD" == command_with_parameters[0]) {
-      nBytes = usb_control_msg(
-          handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN,
-          static_cast<int>(USBRequest::DATA_WRITE), 'T' + ('E' << 8),
-          'S' + ('T' << 8), (char *)buffer, sizeof(buffer), 5000);
     } else if ("in" == command_with_parameters[0]) {
       if (2 == command_with_parameters.size()) {
         nBytes = usb_control_msg(
@@ -468,8 +474,8 @@ int main(int argc, char **argv) {
       onExit(device_handles);
 
       device_handles = usbOpenDevice(
-          0x16C0, const_cast<char *>(string{"Galos Industries"}.c_str()),
-          0x05DC, const_cast<char *>(string{"DotPhat"}.c_str()));
+          vendor_id, const_cast<char *>(string{"Galos Industries"}.c_str()),
+          device_id, const_cast<char *>(string{"DotPhat"}.c_str()));
 
       if (0 == device_handles.size()) {
         throw std::runtime_error("Could not find USB device!");
