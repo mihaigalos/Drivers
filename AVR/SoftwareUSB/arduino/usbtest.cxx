@@ -23,6 +23,8 @@
 #include <iterator>
 #include <sstream>
 #include <vector>
+#include <memory>
+#include <map>
 
 #include <algorithm> // for std::remove
 #include <chrono>    // std::chrono::seconds
@@ -260,7 +262,144 @@ void looping_dump(usb_dev_handle *handle, char *buffer){
   std::this_thread::sleep_for(std::chrono::seconds(1));
 }
 
+
+
+class Command {
+public:
+  using EndpointIO = int;
+
+  auto execute(std::vector<string>& args = empty_vector_) -> int{
+    auto result = 0;
+    std::tuple<EndpointIO, USBRequest> parameters = run (args);
+    std::cout <<std::endl<<std::endl<<"In execute!"<<std::endl;
+    auto request = std::get<1>(parameters);
+    if(USBRequest::Unknown != request){
+      result = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE |
+        std::get<0>(parameters),
+        static_cast<int>(std::get<1>(parameters)), 0, 0,
+        (char *)buffer, sizeof(buffer), 5000);
+    }
+    return result;
+
+  }
+protected:
+   virtual std::tuple<EndpointIO, USBRequest> run(std::vector<string>& args) = 0;
+private:
+   static std::vector<std::string> empty_vector_;
+   usb_dev_handle *handle = NULL;
+   char buffer[254];
+};
+
+
+class ExitCommand : public Command{
+public:
+  std::tuple<EndpointIO, USBRequest> run(std::vector<string>& args){
+    return std::tuple<EndpointIO, USBRequest>(EndpointIO(), USBRequest());
+  }
+};
+class FlashDumpCommand : public Command{
+public:
+  std::tuple<EndpointIO, USBRequest> run(std::vector<string>& args){
+    return std::tuple<EndpointIO, USBRequest>(EndpointIO(), USBRequest());
+  }
+};
+class InCommand : public Command{
+public:
+  std::tuple<EndpointIO, USBRequest> run(std::vector<string>& args){
+    return std::tuple<EndpointIO, USBRequest>(EndpointIO(), USBRequest());
+  }
+};
+class OutCommand : public Command{
+public:
+  std::tuple<EndpointIO, USBRequest> run(std::vector<string>& args){
+    return std::tuple<EndpointIO, USBRequest>(EndpointIO(), USBRequest());
+  }
+};
+
+class OffCommand : public Command{
+public:
+  std::tuple<EndpointIO, USBRequest> run(std::vector<string>& args){
+    return std::tuple<EndpointIO, USBRequest>(EndpointIO(), USBRequest());
+  }
+};
+class OnCommand : public Command{
+public:
+  std::tuple<EndpointIO, USBRequest> run(std::vector<string>& args){
+    return std::tuple<EndpointIO, USBRequest>(EndpointIO(), USBRequest());
+  }
+};
+class OuteCommand : public Command{
+public:
+  std::tuple<EndpointIO, USBRequest> run(std::vector<string>& args){
+    return std::tuple<EndpointIO, USBRequest>(EndpointIO(), USBRequest());
+  }
+};
+class UseCommand : public Command{
+public:
+  std::tuple<EndpointIO, USBRequest> run(std::vector<string>& args){
+
+    desired_device_index = stoi(args[1]);
+      if (desired_device_index < device_handles.size()) {
+        handle = device_handles[desired_device_index];
+      } else {
+        cout << "Invalid index!" << endl;
+      }
+
+    return std::tuple<EndpointIO, USBRequest>(EndpointIO(), USBRequest());
+  }
+private:
+  std::vector<usb_dev_handle *> device_handles;
+};
+class ResetCommand : public Command{
+public:
+  std::tuple<EndpointIO, USBRequest> run(std::vector<string>& args){
+    return std::tuple<EndpointIO, USBRequest>(EndpointIO(), USBRequest());
+  }
+};
+class ListCommand : public Command{
+public:
+  std::tuple<EndpointIO, USBRequest> run(std::vector<string>& args){
+    cout << "Usage:" << endl;
+    cout << "  exit" << endl;
+    cout << "  flashdump <direct hex address literals>" << endl;
+    cout << "  in <predicate - see below>: send to usb device" << endl;
+    cout << "     s:[frequence in millisecond multiples of 100ms[:max count]]:<string>: send over radio" << endl;
+    cout << "       example: in s:5:HelloWorld"<<endl;
+    cout << "     r: receive over radio" << endl;
+    cout << "  list" << endl;
+    cout << "  off" << endl;
+    cout << "  on" << endl;
+    cout << "  out: looping read from usb device" << endl;
+    cout << "  oute: read and parse eeprom metadata" << endl;
+    cout << "  use <device index>" << endl;
+    cout << "  reset" << endl << endl;
+    return std::tuple<EndpointIO, USBRequest>(EndpointIO(), USBRequest());
+  }
+
+};
+
+
+template <typename T>
+std::unique_ptr<Command> creator() {
+  return std::unique_ptr<T>(new T());
+}
+
+using CommandMap = std::map<std::string, std::unique_ptr<Command>(*)()>;
+CommandMap command_map {
+  {"exit", &creator<ExitCommand>},
+  {"flashdump", &creator<FlashDumpCommand>},
+  {"in", &creator<InCommand>},
+  {"out", &creator<OutCommand>},
+  {"list", &creator<ListCommand>},
+  {"off", &creator<OffCommand>},
+  {"on", &creator<OnCommand>},
+  {"oute", &creator<OuteCommand>},
+  {"use", &creator<UseCommand>},
+  {"reset", &creator<ResetCommand>}
+};
+
 int main(int argc, char **argv) {
+
   usb_dev_handle *handle = NULL;
   int nBytes = 0;
   char buffer[254];
@@ -291,221 +430,222 @@ int main(int argc, char **argv) {
     auto start = chrono::high_resolution_clock::now();
     auto command_with_parameters = tokenize_string(command);
 
-    if ("on" == command_with_parameters[0]) {
-      nBytes = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE |
-                                           USB_ENDPOINT_IN,
-                               static_cast<int>(USBRequest::LED_ON), 0, 0,
-                               (char *)buffer, sizeof(buffer), 5000);
-    } else if ("off" == command_with_parameters[0]) {
-      nBytes = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE |
-                                           USB_ENDPOINT_IN,
-                               static_cast<int>(USBRequest::LED_OFF), 0, 0,
-                               (char *)buffer, sizeof(buffer), 5000);
-    } else if ("out" == command_with_parameters[0]) {
-      looping_dump(handle, buffer);
-    } else if ("oute" == command_with_parameters[0]) {
-
-      nBytes = usb_control_msg(
-            handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_OUT,
-            static_cast<int>(USBRequest::DATA_WRITE), 0, 0,
-            const_cast<char *>("e"),
-            2, 5000);
-
-      cout << "Read and parsing eeprom metadata:" << endl << endl;
-      nBytes = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE |
-                                           USB_ENDPOINT_IN,
-                               static_cast<int>(USBRequest::DATA_OUT), 0, 0,
-                               (char *)buffer, sizeof(buffer), 5000);
-
-      cout << "Got bytes: " << buffer << endl;
-      auto eeprom_metadata = tokenize_string(buffer);
-
-      auto print_version = [](string tokenized_element, string text) {
-        uint16_t one_byte = 0;
-        std::istringstream iss(tokenized_element);
-        iss >> std::hex >> one_byte;
-
-        UVersionInfo version_info;
-        version_info.u_version_info = one_byte;
-
-        auto metadata_version = version_info.s_version_info;
-
-        cout << text << " ";
-        cout << "\033[1;33m"
-             << "\033[1;46m"
-             << "v" << static_cast<uint16_t>(metadata_version.major) << "."
-             << static_cast<uint16_t>(metadata_version.minor) << "."
-             << static_cast<uint16_t>(metadata_version.patch) << "\033[0m"
-             << " [Raw: 0x" << hex << one_byte << "]" << dec << endl;
-
-      };
-
-      uint8_t one_byte = 0;
-      std::istringstream iss(eeprom_metadata.at(0));
-      iss >> std::hex >> one_byte;
-
-      print_version(eeprom_metadata.at(0), "Metadata version:");
-      print_version(eeprom_metadata.at(2), "Sofware version: ");
-      print_version(eeprom_metadata.at(8), "Hardware version:");
-
-      auto print_timestamp = [](vector<string> &tokenized_elements,
-                                string time_zone_info, string text) {
-
-        cout << endl << text;
-        time_t epoch = 0;
-        uint8_t i = 0;
-        for (auto &element : tokenized_elements) {
-          uint16_t one_byte = 0;
-          std::istringstream iss(element);
-          iss >> std::hex >> one_byte;
-
-          epoch |= one_byte << (3 - i++) * 8;
-        }
-
-        uint16_t uint16_tzi = 0;
-        std::istringstream iss(time_zone_info);
-        iss >> std::hex >> uint16_tzi;
-
-        UTimeZoneInfo tzi;
-        tzi.u_timezone_info = uint16_tzi;
-
-        string utc_sign = tzi.s_timezone_info.timezone_sign ? "+" : "-";
-        auto time_offset = tzi.s_timezone_info.utc_offset;
-
-        if (!tzi.s_timezone_info.timezone_sign)
-          time_offset = -time_offset;
-
-        string is_daylight_saving;
-        if (tzi.s_timezone_info.is_daylight_saving_active &&
-            !tzi.s_timezone_info.is_china_time) {
-          time_offset += 1;
-          is_daylight_saving = " (+1 Daylight saving included)";
-        } else {
-          is_daylight_saving = " No Daylight saving";
-        }
-
-        std::tm myEpoch = *std::gmtime(&epoch);
-        if (tzi.s_timezone_info.is_daylight_saving_active) {
-          myEpoch.tm_hour = myEpoch.tm_hour - tzi.s_timezone_info.utc_offset;
-          if (tzi.s_timezone_info.is_china_time) {
-            --myEpoch.tm_hour;
-          }
-        }
-
-        auto make_time = mktime(&myEpoch);
-        string c_time = std::ctime(&make_time);
-
-        c_time.erase(std::remove(c_time.begin(), c_time.end(), '\n'),
-                     c_time.end());
-
-        cout << "\033[1;36m" << c_time
-
-             << "\033[1;35m"
-             << " UTC" << utc_sign
-             << to_string(static_cast<uint32_t>(time_offset)) << "\033[1;36m"
-             << is_daylight_saving << "."
-             << "\033[0m" << endl
-             << "[Raw hex: " << hex << static_cast<uint32_t>(epoch) << dec
-             << "]";
-
-        cout << endl;
-      };
-
-      vector<string> software_version_last_updated_timestamp{
-          eeprom_metadata.begin() + 4, eeprom_metadata.begin() + 8};
-      vector<string> hardware_version_timestamp{eeprom_metadata.begin() + 10,
-                                                eeprom_metadata.begin() + 14};
-
-      auto sofware_timezone_info = eeprom_metadata.at(3);
-      auto hardware_timezone_info = eeprom_metadata.at(9);
-
-      print_timestamp(software_version_last_updated_timestamp,
-                      sofware_timezone_info, "SW Timestamp : ");
-      print_timestamp(hardware_version_timestamp, hardware_timezone_info,
-                      "HW Timestamp : ");
-
-    } else if ("in" == command_with_parameters[0]) {
-      if (2 == command_with_parameters.size()) {
-        nBytes = usb_control_msg(
-            handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_OUT,
-            static_cast<int>(USBRequest::DATA_WRITE), 0, 0,
-            const_cast<char *>(command_with_parameters.at(1).c_str()),
-            command_with_parameters.at(1).length() + 1, 5000);
-      }
-    } else if ("clear" == command_with_parameters[0]) {
-      std::cout << "\x1B[2J\x1B[H";
-    } else if ("flashdump" == command_with_parameters[0]) {
-
-      if (argc > 2) {
-        nBytes = usb_control_msg(
-            handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_OUT,
-            static_cast<int>(USBRequest::FLASH_DUMP_FROM_ADDRESS), 0, 0,
-            const_cast<char *>(command_with_parameters.at(1).c_str()),
-            command_with_parameters.at(1).length() + 1, 5000);
-      } else {
-        char address_hex[6] = "0";
-        constexpr double atmega328p_flash_size = 32 * 1024;
-        constexpr uint16_t repeat_count = static_cast<uint16_t>(
-            ceil(atmega328p_flash_size / static_cast<double>(kBufferSize)));
-
-        for (uint16_t i = 0; i < repeat_count; ++i) {
-          uint16_t offset = i * kBufferSize;
-          sprintf(address_hex, "%x", offset);
-
-          nBytes = usb_control_msg(
-              handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_OUT,
-              static_cast<int>(USBRequest::FLASH_DUMP_FROM_ADDRESS), 0, 0,
-              address_hex, strlen(address_hex) + 1, 5000);
-
-          nBytes = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE |
-                                               USB_ENDPOINT_IN,
-                                   static_cast<int>(USBRequest::DATA_OUT), 0, 0,
-                                   (char *)buffer, sizeof(buffer), 5000);
-          printReceivedBytes(offset, nBytes, buffer, "", false);
-        }
-      }
-
-    } else if ("reset" == command_with_parameters[0]) {
-      nBytes = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE |
-                                           USB_ENDPOINT_IN,
-                               static_cast<int>(USBRequest::RESET), 0, 0,
-                               (char *)buffer, sizeof(buffer), 5000);
-    } else if ("list" == command_with_parameters[0]) {
-      onExit(device_handles);
-
-      device_handles = usbOpenDevice(
-          vendor_id, const_cast<char *>(string{"Galos Industries"}.c_str()),
-          device_id, const_cast<char *>(string{"DotPhat"}.c_str()));
-
-      if (0 == device_handles.size()) {
-        throw std::runtime_error("Could not find USB device!");
-      } else {
-
-        cout << "Found \033[1;36m" << device_handles.size() << "\033[0m device";
-
-        if (1 < device_handles.size()) {
-          cout << "s";
-        }
-
-        cout << "." << endl;
-        for (uint8_t i = 0; i < device_handles.size(); ++i) {
-          cout << to_string(static_cast<long long>(i)) << ": " << hex
-               << device_handles.at(i) << dec << endl;
-        }
-
-        if (nullptr == handle && device_handles.size() > 0) {
-          handle = device_handles.at(0);
-        }
-      }
-
-    } else if ("use" == command_with_parameters[0]) {
-      desired_device_index = stoi(command_with_parameters[1]);
-      if (desired_device_index < device_handles.size()) {
-        handle = device_handles[desired_device_index];
-      } else {
-        cout << "Invalid index!" << endl;
-      }
-    }
+    command_map[command_with_parameters[0]]()->execute();
+    // if ("on" == command_with_parameters[0]) {
+    //   nBytes = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE |
+    //                                        USB_ENDPOINT_IN,
+    //                            static_cast<int>(USBRequest::LED_ON), 0, 0,
+    //                            (char *)buffer, sizeof(buffer), 5000);
+    // } else if ("off" == command_with_parameters[0]) {
+    //   nBytes = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE |
+    //                                        USB_ENDPOINT_IN,
+    //                            static_cast<int>(USBRequest::LED_OFF), 0, 0,
+    //                            (char *)buffer, sizeof(buffer), 5000);
+    // } else if ("out" == command_with_parameters[0]) {
+    //   looping_dump(handle, buffer);
+    // } else if ("oute" == command_with_parameters[0]) {
+    //
+    //   nBytes = usb_control_msg(
+    //         handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_OUT,
+    //         static_cast<int>(USBRequest::DATA_WRITE), 0, 0,
+    //         const_cast<char *>("e"),
+    //         2, 5000);
+    //
+    //   cout << "Read and parsing eeprom metadata:" << endl << endl;
+    //   nBytes = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE |
+    //                                        USB_ENDPOINT_IN,
+    //                            static_cast<int>(USBRequest::DATA_OUT), 0, 0,
+    //                            (char *)buffer, sizeof(buffer), 5000);
+    //
+    //   cout << "Got bytes: " << buffer << endl;
+    //   auto eeprom_metadata = tokenize_string(buffer);
+    //
+    //   auto print_version = [](string tokenized_element, string text) {
+    //     uint16_t one_byte = 0;
+    //     std::istringstream iss(tokenized_element);
+    //     iss >> std::hex >> one_byte;
+    //
+    //     UVersionInfo version_info;
+    //     version_info.u_version_info = one_byte;
+    //
+    //     auto metadata_version = version_info.s_version_info;
+    //
+    //     cout << text << " ";
+    //     cout << "\033[1;33m"
+    //          << "\033[1;46m"
+    //          << "v" << static_cast<uint16_t>(metadata_version.major) << "."
+    //          << static_cast<uint16_t>(metadata_version.minor) << "."
+    //          << static_cast<uint16_t>(metadata_version.patch) << "\033[0m"
+    //          << " [Raw: 0x" << hex << one_byte << "]" << dec << endl;
+    //
+    //   };
+    //
+    //   uint8_t one_byte = 0;
+    //   std::istringstream iss(eeprom_metadata.at(0));
+    //   iss >> std::hex >> one_byte;
+    //
+    //   print_version(eeprom_metadata.at(0), "Metadata version:");
+    //   print_version(eeprom_metadata.at(2), "Sofware version: ");
+    //   print_version(eeprom_metadata.at(8), "Hardware version:");
+    //
+    //   auto print_timestamp = [](vector<string> &tokenized_elements,
+    //                             string time_zone_info, string text) {
+    //
+    //     cout << endl << text;
+    //     time_t epoch = 0;
+    //     uint8_t i = 0;
+    //     for (auto &element : tokenized_elements) {
+    //       uint16_t one_byte = 0;
+    //       std::istringstream iss(element);
+    //       iss >> std::hex >> one_byte;
+    //
+    //       epoch |= one_byte << (3 - i++) * 8;
+    //     }
+    //
+    //     uint16_t uint16_tzi = 0;
+    //     std::istringstream iss(time_zone_info);
+    //     iss >> std::hex >> uint16_tzi;
+    //
+    //     UTimeZoneInfo tzi;
+    //     tzi.u_timezone_info = uint16_tzi;
+    //
+    //     string utc_sign = tzi.s_timezone_info.timezone_sign ? "+" : "-";
+    //     auto time_offset = tzi.s_timezone_info.utc_offset;
+    //
+    //     if (!tzi.s_timezone_info.timezone_sign)
+    //       time_offset = -time_offset;
+    //
+    //     string is_daylight_saving;
+    //     if (tzi.s_timezone_info.is_daylight_saving_active &&
+    //         !tzi.s_timezone_info.is_china_time) {
+    //       time_offset += 1;
+    //       is_daylight_saving = " (+1 Daylight saving included)";
+    //     } else {
+    //       is_daylight_saving = " No Daylight saving";
+    //     }
+    //
+    //     std::tm myEpoch = *std::gmtime(&epoch);
+    //     if (tzi.s_timezone_info.is_daylight_saving_active) {
+    //       myEpoch.tm_hour = myEpoch.tm_hour - tzi.s_timezone_info.utc_offset;
+    //       if (tzi.s_timezone_info.is_china_time) {
+    //         --myEpoch.tm_hour;
+    //       }
+    //     }
+    //
+    //     auto make_time = mktime(&myEpoch);
+    //     string c_time = std::ctime(&make_time);
+    //
+    //     c_time.erase(std::remove(c_time.begin(), c_time.end(), '\n'),
+    //                  c_time.end());
+    //
+    //     cout << "\033[1;36m" << c_time
+    //
+    //          << "\033[1;35m"
+    //          << " UTC" << utc_sign
+    //          << to_string(static_cast<uint32_t>(time_offset)) << "\033[1;36m"
+    //          << is_daylight_saving << "."
+    //          << "\033[0m" << endl
+    //          << "[Raw hex: " << hex << static_cast<uint32_t>(epoch) << dec
+    //          << "]";
+    //
+    //     cout << endl;
+    //   };
+    //
+    //   vector<string> software_version_last_updated_timestamp{
+    //       eeprom_metadata.begin() + 4, eeprom_metadata.begin() + 8};
+    //   vector<string> hardware_version_timestamp{eeprom_metadata.begin() + 10,
+    //                                             eeprom_metadata.begin() + 14};
+    //
+    //   auto sofware_timezone_info = eeprom_metadata.at(3);
+    //   auto hardware_timezone_info = eeprom_metadata.at(9);
+    //
+    //   print_timestamp(software_version_last_updated_timestamp,
+    //                   sofware_timezone_info, "SW Timestamp : ");
+    //   print_timestamp(hardware_version_timestamp, hardware_timezone_info,
+    //                   "HW Timestamp : ");
+    //
+    // } else if ("in" == command_with_parameters[0]) {
+    //   if (2 == command_with_parameters.size()) {
+    //     nBytes = usb_control_msg(
+    //         handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_OUT,
+    //         static_cast<int>(USBRequest::DATA_WRITE), 0, 0,
+    //         const_cast<char *>(command_with_parameters.at(1).c_str()),
+    //         command_with_parameters.at(1).length() + 1, 5000);
+    //   }
+    // } else if ("clear" == command_with_parameters[0]) {
+    //   std::cout << "\x1B[2J\x1B[H";
+    // } else if ("flashdump" == command_with_parameters[0]) {
+    //
+    //   if (argc > 2) {
+    //     nBytes = usb_control_msg(
+    //         handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_OUT,
+    //         static_cast<int>(USBRequest::FLASH_DUMP_FROM_ADDRESS), 0, 0,
+    //         const_cast<char *>(command_with_parameters.at(1).c_str()),
+    //         command_with_parameters.at(1).length() + 1, 5000);
+    //   } else {
+    //     char address_hex[6] = "0";
+    //     constexpr double atmega328p_flash_size = 32 * 1024;
+    //     constexpr uint16_t repeat_count = static_cast<uint16_t>(
+    //         ceil(atmega328p_flash_size / static_cast<double>(kBufferSize)));
+    //
+    //     for (uint16_t i = 0; i < repeat_count; ++i) {
+    //       uint16_t offset = i * kBufferSize;
+    //       sprintf(address_hex, "%x", offset);
+    //
+    //       nBytes = usb_control_msg(
+    //           handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_OUT,
+    //           static_cast<int>(USBRequest::FLASH_DUMP_FROM_ADDRESS), 0, 0,
+    //           address_hex, strlen(address_hex) + 1, 5000);
+    //
+    //       nBytes = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE |
+    //                                            USB_ENDPOINT_IN,
+    //                                static_cast<int>(USBRequest::DATA_OUT), 0, 0,
+    //                                (char *)buffer, sizeof(buffer), 5000);
+    //       printReceivedBytes(offset, nBytes, buffer, "", false);
+    //     }
+    //   }
+    //
+    // } else if ("reset" == command_with_parameters[0]) {
+    //   nBytes = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE |
+    //                                        USB_ENDPOINT_IN,
+    //                            static_cast<int>(USBRequest::RESET), 0, 0,
+    //                            (char *)buffer, sizeof(buffer), 5000);
+    // } else if ("list" == command_with_parameters[0]) {
+    //   onExit(device_handles);
+    //
+    //   device_handles = usbOpenDevice(
+    //       vendor_id, const_cast<char *>(string{"Galos Industries"}.c_str()),
+    //       device_id, const_cast<char *>(string{"DotPhat"}.c_str()));
+    //
+    //   if (0 == device_handles.size()) {
+    //     throw std::runtime_error("Could not find USB device!");
+    //   } else {
+    //
+    //     cout << "Found \033[1;36m" << device_handles.size() << "\033[0m device";
+    //
+    //     if (1 < device_handles.size()) {
+    //       cout << "s";
+    //     }
+    //
+    //     cout << "." << endl;
+    //     for (uint8_t i = 0; i < device_handles.size(); ++i) {
+    //       cout << to_string(static_cast<long long>(i)) << ": " << hex
+    //            << device_handles.at(i) << dec << endl;
+    //     }
+    //
+    //     if (nullptr == handle && device_handles.size() > 0) {
+    //       handle = device_handles.at(0);
+    //     }
+    //   }
+    //
+    // } else if ("use" == command_with_parameters[0]) {
+    //   desired_device_index = stoi(command_with_parameters[1]);
+    //   if (desired_device_index < device_handles.size()) {
+    //     handle = device_handles[desired_device_index];
+    //   } else {
+    //     cout << "Invalid index!" << endl;
+    //   }
+    // }
 
     if (nBytes < 0)
       fprintf(stderr, "USB error: %s\n", usb_strerror());

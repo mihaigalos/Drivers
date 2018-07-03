@@ -21,7 +21,7 @@ UNAME := $(shell uname)
 ifeq ($(UNAME), Linux)
   COMPILE_COMMAND = g++ -std=c++11 -lusb -O -Wall usbtest.cxx -o usbtest.bin
 else
-  COMPILE_COMMAND = g++ -std=c++1y -I ./libusb/include -O -Wall usbtest.cxx ./libusb/lib/dynamic/libusb_dyn.c -o $@
+  COMPILE_COMMAND = g++ -std=c++11 -I ./libusb/include -O -Wall usbtest.cxx ./libusb/lib/dynamic/libusb_dyn.c -o $@
 endif
 
 
