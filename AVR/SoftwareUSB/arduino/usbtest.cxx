@@ -330,7 +330,7 @@ int main(int argc, char **argv) {
     auto start = chrono::high_resolution_clock::now();
     auto command_with_parameters = tokenize_string(command);
 
-    command_map[command_with_parameters[0]]()->execute();
+    command_map[command_with_parameters[0]]()->execute(command_with_parameters);
     // if ("on" == command_with_parameters[0]) {
     //   nBytes = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE |
     //                                        USB_ENDPOINT_IN,
