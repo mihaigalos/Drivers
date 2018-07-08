@@ -3,6 +3,8 @@
 #include <tuple>
 #include <vector>
 #include <string>
+#include <exception>
+
 
 void onExit(const std::vector<usb_dev_handle *> &handles);
 auto getUsbHandles() -> std::tuple<usb_dev_handle *, std::vector<usb_dev_handle *>>;
@@ -23,24 +25,33 @@ public:
     std::tuple<EndpointIO, USBRequest> parameters = run (args);
     auto request = std::get<1>(parameters);
     if(USBRequest::Unknown != request){
+
+      std::cout<<"<0>: "<<static_cast<int>(std::get<0>(parameters))<<std::endl;
+      std::cout<<"<1>: "<<static_cast<int>(std::get<1>(parameters))<<std::endl;
+      std::cout<<"<h>: "<<reinterpret_cast<long long>(handle_)<<std::endl;
+
+
       result = usb_control_msg(handle_, USB_TYPE_VENDOR | USB_RECIP_DEVICE |
         std::get<0>(parameters),
         static_cast<int>(std::get<1>(parameters)), 0, 0,
-        (char *)buffer, sizeof(buffer), 5000);
+        (char *)buffer_, sizeof(buffer_), 5000);
     }
     return result;
 
   }
 protected:
    virtual std::tuple<EndpointIO, USBRequest> run(std::vector<std::string>& args) = 0;
-   usb_dev_handle * handle_ {nullptr};
-   std::vector<usb_dev_handle *> device_handles_;
+   static usb_dev_handle * handle_;
+   static std::vector<usb_dev_handle *> device_handles_;
+   char buffer_[254];
 private:
    static std::vector<std::string> empty_vector_;
-   char buffer[254];
 };
 
 std::vector<std::string> Command::empty_vector_;
+usb_dev_handle * Command::handle_ {nullptr};
+std::vector<usb_dev_handle *> Command::device_handles_;
+
 
 class ExitCommand : public Command{
 public:
@@ -70,13 +81,14 @@ public:
 class OffCommand : public Command{
 public:
   std::tuple<EndpointIO, USBRequest> run(std::vector<std::string>& args){
-    return std::tuple<EndpointIO, USBRequest>(EndpointIO(), USBRequest());
+    return std::tuple<EndpointIO, USBRequest>(USB_ENDPOINT_IN, USBRequest::LED_OFF);
   }
 };
 class OnCommand : public Command{
 public:
   std::tuple<EndpointIO, USBRequest> run(std::vector<std::string>& args){
-    return std::tuple<EndpointIO, USBRequest>(EndpointIO(), USBRequest());
+    std::cout<<"on command.."<<std::endl;
+    return std::tuple<EndpointIO, USBRequest>(USB_ENDPOINT_IN, USBRequest::LED_ON);
   }
 };
 class OuteCommand : public Command{
