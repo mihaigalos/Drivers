@@ -34,6 +34,7 @@
 
 #include "eeprom_metadata.h"
 #include "i_usbRequest.h"
+#include "command.h"
 using namespace std;
 
 constexpr uint16_t vendor_id {0x16C0};
@@ -78,7 +79,7 @@ static int usbGetDescriptorString(usb_dev_handle *dev, int index, int langid,
   return i - 1;
 }
 
-void onExit(const vector<usb_dev_handle *> &handles) {
+void onExit(const std::vector<usb_dev_handle *> &handles) {
   for (auto &handle : handles) {
     usb_close(handle);
   }
@@ -263,140 +264,37 @@ void looping_dump(usb_dev_handle *handle, char *buffer){
 }
 
 
+auto getUsbHandles() -> std::tuple<usb_dev_handle *, vector<usb_dev_handle *>>{
+  usb_dev_handle * handle {nullptr};
+  auto device_handles = usbOpenDevice(
+        vendor_id, const_cast<char *>(string{"Galos Industries"}.c_str()),
+        device_id, const_cast<char *>(string{"DotPhat"}.c_str()));
 
-class Command {
-public:
-  using EndpointIO = int;
+    if (0 == device_handles.size()) {
+      throw std::runtime_error("Could not find USB device!");
+    } else {
 
-  auto execute(std::vector<string>& args = empty_vector_) -> int{
-    auto result = 0;
-    std::tuple<EndpointIO, USBRequest> parameters = run (args);
-    std::cout <<std::endl<<std::endl<<"In execute!"<<std::endl;
-    auto request = std::get<1>(parameters);
-    if(USBRequest::Unknown != request){
-      result = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE |
-        std::get<0>(parameters),
-        static_cast<int>(std::get<1>(parameters)), 0, 0,
-        (char *)buffer, sizeof(buffer), 5000);
-    }
-    return result;
+      cout << "Found \033[1;36m" << device_handles.size() << "\033[0m device";
 
-  }
-protected:
-   virtual std::tuple<EndpointIO, USBRequest> run(std::vector<string>& args) = 0;
-private:
-   static std::vector<std::string> empty_vector_;
-   usb_dev_handle *handle = NULL;
-   char buffer[254];
-};
-
-
-class ExitCommand : public Command{
-public:
-  std::tuple<EndpointIO, USBRequest> run(std::vector<string>& args){
-    return std::tuple<EndpointIO, USBRequest>(EndpointIO(), USBRequest());
-  }
-};
-class FlashDumpCommand : public Command{
-public:
-  std::tuple<EndpointIO, USBRequest> run(std::vector<string>& args){
-    return std::tuple<EndpointIO, USBRequest>(EndpointIO(), USBRequest());
-  }
-};
-class InCommand : public Command{
-public:
-  std::tuple<EndpointIO, USBRequest> run(std::vector<string>& args){
-    return std::tuple<EndpointIO, USBRequest>(EndpointIO(), USBRequest());
-  }
-};
-class OutCommand : public Command{
-public:
-  std::tuple<EndpointIO, USBRequest> run(std::vector<string>& args){
-    return std::tuple<EndpointIO, USBRequest>(EndpointIO(), USBRequest());
-  }
-};
-
-class OffCommand : public Command{
-public:
-  std::tuple<EndpointIO, USBRequest> run(std::vector<string>& args){
-    return std::tuple<EndpointIO, USBRequest>(EndpointIO(), USBRequest());
-  }
-};
-class OnCommand : public Command{
-public:
-  std::tuple<EndpointIO, USBRequest> run(std::vector<string>& args){
-    return std::tuple<EndpointIO, USBRequest>(EndpointIO(), USBRequest());
-  }
-};
-class OuteCommand : public Command{
-public:
-  std::tuple<EndpointIO, USBRequest> run(std::vector<string>& args){
-    return std::tuple<EndpointIO, USBRequest>(EndpointIO(), USBRequest());
-  }
-};
-class UseCommand : public Command{
-public:
-  std::tuple<EndpointIO, USBRequest> run(std::vector<string>& args){
-
-    desired_device_index = stoi(args[1]);
-      if (desired_device_index < device_handles.size()) {
-        handle = device_handles[desired_device_index];
-      } else {
-        cout << "Invalid index!" << endl;
+      if (1 < device_handles.size()) {
+        cout << "s";
       }
 
-    return std::tuple<EndpointIO, USBRequest>(EndpointIO(), USBRequest());
-  }
-private:
-  std::vector<usb_dev_handle *> device_handles;
-};
-class ResetCommand : public Command{
-public:
-  std::tuple<EndpointIO, USBRequest> run(std::vector<string>& args){
-    return std::tuple<EndpointIO, USBRequest>(EndpointIO(), USBRequest());
-  }
-};
-class ListCommand : public Command{
-public:
-  std::tuple<EndpointIO, USBRequest> run(std::vector<string>& args){
-    cout << "Usage:" << endl;
-    cout << "  exit" << endl;
-    cout << "  flashdump <direct hex address literals>" << endl;
-    cout << "  in <predicate - see below>: send to usb device" << endl;
-    cout << "     s:[frequence in millisecond multiples of 100ms[:max count]]:<string>: send over radio" << endl;
-    cout << "       example: in s:5:HelloWorld"<<endl;
-    cout << "     r: receive over radio" << endl;
-    cout << "  list" << endl;
-    cout << "  off" << endl;
-    cout << "  on" << endl;
-    cout << "  out: looping read from usb device" << endl;
-    cout << "  oute: read and parse eeprom metadata" << endl;
-    cout << "  use <device index>" << endl;
-    cout << "  reset" << endl << endl;
-    return std::tuple<EndpointIO, USBRequest>(EndpointIO(), USBRequest());
-  }
+      cout << "." << endl;
+      for (uint8_t i = 0; i < device_handles.size(); ++i) {
+        cout << to_string(static_cast<long long>(i)) << ": " << hex
+             << device_handles.at(i) << dec << endl;
+      }
 
-};
+      if (nullptr == handle && device_handles.size() > 0) {
+        handle = device_handles.at(0);
+      }
+    }
 
-
-template <typename T>
-std::unique_ptr<Command> creator() {
-  return std::unique_ptr<T>(new T());
+    return std::tie(handle, device_handles);
 }
 
-using CommandMap = std::map<std::string, std::unique_ptr<Command>(*)()>;
-CommandMap command_map {
-  {"exit", &creator<ExitCommand>},
-  {"flashdump", &creator<FlashDumpCommand>},
-  {"in", &creator<InCommand>},
-  {"out", &creator<OutCommand>},
-  {"list", &creator<ListCommand>},
-  {"off", &creator<OffCommand>},
-  {"on", &creator<OnCommand>},
-  {"oute", &creator<OuteCommand>},
-  {"use", &creator<UseCommand>},
-  {"reset", &creator<ResetCommand>}
-};
+
 
 int main(int argc, char **argv) {
 
@@ -424,6 +322,8 @@ int main(int argc, char **argv) {
 
   string command = "list";
   string parameters;
+
+  command_map[command]()->init();
 
   do {
 
