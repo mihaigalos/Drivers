@@ -28,7 +28,7 @@ public:
 
       std::cout<<"<0>: "<<static_cast<int>(std::get<0>(parameters))<<std::endl;
       std::cout<<"<1>: "<<static_cast<int>(std::get<1>(parameters))<<std::endl;
-      std::cout<<"<h>: "<<reinterpret_cast<long long>(handle_)<<std::endl;
+      std::cout<<"<h>: "<<std::hex<<"0x"<<reinterpret_cast<long long>(handle_)<<std::dec<<std::endl;
 
 
       result = usb_control_msg(handle_, USB_TYPE_VENDOR | USB_RECIP_DEVICE |
@@ -56,60 +56,60 @@ std::vector<usb_dev_handle *> Command::device_handles_;
 class ExitCommand : public Command{
 public:
   std::tuple<EndpointIO, USBRequest> run(std::vector<std::string>& args){
-    return std::tuple<EndpointIO, USBRequest>(EndpointIO(), USBRequest());
+    return std::tuple<EndpointIO, USBRequest>{EndpointIO(), USBRequest()};
   }
 };
 class FlashDumpCommand : public Command{
 public:
   std::tuple<EndpointIO, USBRequest> run(std::vector<std::string>& args){
-    return std::tuple<EndpointIO, USBRequest>(EndpointIO(), USBRequest());
+    return std::tuple<EndpointIO, USBRequest>{EndpointIO(), USBRequest()};
   }
 };
 class InCommand : public Command{
 public:
   std::tuple<EndpointIO, USBRequest> run(std::vector<std::string>& args){
-    return std::tuple<EndpointIO, USBRequest>(EndpointIO(), USBRequest());
+    return std::tuple<EndpointIO, USBRequest>{EndpointIO(), USBRequest()};
   }
 };
 class OutCommand : public Command{
 public:
   std::tuple<EndpointIO, USBRequest> run(std::vector<std::string>& args){
-    return std::tuple<EndpointIO, USBRequest>(EndpointIO(), USBRequest());
+    return std::tuple<EndpointIO, USBRequest>{EndpointIO(), USBRequest()};
   }
 };
 
 class OffCommand : public Command{
 public:
   std::tuple<EndpointIO, USBRequest> run(std::vector<std::string>& args){
-    return std::tuple<EndpointIO, USBRequest>(USB_ENDPOINT_IN, USBRequest::LED_OFF);
+    return std::tuple<EndpointIO, USBRequest>{USB_ENDPOINT_IN, USBRequest::LED_OFF};
   }
 };
 class OnCommand : public Command{
 public:
   std::tuple<EndpointIO, USBRequest> run(std::vector<std::string>& args){
-    std::cout<<"on command.."<<std::endl;
-    return std::tuple<EndpointIO, USBRequest>(USB_ENDPOINT_IN, USBRequest::LED_ON);
+    // std::cout<<"on command.."<<std::endl;
+    return std::tuple<EndpointIO, USBRequest>{USB_ENDPOINT_IN, USBRequest::LED_ON};
   }
 };
 class OuteCommand : public Command{
 public:
   std::tuple<EndpointIO, USBRequest> run(std::vector<std::string>& args){
-    return std::tuple<EndpointIO, USBRequest>(EndpointIO(), USBRequest());
+    return std::tuple<EndpointIO, USBRequest>{EndpointIO(), USBRequest()};
   }
 };
 class UseCommand : public Command{
 public:
   std::tuple<EndpointIO, USBRequest> run(std::vector<std::string>& args){
 
-    unsigned int desired_device_index = stoi(args[1]);
+    // unsigned int desired_device_index = stoi(args[1]);
     init();
-      if (desired_device_index < device_handles_.size()) {
-        handle_ = device_handles_[desired_device_index];
-      } else {
-        std::cout << "Invalid index!" << std::endl;
-      }
+      // if (desired_device_index < device_handles_.size()) {
+      //   handle_ = device_handles_[desired_device_index];
+      // } else {
+      //   std::cout << "Invalid index!" << std::endl;
+      // }
 
-    return std::tuple<EndpointIO, USBRequest>(EndpointIO(), USBRequest());
+    return std::tuple<EndpointIO, USBRequest>{EndpointIO(), USBRequest()};
   }
 private:
   std::vector<usb_dev_handle *> device_handles;
@@ -117,7 +117,7 @@ private:
 class ResetCommand : public Command{
 public:
   std::tuple<EndpointIO, USBRequest> run(std::vector<std::string>& args){
-    return std::tuple<EndpointIO, USBRequest>(EndpointIO(), USBRequest());
+    return std::tuple<EndpointIO, USBRequest>{EndpointIO(), USBRequest()};
   }
 };
 class ListCommand : public Command{
@@ -137,7 +137,7 @@ public:
     std::cout << "  oute: read and parse eeprom metadata" << std::endl;
     std::cout << "  use <device index>" << std::endl;
     std::cout << "  reset" << std::endl << std::endl;
-    return std::tuple<EndpointIO, USBRequest>(EndpointIO(), USBRequest());
+    return std::tuple<EndpointIO, USBRequest>{EndpointIO(), USBRequest()};
   }
 
 };
