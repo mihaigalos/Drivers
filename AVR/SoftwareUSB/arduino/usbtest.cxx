@@ -228,15 +228,6 @@ void printReceivedBytes(uint16_t start_address, uint16_t nBytes, char buffer[],
   cout << dec << nouppercase;
 }
 
-vector<string> tokenize_string(const string &s) {
-  std::stringstream ss(s);
-  std::istream_iterator<std::string> begin(ss);
-  std::istream_iterator<std::string> end;
-  std::vector<std::string> vstrings(begin, end);
-
-  return vstrings;
-}
-
 auto getUsbHandles() -> std::vector<usb_dev_handle *>{
   auto device_handles = usbOpenDevice(
         vendor_id, const_cast<char *>(string{"Galos Industries"}.c_str()),
