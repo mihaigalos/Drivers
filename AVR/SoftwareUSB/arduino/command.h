@@ -25,20 +25,7 @@ public:
     auto endpoint = std::get<0>(parameters);
     auto request = std::get<1>(parameters);
 
-    // This does not work, probably the handle has changed..
-    // result = usb_control_msg(handle_, USB_TYPE_VENDOR | USB_RECIP_DEVICE |
-    //                                        USB_ENDPOINT_IN,
-    //                            static_cast<int>(USBRequest::LED_OFF), 0, 0,
-    //                            (char *)buffer_, sizeof(buffer_), 5000);
-
-
     if(USBRequest::Unknown != request){
-
-      std::cout<<"<0>: "<<static_cast<int>(std::get<0>(parameters))<<std::endl;
-      std::cout<<"<1>: "<<static_cast<int>(std::get<1>(parameters))<<std::endl;
-      std::cout<<"<h>: "<<std::hex<<"0x"<<reinterpret_cast<long long>(handle_)<<std::dec<<std::endl;
-
-
       result = usb_control_msg(handle_, USB_TYPE_VENDOR | USB_RECIP_DEVICE |
         static_cast<int>(endpoint),
         static_cast<int>(request),
@@ -113,15 +100,7 @@ public:
 class UseCommand : public Command{
 public:
   std::tuple<EndpointIO, USBRequest> run(std::vector<std::string>& args) override {
-
-    // unsigned int desired_device_index = stoi(args[1]);
     init();
-      // if (desired_device_index < device_handles_.size()) {
-      //   handle_ = device_handles_[desired_device_index];
-      // } else {
-      //   std::cout << "Invalid index!" << std::endl;
-      // }
-
     return std::tuple<EndpointIO, USBRequest>{EndpointIO(), USBRequest()};
   }
 private:
@@ -154,7 +133,6 @@ public:
   }
 
 };
-
 
 template <typename T>
 std::unique_ptr<Command> creator() {
