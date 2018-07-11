@@ -6,24 +6,32 @@
 #include <exception>
 
 
-void onExit(const std::vector<usb_dev_handle *> &handles);
-auto getUsbHandles() -> std::tuple<usb_dev_handle *, std::vector<usb_dev_handle *>>;
+void onExit(std::vector<usb_dev_handle *> &handles);
+auto getUsbHandles() -> std::vector<usb_dev_handle *>;
 
 class Command {
 public:
   using EndpointIO = int;
 
-  void init(){
+  static void init(){
     onExit(device_handles_);
-    auto handle_device_handles = getUsbHandles();
-    handle_ = std::get<0>(handle_device_handles);
-    device_handles_ = std::get<1>(handle_device_handles);
+    Command::device_handles_ = getUsbHandles();
+    Command::handle_ = device_handles_.at(0);
   }
 
   auto execute(std::vector<std::string>& args = empty_vector_) -> int{
     auto result = 0;
     std::tuple<EndpointIO, USBRequest> parameters = run (args);
+    auto endpoint = std::get<0>(parameters);
     auto request = std::get<1>(parameters);
+
+    // This does not work, probably the handle has changed..
+    // result = usb_control_msg(handle_, USB_TYPE_VENDOR | USB_RECIP_DEVICE |
+    //                                        USB_ENDPOINT_IN,
+    //                            static_cast<int>(USBRequest::LED_OFF), 0, 0,
+    //                            (char *)buffer_, sizeof(buffer_), 5000);
+
+
     if(USBRequest::Unknown != request){
 
       std::cout<<"<0>: "<<static_cast<int>(std::get<0>(parameters))<<std::endl;
@@ -32,9 +40,12 @@ public:
 
 
       result = usb_control_msg(handle_, USB_TYPE_VENDOR | USB_RECIP_DEVICE |
-        std::get<0>(parameters),
-        static_cast<int>(std::get<1>(parameters)), 0, 0,
+        static_cast<int>(endpoint),
+        static_cast<int>(request),
+        0, 0,
         (char *)buffer_, sizeof(buffer_), 5000);
+
+        std::cout<< "result: "<<result<<std::endl;
     }
     return result;
 
@@ -43,63 +54,65 @@ protected:
    virtual std::tuple<EndpointIO, USBRequest> run(std::vector<std::string>& args) = 0;
    static usb_dev_handle * handle_;
    static std::vector<usb_dev_handle *> device_handles_;
-   char buffer_[254];
+   static char buffer_[254];
 private:
    static std::vector<std::string> empty_vector_;
 };
 
 std::vector<std::string> Command::empty_vector_;
 usb_dev_handle * Command::handle_ {nullptr};
+char Command::buffer_[254];
 std::vector<usb_dev_handle *> Command::device_handles_;
 
 
 class ExitCommand : public Command{
 public:
-  std::tuple<EndpointIO, USBRequest> run(std::vector<std::string>& args){
+  std::tuple<EndpointIO, USBRequest> run(std::vector<std::string>& args) override {
     return std::tuple<EndpointIO, USBRequest>{EndpointIO(), USBRequest()};
   }
 };
 class FlashDumpCommand : public Command{
 public:
-  std::tuple<EndpointIO, USBRequest> run(std::vector<std::string>& args){
+  std::tuple<EndpointIO, USBRequest> run(std::vector<std::string>& args) override {
     return std::tuple<EndpointIO, USBRequest>{EndpointIO(), USBRequest()};
   }
 };
 class InCommand : public Command{
 public:
-  std::tuple<EndpointIO, USBRequest> run(std::vector<std::string>& args){
+  std::tuple<EndpointIO, USBRequest> run(std::vector<std::string>& args) override {
     return std::tuple<EndpointIO, USBRequest>{EndpointIO(), USBRequest()};
   }
 };
 class OutCommand : public Command{
 public:
-  std::tuple<EndpointIO, USBRequest> run(std::vector<std::string>& args){
+  std::tuple<EndpointIO, USBRequest> run(std::vector<std::string>& args) override {
     return std::tuple<EndpointIO, USBRequest>{EndpointIO(), USBRequest()};
   }
 };
 
 class OffCommand : public Command{
 public:
-  std::tuple<EndpointIO, USBRequest> run(std::vector<std::string>& args){
+  std::tuple<EndpointIO, USBRequest> run(std::vector<std::string>& args) override {
+    std::cout<<"Off!"<<std::endl;
     return std::tuple<EndpointIO, USBRequest>{USB_ENDPOINT_IN, USBRequest::LED_OFF};
   }
 };
 class OnCommand : public Command{
 public:
-  std::tuple<EndpointIO, USBRequest> run(std::vector<std::string>& args){
-    // std::cout<<"on command.."<<std::endl;
+  std::tuple<EndpointIO, USBRequest> run(std::vector<std::string>& args) override {
+     std::cout<<"On!"<<std::endl;
     return std::tuple<EndpointIO, USBRequest>{USB_ENDPOINT_IN, USBRequest::LED_ON};
   }
 };
 class OuteCommand : public Command{
 public:
-  std::tuple<EndpointIO, USBRequest> run(std::vector<std::string>& args){
+  std::tuple<EndpointIO, USBRequest> run(std::vector<std::string>& args) override {
     return std::tuple<EndpointIO, USBRequest>{EndpointIO(), USBRequest()};
   }
 };
 class UseCommand : public Command{
 public:
-  std::tuple<EndpointIO, USBRequest> run(std::vector<std::string>& args){
+  std::tuple<EndpointIO, USBRequest> run(std::vector<std::string>& args) override {
 
     // unsigned int desired_device_index = stoi(args[1]);
     init();
@@ -116,13 +129,13 @@ private:
 };
 class ResetCommand : public Command{
 public:
-  std::tuple<EndpointIO, USBRequest> run(std::vector<std::string>& args){
+  std::tuple<EndpointIO, USBRequest> run(std::vector<std::string>& args) override {
     return std::tuple<EndpointIO, USBRequest>{EndpointIO(), USBRequest()};
   }
 };
 class ListCommand : public Command{
 public:
-  std::tuple<EndpointIO, USBRequest> run(std::vector<std::string>& args){
+  std::tuple<EndpointIO, USBRequest> run(std::vector<std::string>& args) override {
     std::cout << "Usage:" << std::endl;
     std::cout << "  exit" << std::endl;
     std::cout << "  flashdump <direct hex address literals>" << std::endl;

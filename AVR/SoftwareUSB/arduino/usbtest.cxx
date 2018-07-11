@@ -79,10 +79,11 @@ static int usbGetDescriptorString(usb_dev_handle *dev, int index, int langid,
   return i - 1;
 }
 
-void onExit(const std::vector<usb_dev_handle *> &handles) {
+void onExit(std::vector<usb_dev_handle *> &handles) {
   for (auto &handle : handles) {
     usb_close(handle);
   }
+  handles.clear();
 }
 
 static vector<usb_dev_handle *> usbOpenDevice(int vendor, char *vendorName,
@@ -264,8 +265,7 @@ void looping_dump(usb_dev_handle *handle, char *buffer){
 }
 
 
-auto getUsbHandles() -> std::tuple<usb_dev_handle *, vector<usb_dev_handle *>>{
-  usb_dev_handle * handle {nullptr};
+auto getUsbHandles() -> std::vector<usb_dev_handle *>{
   auto device_handles = usbOpenDevice(
         vendor_id, const_cast<char *>(string{"Galos Industries"}.c_str()),
         device_id, const_cast<char *>(string{"DotPhat"}.c_str()));
@@ -285,22 +285,17 @@ auto getUsbHandles() -> std::tuple<usb_dev_handle *, vector<usb_dev_handle *>>{
         cout << to_string(static_cast<long long>(i)) << ": " << hex
              << device_handles.at(i) << dec << endl;
       }
-
-      if (nullptr == handle && device_handles.size() > 0) {
-        handle = device_handles.at(0);
-      }
     }
 
-    return std::tie(handle, device_handles);
+    return device_handles;
 }
 
 
 
 int main(int argc, char **argv) {
 
-  usb_dev_handle *handle = NULL;
+
   int nBytes = 0;
-  char buffer[254];
 
   cout << "Usage:" << endl;
   cout << "  exit" << endl;
@@ -317,13 +312,10 @@ int main(int argc, char **argv) {
   cout << "  use <device index>" << endl;
   cout << "  reset" << endl << endl;
 
-  vector<usb_dev_handle *> device_handles;
-  uint8_t desired_device_index = 0;
-
   string command = "list";
   string parameters;
 
-  command_map[command]()->init();
+  Command::init();
 
   do {
 
@@ -560,8 +552,6 @@ int main(int argc, char **argv) {
     getline(std::cin, command);
 
   } while ("exit" != command);
-
-  onExit(device_handles);
 
   return 0;
 }
