@@ -237,34 +237,6 @@ vector<string> tokenize_string(const string &s) {
   return vstrings;
 }
 
-void run_until_keypressed(std::function<void()> callable) {
-  do {
-    callable();
-    std::this_thread::sleep_for(std::chrono::seconds(1));
-  } while (!kbhit());
-}
-
-void looping_dump(usb_dev_handle *handle, char *buffer){
-  cout << "Looping dump. Press ESC to exit." << endl << endl;
-  auto callable = [&] {
-    usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE |
-                                         USB_ENDPOINT_IN,
-                             static_cast<int>(USBRequest::DATA_OUT), 0, 0,
-                             (char *)buffer, sizeof(buffer), 5000);
-    static string old_buffer;
-    if (string{buffer} != old_buffer)
-    {
-      cout << "Got bytes: " << buffer << endl;
-      old_buffer = string{buffer};
-    }
-
-  };
-
-  run_until_keypressed(callable);
-  std::this_thread::sleep_for(std::chrono::seconds(1));
-}
-
-
 auto getUsbHandles() -> std::vector<usb_dev_handle *>{
   auto device_handles = usbOpenDevice(
         vendor_id, const_cast<char *>(string{"Galos Industries"}.c_str()),
@@ -323,19 +295,8 @@ int main(int argc, char **argv) {
     auto command_with_parameters = tokenize_string(command);
 
     command_map[command_with_parameters[0]]()->execute(command_with_parameters);
-    // if ("on" == command_with_parameters[0]) {
-    //   nBytes = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE |
-    //                                        USB_ENDPOINT_IN,
-    //                            static_cast<int>(USBRequest::LED_ON), 0, 0,
-    //                            (char *)buffer, sizeof(buffer), 5000);
-    // } else if ("off" == command_with_parameters[0]) {
-    //   nBytes = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE |
-    //                                        USB_ENDPOINT_IN,
-    //                            static_cast<int>(USBRequest::LED_OFF), 0, 0,
-    //                            (char *)buffer, sizeof(buffer), 5000);
-    // } else if ("out" == command_with_parameters[0]) {
-    //   looping_dump(handle, buffer);
-    // } else if ("oute" == command_with_parameters[0]) {
+
+    //  if ("oute" == command_with_parameters[0]) {
     //
     //   nBytes = usb_control_msg(
     //         handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_OUT,

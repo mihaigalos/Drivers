@@ -9,9 +9,15 @@
 void onExit(std::vector<usb_dev_handle *> &handles);
 auto getUsbHandles() -> std::vector<usb_dev_handle *>;
 
+using EndpointIO = int;
+struct TRunParameters{
+  EndpointIO endpoint;
+  USBRequest request;
+  std::function<void()> postAction;
+}; //std::tuple<EndpointIO, USBRequest>;
+
 class Command {
 public:
-  using EndpointIO = int;
 
   static void init(){
     onExit(device_handles_);
@@ -21,29 +27,29 @@ public:
 
   auto execute(std::vector<std::string>& args = empty_vector_) -> int{
     auto result = 0;
-    std::tuple<EndpointIO, USBRequest> parameters = run (args);
-    auto endpoint = std::get<0>(parameters);
-    auto request = std::get<1>(parameters);
+    TRunParameters parameters = run (args);
 
-    if(USBRequest::Unknown != request){
+    if(USBRequest::Unknown != parameters.request){
       result = usb_control_msg(handle_, USB_TYPE_VENDOR | USB_RECIP_DEVICE |
-        static_cast<int>(endpoint),
-        static_cast<int>(request),
+        static_cast<int>(parameters.endpoint),
+        static_cast<int>(parameters.request),
         0, 0,
         (char *)buffer_, sizeof(buffer_), 5000);
-
-        std::cout<< "result: "<<result<<std::endl;
     }
+
+    if(parameters.postAction) parameters.postAction();
+
     return result;
 
   }
 protected:
-   virtual std::tuple<EndpointIO, USBRequest> run(std::vector<std::string>& args) = 0;
+   virtual TRunParameters run(std::vector<std::string>& args) = 0;
    static usb_dev_handle * handle_;
    static std::vector<usb_dev_handle *> device_handles_;
    static char buffer_[254];
 private:
    static std::vector<std::string> empty_vector_;
+
 };
 
 std::vector<std::string> Command::empty_vector_;
@@ -54,67 +60,100 @@ std::vector<usb_dev_handle *> Command::device_handles_;
 
 class ExitCommand : public Command{
 public:
-  std::tuple<EndpointIO, USBRequest> run(std::vector<std::string>& args) override {
-    return std::tuple<EndpointIO, USBRequest>{EndpointIO(), USBRequest()};
+  TRunParameters run(std::vector<std::string>& args) override {
+    return TRunParameters{EndpointIO(), USBRequest()};
   }
 };
 class FlashDumpCommand : public Command{
 public:
-  std::tuple<EndpointIO, USBRequest> run(std::vector<std::string>& args) override {
-    return std::tuple<EndpointIO, USBRequest>{EndpointIO(), USBRequest()};
+  TRunParameters run(std::vector<std::string>& args) override {
+    return TRunParameters{EndpointIO(), USBRequest()};
   }
 };
 class InCommand : public Command{
 public:
-  std::tuple<EndpointIO, USBRequest> run(std::vector<std::string>& args) override {
-    return std::tuple<EndpointIO, USBRequest>{EndpointIO(), USBRequest()};
+  TRunParameters run(std::vector<std::string>& args) override {
+    return TRunParameters{EndpointIO(), USBRequest()};
   }
 };
 class OutCommand : public Command{
 public:
-  std::tuple<EndpointIO, USBRequest> run(std::vector<std::string>& args) override {
-    return std::tuple<EndpointIO, USBRequest>{EndpointIO(), USBRequest()};
+  TRunParameters run(std::vector<std::string>& args) override {
+    return TRunParameters{EndpointIO(), USBRequest(), Utils::looping_dump};
   }
+private:
+
+  class Utils{
+  public:
+    static void run_until_keypressed(std::function<void()> callable) {
+      do {
+        callable();
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+      } while (!kbhit());
+    }
+
+    static void looping_dump(){
+      std::cout << "Looping dump. Press ESC to exit." << std::endl << std::endl;
+      auto callable = [&] {
+        usb_control_msg(handle_, USB_TYPE_VENDOR | USB_RECIP_DEVICE |
+          USB_ENDPOINT_IN,
+          static_cast<int>(USBRequest::DATA_OUT), 0, 0,
+          (char *)buffer_, sizeof(buffer_), 5000);
+          static std::string old_buffer;
+          if (std::string{buffer_} != old_buffer)
+          {
+            std::cout << "Got bytes: " << buffer_ << std::endl;
+            old_buffer = std::string{buffer_};
+          }
+
+        };
+
+        run_until_keypressed(callable);
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+      }
+    };
+
+
 };
 
 class OffCommand : public Command{
 public:
-  std::tuple<EndpointIO, USBRequest> run(std::vector<std::string>& args) override {
+  TRunParameters run(std::vector<std::string>& args) override {
     std::cout<<"Off!"<<std::endl;
-    return std::tuple<EndpointIO, USBRequest>{USB_ENDPOINT_IN, USBRequest::LED_OFF};
+    return TRunParameters{USB_ENDPOINT_IN, USBRequest::LED_OFF};
   }
 };
 class OnCommand : public Command{
 public:
-  std::tuple<EndpointIO, USBRequest> run(std::vector<std::string>& args) override {
+  TRunParameters run(std::vector<std::string>& args) override {
      std::cout<<"On!"<<std::endl;
-    return std::tuple<EndpointIO, USBRequest>{USB_ENDPOINT_IN, USBRequest::LED_ON};
+    return TRunParameters{USB_ENDPOINT_IN, USBRequest::LED_ON};
   }
 };
 class OuteCommand : public Command{
 public:
-  std::tuple<EndpointIO, USBRequest> run(std::vector<std::string>& args) override {
-    return std::tuple<EndpointIO, USBRequest>{EndpointIO(), USBRequest()};
+  TRunParameters run(std::vector<std::string>& args) override {
+    return TRunParameters{EndpointIO(), USBRequest()};
   }
 };
 class UseCommand : public Command{
 public:
-  std::tuple<EndpointIO, USBRequest> run(std::vector<std::string>& args) override {
+  TRunParameters run(std::vector<std::string>& args) override {
     init();
-    return std::tuple<EndpointIO, USBRequest>{EndpointIO(), USBRequest()};
+    return TRunParameters{EndpointIO(), USBRequest()};
   }
 private:
   std::vector<usb_dev_handle *> device_handles;
 };
 class ResetCommand : public Command{
 public:
-  std::tuple<EndpointIO, USBRequest> run(std::vector<std::string>& args) override {
-    return std::tuple<EndpointIO, USBRequest>{EndpointIO(), USBRequest()};
+  TRunParameters run(std::vector<std::string>& args) override {
+    return TRunParameters{EndpointIO(), USBRequest()};
   }
 };
 class ListCommand : public Command{
 public:
-  std::tuple<EndpointIO, USBRequest> run(std::vector<std::string>& args) override {
+  TRunParameters run(std::vector<std::string>& args) override {
     std::cout << "Usage:" << std::endl;
     std::cout << "  exit" << std::endl;
     std::cout << "  flashdump <direct hex address literals>" << std::endl;
@@ -129,7 +168,7 @@ public:
     std::cout << "  oute: read and parse eeprom metadata" << std::endl;
     std::cout << "  use <device index>" << std::endl;
     std::cout << "  reset" << std::endl << std::endl;
-    return std::tuple<EndpointIO, USBRequest>{EndpointIO(), USBRequest()};
+    return TRunParameters{EndpointIO(), USBRequest()};
   }
 
 };
