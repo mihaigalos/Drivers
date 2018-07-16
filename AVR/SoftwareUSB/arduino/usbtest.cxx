@@ -330,35 +330,7 @@ int main(int argc, char **argv) {
     //                                        USB_ENDPOINT_IN,
     //                            static_cast<int>(USBRequest::RESET), 0, 0,
     //                            (char *)buffer, sizeof(buffer), 5000);
-    // } else if ("list" == command_with_parameters[0]) {
-    //   onExit(device_handles);
-    //
-    //   device_handles = usbOpenDevice(
-    //       vendor_id, const_cast<char *>(string{"Galos Industries"}.c_str()),
-    //       device_id, const_cast<char *>(string{"DotPhat"}.c_str()));
-    //
-    //   if (0 == device_handles.size()) {
-    //     throw std::runtime_error("Could not find USB device!");
-    //   } else {
-    //
-    //     cout << "Found \033[1;36m" << device_handles.size() << "\033[0m device";
-    //
-    //     if (1 < device_handles.size()) {
-    //       cout << "s";
-    //     }
-    //
-    //     cout << "." << endl;
-    //     for (uint8_t i = 0; i < device_handles.size(); ++i) {
-    //       cout << to_string(static_cast<long long>(i)) << ": " << hex
-    //            << device_handles.at(i) << dec << endl;
-    //     }
-    //
-    //     if (nullptr == handle && device_handles.size() > 0) {
-    //       handle = device_handles.at(0);
-    //     }
-    //   }
-    //
-    // } else if ("use" == command_with_parameters[0]) {
+    // }  else if ("use" == command_with_parameters[0]) {
     //   desired_device_index = stoi(command_with_parameters[1]);
     //   if (desired_device_index < device_handles.size()) {
     //     handle = device_handles[desired_device_index];
