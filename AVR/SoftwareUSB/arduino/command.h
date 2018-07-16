@@ -295,7 +295,7 @@ private:
 class ResetCommand : public Command{
 public:
   TRunParameters run(std::vector<std::string>& args) override {
-    return TRunParameters{EndpointIO(), USBRequest()};
+    return TRunParameters{USB_ENDPOINT_IN, USBRequest::RESET};
   }
 };
 class ListCommand : public Command{
