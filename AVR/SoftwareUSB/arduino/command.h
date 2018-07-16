@@ -283,6 +283,15 @@ public:
 private:
   std::vector<usb_dev_handle *> device_handles;
 };
+class ClearCommand : public Command{
+public:
+  TRunParameters run(std::vector<std::string>& args) override {
+    init();
+    return TRunParameters{EndpointIO(), USBRequest(),[](){std::cout << "\x1B[2J\x1B[H";}};
+  }
+private:
+  std::vector<usb_dev_handle *> device_handles;
+};
 class ResetCommand : public Command{
 public:
   TRunParameters run(std::vector<std::string>& args) override {
@@ -293,6 +302,7 @@ class ListCommand : public Command{
 public:
   TRunParameters run(std::vector<std::string>& args) override {
     std::cout << "Usage:" << std::endl;
+    std::cout << "  clear" << std::endl;
     std::cout << "  exit" << std::endl;
     std::cout << "  flashdump <direct hex address literals>" << std::endl;
     std::cout << "  in <predicate - see below>: send to usb device" << std::endl;
@@ -327,5 +337,6 @@ CommandMap command_map {
   {"on", &creator<OnCommand>},
   {"oute", &creator<OuteCommand>},
   {"use", &creator<UseCommand>},
+  {"clear", &creator<ClearCommand>},
   {"reset", &creator<ResetCommand>}
 };

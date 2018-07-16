@@ -295,8 +295,6 @@ int main(int argc, char **argv) {
     //         const_cast<char *>(command_with_parameters.at(1).c_str()),
     //         command_with_parameters.at(1).length() + 1, 5000);
     //   }
-    // } else if ("clear" == command_with_parameters[0]) {
-    //   std::cout << "\x1B[2J\x1B[H";
     // } else if ("flashdump" == command_with_parameters[0]) {
     //
     //   if (argc > 2) {
