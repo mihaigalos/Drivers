@@ -325,12 +325,7 @@ int main(int argc, char **argv) {
     //     }
     //   }
     //
-    // } else if ("reset" == command_with_parameters[0]) {
-    //   nBytes = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE |
-    //                                        USB_ENDPOINT_IN,
-    //                            static_cast<int>(USBRequest::RESET), 0, 0,
-    //                            (char *)buffer, sizeof(buffer), 5000);
-    // }  else if ("use" == command_with_parameters[0]) {
+    // } else if ("use" == command_with_parameters[0]) {
     //   desired_device_index = stoi(command_with_parameters[1]);
     //   if (desired_device_index < device_handles.size()) {
     //     handle = device_handles[desired_device_index];
