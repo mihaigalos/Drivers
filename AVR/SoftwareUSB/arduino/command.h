@@ -38,6 +38,8 @@ public:
     auto result = 0;
     TRunParameters parameters = run (args);
 
+    std::cout<<"buffer before: "<<buffer_<<std::endl;
+
     if(USBRequest::Unknown != parameters.request){
       result = usb_control_msg(handle_, USB_TYPE_VENDOR | USB_RECIP_DEVICE |
         static_cast<int>(parameters.endpoint),
@@ -46,8 +48,9 @@ public:
         (char *)buffer_, sizeof(buffer_), 5000);
     }
 
+    std::cout<<"buffer intermediate: "<<buffer_<<std::endl;
     if(parameters.postAction) parameters.postAction();
-
+    std::cout<<"buffer after: "<<buffer_<<std::endl;
     return result;
 
   }
@@ -96,7 +99,7 @@ public:
 class OutCommand : public Command{
 public:
   TRunParameters run(std::vector<std::string>& args) override {
-    return TRunParameters{EndpointIO(), USBRequest(), Utils::looping_dump};
+    return TRunParameters{USB_ENDPOINT_IN, USBRequest::DATA_OUT, Utils::looping_dump};
   }
 private:
 
@@ -112,10 +115,7 @@ private:
     static void looping_dump(){
       std::cout << "Looping dump. Press ESC to exit." << std::endl << std::endl;
       auto callable = [&] {
-        usb_control_msg(handle_, USB_TYPE_VENDOR | USB_RECIP_DEVICE |
-          USB_ENDPOINT_IN,
-          static_cast<int>(USBRequest::DATA_OUT), 0, 0,
-          (char *)buffer_, sizeof(buffer_), 5000);
+          OutCommandSimple{}.execute();
           static std::string old_buffer;
           if (std::string{buffer_} != old_buffer)
           {
@@ -127,8 +127,8 @@ private:
 
         run_until_keypressed(callable);
         std::this_thread::sleep_for(std::chrono::seconds(1));
-      }
-    };
+    }
+  };
 
 
 };
@@ -136,14 +136,12 @@ private:
 class OffCommand : public Command{
 public:
   TRunParameters run(std::vector<std::string>& args) override {
-    std::cout<<"Off!"<<std::endl;
     return TRunParameters{USB_ENDPOINT_IN, USBRequest::LED_OFF};
   }
 };
 class OnCommand : public Command{
 public:
   TRunParameters run(std::vector<std::string>& args) override {
-     std::cout<<"On!"<<std::endl;
     return TRunParameters{USB_ENDPOINT_IN, USBRequest::LED_ON};
   }
 };
@@ -165,7 +163,7 @@ private:
 
 
 
-        std::cout << "Got bytes: " << buffer_ << std::endl;
+        std::cout << "Got eeprom bytes: " << buffer_ << std::endl;
         std::vector<std::string> eeprom_metadata = tokenize_string(buffer_);
 
         auto print_version = [](std::string tokenized_element, std::string text) {
@@ -323,7 +321,7 @@ CommandMap command_map {
   {"exit", &creator<ExitCommand>},
   {"flashdump", &creator<FlashDumpCommand>},
   {"in", &creator<InCommand>},
-  {"out", &creator<OutCommand>},
+  {"out", &creator<OutCommandSimple>},
   {"list", &creator<ListCommand>},
   {"off", &creator<OffCommand>},
   {"on", &creator<OnCommand>},
