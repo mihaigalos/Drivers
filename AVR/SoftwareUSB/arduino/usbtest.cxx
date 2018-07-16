@@ -338,7 +338,6 @@ int main(int argc, char **argv) {
     //     cout << "Invalid index!" << endl;
     //   }
     // }
-
     if (nBytes < 0)
       fprintf(stderr, "USB error: %s\n", usb_strerror());
 
