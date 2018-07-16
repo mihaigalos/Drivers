@@ -296,7 +296,6 @@ int main(int argc, char **argv) {
     //         command_with_parameters.at(1).length() + 1, 5000);
     //   }
     // } else if ("flashdump" == command_with_parameters[0]) {
-    //
     //   if (argc > 2) {
     //     nBytes = usb_control_msg(
     //         handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_OUT,
