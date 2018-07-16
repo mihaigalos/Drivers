@@ -38,8 +38,6 @@ public:
     auto result = 0;
     TRunParameters parameters = run (args);
 
-    std::cout<<"buffer before: "<<buffer_<<std::endl;
-
     if(USBRequest::Unknown != parameters.request){
       result = usb_control_msg(handle_, USB_TYPE_VENDOR | USB_RECIP_DEVICE |
         static_cast<int>(parameters.endpoint),
@@ -48,11 +46,8 @@ public:
         (char *)buffer_, sizeof(buffer_), 5000);
     }
 
-    std::cout<<"buffer intermediate: "<<buffer_<<std::endl;
     if(parameters.postAction) parameters.postAction();
-    std::cout<<"buffer after: "<<buffer_<<std::endl;
     return result;
-
   }
 protected:
    virtual TRunParameters run(std::vector<std::string>& args) = 0;
@@ -117,6 +112,7 @@ private:
       auto callable = [&] {
           OutCommandSimple{}.execute();
           static std::string old_buffer;
+
           if (std::string{buffer_} != old_buffer)
           {
             std::cout << "Got bytes: " << buffer_ << std::endl;
@@ -321,7 +317,7 @@ CommandMap command_map {
   {"exit", &creator<ExitCommand>},
   {"flashdump", &creator<FlashDumpCommand>},
   {"in", &creator<InCommand>},
-  {"out", &creator<OutCommandSimple>},
+  {"out", &creator<OutCommand>},
   {"list", &creator<ListCommand>},
   {"off", &creator<OffCommand>},
   {"on", &creator<OnCommand>},
