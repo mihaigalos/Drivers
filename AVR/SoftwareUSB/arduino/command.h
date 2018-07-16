@@ -155,118 +155,122 @@ private:
   class EepromParser{
   public:
     static void parse(){
-
-
-
-
         std::cout << "Got eeprom bytes: " << buffer_ << std::endl;
         std::vector<std::string> eeprom_metadata = tokenize_string(buffer_);
 
-        auto print_version = [](std::string tokenized_element, std::string text) {
-          uint16_t one_byte = 0;
-          std::istringstream iss(tokenized_element);
-          iss >> std::hex >> one_byte;
+        print_versions(eeprom_metadata);
+        print_timestamps(eeprom_metadata);
+    }
 
-          UVersionInfo version_info;
-          version_info.u_version_info = one_byte;
+  private:
 
-          auto metadata_version = version_info.s_version_info;
+  static void print_versions(const std::vector<std::string>& eeprom_metadata){
+    uint8_t one_byte = 0;
+    std::istringstream iss(eeprom_metadata.at(0));
+    iss >> std::hex >> one_byte;
 
-          std::cout << text << " ";
-          std::cout << "\033[1;33m"
-               << "\033[1;46m"
-               << "v" << static_cast<uint16_t>(metadata_version.major) << "."
-               << static_cast<uint16_t>(metadata_version.minor) << "."
-               << static_cast<uint16_t>(metadata_version.patch) << "\033[0m"
-               << " [Raw: 0x" << std::hex << one_byte << "]" << std::dec << std::endl;
+    print_version(eeprom_metadata.at(0), "Metadata version:");
+    print_version(eeprom_metadata.at(2), "Sofware version: ");
+    print_version(eeprom_metadata.at(8), "Hardware version:");
+  }
 
-        };
+  static void print_timestamps(const std::vector<std::string>& eeprom_metadata){
+    std::vector<std::string> software_version_last_updated_timestamp{
+        eeprom_metadata.begin() + 4, eeprom_metadata.begin() + 8};
+    std::vector<std::string> hardware_version_timestamp{eeprom_metadata.begin() + 10,
+                                              eeprom_metadata.begin() + 14};
 
-        uint8_t one_byte = 0;
-        std::istringstream iss(eeprom_metadata.at(0));
-        iss >> std::hex >> one_byte;
+    auto sofware_timezone_info = eeprom_metadata.at(3);
+    auto hardware_timezone_info = eeprom_metadata.at(9);
 
-        print_version(eeprom_metadata.at(0), "Metadata version:");
-        print_version(eeprom_metadata.at(2), "Sofware version: ");
-        print_version(eeprom_metadata.at(8), "Hardware version:");
+    print_timestamp(software_version_last_updated_timestamp,
+                    sofware_timezone_info, "SW Timestamp : ");
+    print_timestamp(hardware_version_timestamp, hardware_timezone_info,
+                    "HW Timestamp : ");
+  }
 
-        auto print_timestamp = [](std::vector<std::string> &tokenized_elements,
-                                  std::string time_zone_info, std::string text) {
+  static void print_version (const std::string tokenized_element, const std::string text) {
+    uint16_t one_byte = 0;
+    std::istringstream iss(tokenized_element);
+    iss >> std::hex >> one_byte;
 
-          std::cout << std::endl << text;
-          time_t epoch = 0;
-          uint8_t i = 0;
-          for (auto &element : tokenized_elements) {
-            uint16_t one_byte = 0;
-            std::istringstream iss(element);
-            iss >> std::hex >> one_byte;
+    UVersionInfo version_info;
+    version_info.u_version_info = one_byte;
 
-            epoch |= one_byte << (3 - i++) * 8;
-          }
+    auto metadata_version = version_info.s_version_info;
 
-          uint16_t uint16_tzi = 0;
-          std::istringstream iss(time_zone_info);
-          iss >> std::hex >> uint16_tzi;
-
-          UTimeZoneInfo tzi;
-          tzi.u_timezone_info = uint16_tzi;
-
-          std::string utc_sign = tzi.s_timezone_info.timezone_sign ? "+" : "-";
-          auto time_offset = tzi.s_timezone_info.utc_offset;
-
-          if (!tzi.s_timezone_info.timezone_sign)
-            time_offset = -time_offset;
-
-          std::string is_daylight_saving;
-          if (tzi.s_timezone_info.is_daylight_saving_active &&
-              !tzi.s_timezone_info.is_china_time) {
-            time_offset += 1;
-            is_daylight_saving = " (+1 Daylight saving included)";
-          } else {
-            is_daylight_saving = " No Daylight saving";
-          }
-
-          std::tm myEpoch = *std::gmtime(&epoch);
-          if (tzi.s_timezone_info.is_daylight_saving_active) {
-            myEpoch.tm_hour = myEpoch.tm_hour - tzi.s_timezone_info.utc_offset;
-            if (tzi.s_timezone_info.is_china_time) {
-              --myEpoch.tm_hour;
-            }
-          }
-
-          auto make_time = mktime(&myEpoch);
-          std::string c_time = std::ctime(&make_time);
-
-          c_time.erase(std::remove(c_time.begin(), c_time.end(), '\n'),
-                       c_time.end());
-
-          std::cout << "\033[1;36m" << c_time
-
-               << "\033[1;35m"
-               << " UTC" << utc_sign
-               << std::to_string(static_cast<uint32_t>(time_offset)) << "\033[1;36m"
-               << is_daylight_saving << "."
-               << "\033[0m" << std::endl
-               << "[Raw hex: " << std::hex << static_cast<uint32_t>(epoch) << std::dec
-               << "]";
-
-          std::cout << std::endl;
-        };
-
-        std::vector<std::string> software_version_last_updated_timestamp{
-            eeprom_metadata.begin() + 4, eeprom_metadata.begin() + 8};
-        std::vector<std::string> hardware_version_timestamp{eeprom_metadata.begin() + 10,
-                                                  eeprom_metadata.begin() + 14};
-
-        auto sofware_timezone_info = eeprom_metadata.at(3);
-        auto hardware_timezone_info = eeprom_metadata.at(9);
-
-        print_timestamp(software_version_last_updated_timestamp,
-                        sofware_timezone_info, "SW Timestamp : ");
-        print_timestamp(hardware_version_timestamp, hardware_timezone_info,
-                        "HW Timestamp : ");
+    std::cout << text << " ";
+    std::cout << "\033[1;33m"
+        << "\033[1;46m"
+        << "v" << static_cast<uint16_t>(metadata_version.major) << "."
+        << static_cast<uint16_t>(metadata_version.minor) << "."
+        << static_cast<uint16_t>(metadata_version.patch) << "\033[0m"
+        << " [Raw: 0x" << std::hex << one_byte << "]" << std::dec << std::endl;
 
     }
+
+    static void print_timestamp(std::vector<std::string> &tokenized_elements,
+                              std::string time_zone_info, std::string text) {
+
+      std::cout << std::endl << text;
+      time_t epoch = 0;
+      uint8_t i = 0;
+      for (auto &element : tokenized_elements) {
+        uint16_t one_byte = 0;
+        std::istringstream iss(element);
+        iss >> std::hex >> one_byte;
+
+        epoch |= one_byte << (3 - i++) * 8;
+      }
+
+      uint16_t uint16_tzi = 0;
+      std::istringstream iss(time_zone_info);
+      iss >> std::hex >> uint16_tzi;
+
+      UTimeZoneInfo tzi;
+      tzi.u_timezone_info = uint16_tzi;
+
+      std::string utc_sign = tzi.s_timezone_info.timezone_sign ? "+" : "-";
+      auto time_offset = tzi.s_timezone_info.utc_offset;
+
+      if (!tzi.s_timezone_info.timezone_sign)
+        time_offset = -time_offset;
+
+      std::string is_daylight_saving;
+      if (tzi.s_timezone_info.is_daylight_saving_active &&
+          !tzi.s_timezone_info.is_china_time) {
+        time_offset += 1;
+        is_daylight_saving = " (+1 Daylight saving included)";
+      } else {
+        is_daylight_saving = " No Daylight saving";
+      }
+
+      std::tm myEpoch = *std::gmtime(&epoch);
+      if (tzi.s_timezone_info.is_daylight_saving_active) {
+        myEpoch.tm_hour = myEpoch.tm_hour - tzi.s_timezone_info.utc_offset;
+        if (tzi.s_timezone_info.is_china_time) {
+          --myEpoch.tm_hour;
+        }
+      }
+
+      auto make_time = mktime(&myEpoch);
+      std::string c_time = std::ctime(&make_time);
+
+      c_time.erase(std::remove(c_time.begin(), c_time.end(), '\n'),
+                   c_time.end());
+
+      std::cout << "\033[1;36m" << c_time
+       << "\033[1;35m"
+       << " UTC" << utc_sign
+       << std::to_string(static_cast<uint32_t>(time_offset)) << "\033[1;36m"
+       << is_daylight_saving << "."
+       << "\033[0m" << std::endl
+       << "[Raw hex: " << std::hex << static_cast<uint32_t>(epoch) << std::dec
+       << "]";
+
+      std::cout << std::endl;
+    }
+
   };
 
 };
