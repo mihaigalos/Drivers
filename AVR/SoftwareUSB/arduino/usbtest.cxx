@@ -285,15 +285,7 @@ int main(int argc, char **argv) {
 
     command_map[command_with_parameters[0]]()->execute(command_with_parameters);
 
-    // if ("in" == command_with_parameters[0]) {
-    //   if (2 == command_with_parameters.size()) {
-    //     nBytes = usb_control_msg(
-    //         handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_OUT,
-    //         static_cast<int>(USBRequest::DATA_WRITE), 0, 0,
-    //         const_cast<char *>(command_with_parameters.at(1).c_str()),
-    //         command_with_parameters.at(1).length() + 1, 5000);
-    //   }
-    // } else if ("flashdump" == command_with_parameters[0]) {
+    // if ("flashdump" == command_with_parameters[0]) {
     //   if (argc > 2) {
     //     nBytes = usb_control_msg(
     //         handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_OUT,

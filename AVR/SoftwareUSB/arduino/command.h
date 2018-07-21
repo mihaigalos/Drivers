@@ -5,6 +5,7 @@
 #include <string>
 #include <exception>
 
+static constexpr uint8_t kCommandBufferSize=254u;
 
 void onExit(std::vector<usb_dev_handle *> &handles);
 auto getUsbHandles() -> std::vector<usb_dev_handle *>;
@@ -53,7 +54,7 @@ protected:
    virtual TRunParameters run(std::vector<std::string>& args) = 0;
    static usb_dev_handle * handle_;
    static std::vector<usb_dev_handle *> device_handles_;
-   static char buffer_[254];
+   static char buffer_[kCommandBufferSize];
 private:
    static std::vector<std::string> empty_vector_;
 
@@ -61,7 +62,7 @@ private:
 
 std::vector<std::string> Command::empty_vector_;
 usb_dev_handle * Command::handle_ {nullptr};
-char Command::buffer_[254];
+char Command::buffer_[kCommandBufferSize];
 std::vector<usb_dev_handle *> Command::device_handles_;
 
 
@@ -80,7 +81,8 @@ public:
 class InCommand : public Command{
 public:
   TRunParameters run(std::vector<std::string>& args) override {
-    return TRunParameters{EndpointIO(), USBRequest()};
+    memcpy(buffer_,args.at(1).c_str(), kCommandBufferSize>args.at(1).length()?args.at(1).length():kCommandBufferSize);
+    return TRunParameters{USB_ENDPOINT_OUT, USBRequest::DATA_WRITE};
   }
 };
 
