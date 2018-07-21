@@ -285,37 +285,6 @@ int main(int argc, char **argv) {
 
     command_map[command_with_parameters[0]]()->execute(command_with_parameters);
 
-    // if ("flashdump" == command_with_parameters[0]) {
-    //   if (argc > 2) {
-    //     nBytes = usb_control_msg(
-    //         handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_OUT,
-    //         static_cast<int>(USBRequest::FLASH_DUMP_FROM_ADDRESS), 0, 0,
-    //         const_cast<char *>(command_with_parameters.at(1).c_str()),
-    //         command_with_parameters.at(1).length() + 1, 5000);
-    //   } else {
-    //     char address_hex[6] = "0";
-    //     constexpr double atmega328p_flash_size = 32 * 1024;
-    //     constexpr uint16_t repeat_count = static_cast<uint16_t>(
-    //         ceil(atmega328p_flash_size / static_cast<double>(kBufferSize)));
-    //
-    //     for (uint16_t i = 0; i < repeat_count; ++i) {
-    //       uint16_t offset = i * kBufferSize;
-    //       sprintf(address_hex, "%x", offset);
-    //
-    //       nBytes = usb_control_msg(
-    //           handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_OUT,
-    //           static_cast<int>(USBRequest::FLASH_DUMP_FROM_ADDRESS), 0, 0,
-    //           address_hex, strlen(address_hex) + 1, 5000);
-    //
-    //       nBytes = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE |
-    //                                            USB_ENDPOINT_IN,
-    //                                static_cast<int>(USBRequest::DATA_OUT), 0, 0,
-    //                                (char *)buffer, sizeof(buffer), 5000);
-    //       printReceivedBytes(offset, nBytes, buffer, "", false);
-    //     }
-    //   }
-    //
-    // }
     if (nBytes < 0)
       fprintf(stderr, "USB error: %s\n", usb_strerror());
 

@@ -9,7 +9,8 @@ static constexpr uint8_t kCommandBufferSize=254u;
 
 void onExit(std::vector<usb_dev_handle *> &handles);
 auto getUsbHandles() -> std::vector<usb_dev_handle *>;
-
+void printReceivedBytes(uint16_t start_address, uint16_t nBytes, char buffer[],
+                        std::string separator, bool print_bytecount);
 std::vector<std::string> tokenize_string(const std::string &s) {
   std::stringstream ss(s);
   std::istream_iterator<std::string> begin(ss);
@@ -24,6 +25,7 @@ struct TRunParameters{
   EndpointIO endpoint;
   USBRequest request;
   std::function<void()> postAction;
+  uint8_t byte_count_override;
 };
 
 class Command {
@@ -40,11 +42,14 @@ public:
     TRunParameters parameters = run (args);
 
     if(USBRequest::Unknown != parameters.request){
+      uint8_t request_length = sizeof(buffer_);
+      if(USBRequest::FLASH_DUMP_FROM_ADDRESS == parameters.request) request_length = parameters.byte_count_override;
+
       result = usb_control_msg(handle_, USB_TYPE_VENDOR | USB_RECIP_DEVICE |
         static_cast<int>(parameters.endpoint),
         static_cast<int>(parameters.request),
         0, 0,
-        (char *)buffer_, sizeof(buffer_), 5000);
+        (char *)buffer_, request_length, 5000);
     }
 
     if(parameters.postAction) parameters.postAction();
@@ -72,19 +77,7 @@ public:
     return TRunParameters{EndpointIO(), USBRequest()};
   }
 };
-class FlashDumpCommand : public Command{
-public:
-  TRunParameters run(std::vector<std::string>& args) override {
-    return TRunParameters{EndpointIO(), USBRequest()};
-  }
-};
-class InCommand : public Command{
-public:
-  TRunParameters run(std::vector<std::string>& args) override {
-    memcpy(buffer_,args.at(1).c_str(), kCommandBufferSize>args.at(1).length()?args.at(1).length():kCommandBufferSize);
-    return TRunParameters{USB_ENDPOINT_OUT, USBRequest::DATA_WRITE};
-  }
-};
+
 
 class OutCommandSimple : public Command{
 public:
@@ -130,6 +123,50 @@ private:
 
 
 };
+
+class FlashDumpCommandSimple : public Command{
+public:
+  TRunParameters run(std::vector<std::string>& args) override {
+    std::string arg = args.at(1);
+    uint8_t length = kCommandBufferSize>arg.length()?arg.length():kCommandBufferSize;
+    memcpy(buffer_,arg.c_str(), arg.length()+1);
+    return TRunParameters{USB_ENDPOINT_OUT, USBRequest::FLASH_DUMP_FROM_ADDRESS,[](){},length};
+  }
+};
+
+class FlashDumpCommand : public Command{
+public:
+  TRunParameters run(std::vector<std::string>& args) override {
+
+     char address_hex[6];
+     memset (address_hex, 0, sizeof(address_hex));
+     address_hex[0] = '0';
+         constexpr double atmega328p_flash_size = 32 * 1024;
+         constexpr uint16_t repeat_count = static_cast<uint16_t>(
+             ceil(atmega328p_flash_size / static_cast<double>(kBufferSize)));
+
+         for (uint16_t i = 0; i < repeat_count; ++i) {
+            uint16_t offset = i * kBufferSize;
+            sprintf(address_hex, "%x", offset);
+            std::vector<std::string> args;
+            args.push_back(std::string{"irrelevant"});
+            args.push_back(std::string{address_hex});
+            FlashDumpCommandSimple{}.execute(args);
+            OutCommandSimple{}.execute();
+
+            printReceivedBytes(offset, kBufferSize, buffer_, "", false);
+         }
+    return TRunParameters{EndpointIO(), USBRequest()};
+  }
+};
+class InCommand : public Command{
+public:
+  TRunParameters run(std::vector<std::string>& args) override {
+    memcpy(buffer_,args.at(1).c_str(), kCommandBufferSize>args.at(1).length()?args.at(1).length():kCommandBufferSize);
+    return TRunParameters{USB_ENDPOINT_OUT, USBRequest::DATA_WRITE};
+  }
+};
+
 
 class OffCommand : public Command{
 public:
