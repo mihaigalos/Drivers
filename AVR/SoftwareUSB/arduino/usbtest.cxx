@@ -278,8 +278,6 @@ int main(int argc, char **argv) {
   string command = "list";
   string parameters;
 
-  Command::init();
-
   do {
 
     auto start = chrono::high_resolution_clock::now();
@@ -325,13 +323,6 @@ int main(int argc, char **argv) {
     //     }
     //   }
     //
-    // } else if ("use" == command_with_parameters[0]) {
-    //   desired_device_index = stoi(command_with_parameters[1]);
-    //   if (desired_device_index < device_handles.size()) {
-    //     handle = device_handles[desired_device_index];
-    //   } else {
-    //     cout << "Invalid index!" << endl;
-    //   }
     // }
     if (nBytes < 0)
       fprintf(stderr, "USB error: %s\n", usb_strerror());

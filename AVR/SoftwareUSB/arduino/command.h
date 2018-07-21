@@ -277,20 +277,20 @@ private:
 class UseCommand : public Command{
 public:
   TRunParameters run(std::vector<std::string>& args) override {
-    init();
+    uint8_t desired_device_index = stoi(args[1]);
+    if (desired_device_index < device_handles_.size()) {
+      handle_ = device_handles_[desired_device_index];
+    } else {
+      std::cout << "Invalid index!" << std::endl;
+    }
     return TRunParameters{EndpointIO(), USBRequest()};
   }
-private:
-  std::vector<usb_dev_handle *> device_handles;
 };
 class ClearCommand : public Command{
 public:
   TRunParameters run(std::vector<std::string>& args) override {
-    init();
     return TRunParameters{EndpointIO(), USBRequest(),[](){std::cout << "\x1B[2J\x1B[H";}};
   }
-private:
-  std::vector<usb_dev_handle *> device_handles;
 };
 class ResetCommand : public Command{
 public:
@@ -301,6 +301,8 @@ public:
 class ListCommand : public Command{
 public:
   TRunParameters run(std::vector<std::string>& args) override {
+    Command::init();
+
     std::cout << "Usage:" << std::endl;
     std::cout << "  clear" << std::endl;
     std::cout << "  exit" << std::endl;
@@ -318,7 +320,6 @@ public:
     std::cout << "  reset" << std::endl << std::endl;
     return TRunParameters{EndpointIO(), USBRequest()};
   }
-
 };
 
 template <typename T>
