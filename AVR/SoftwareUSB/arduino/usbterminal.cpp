@@ -21,10 +21,10 @@
 #include <cmath>
 #include <functional>
 #include <iterator>
+#include <map>
+#include <memory>
 #include <sstream>
 #include <vector>
-#include <memory>
-#include <map>
 
 #include <algorithm> // for std::remove
 #include <chrono>    // std::chrono::seconds
@@ -32,13 +32,16 @@
 #include <thread>    // std::this_thread::sleep_for
 #include <time.h>    // for unix timestamps
 
+
+#include "command.h"
 #include "eeprom_metadata.h"
 #include "i_usbRequest.h"
-#include "command.h"
+
+
 using namespace std;
 
-constexpr uint16_t vendor_id {0x16C0};
-constexpr uint16_t device_id {0x05DC};
+constexpr uint16_t vendor_id{0x16C0};
+constexpr uint16_t device_id{0x05DC};
 
 // used to get descriptor strings for device identification
 static int usbGetDescriptorString(usb_dev_handle *dev, int index, int langid,
@@ -228,29 +231,29 @@ void printReceivedBytes(uint16_t start_address, uint16_t nBytes, char buffer[],
   cout << dec << nouppercase;
 }
 
-auto getUsbHandles() -> std::vector<usb_dev_handle *>{
+auto getUsbHandles() -> std::vector<usb_dev_handle *> {
   auto device_handles = usbOpenDevice(
-        vendor_id, const_cast<char *>(string{"Galos Industries"}.c_str()),
-        device_id, const_cast<char *>(string{"DotPhat"}.c_str()));
+      vendor_id, const_cast<char *>(string{"Galos Industries"}.c_str()),
+      device_id, const_cast<char *>(string{"DotPhat"}.c_str()));
 
-    if (0 == device_handles.size()) {
-      throw std::runtime_error("Could not find USB device!");
-    } else {
+  if (0 == device_handles.size()) {
+    throw std::runtime_error("Could not find USB device!");
+  } else {
 
-      cout << "Found \033[1;36m" << device_handles.size() << "\033[0m device";
+    cout << "Found \033[1;36m" << device_handles.size() << "\033[0m device";
 
-      if (1 < device_handles.size()) {
-        cout << "s";
-      }
-
-      cout << "." << endl;
-      for (uint8_t i = 0; i < device_handles.size(); ++i) {
-        cout << to_string(static_cast<long long>(i)) << ": " << hex
-             << device_handles.at(i) << dec << endl;
-      }
+    if (1 < device_handles.size()) {
+      cout << "s";
     }
 
-    return device_handles;
+    cout << "." << endl;
+    for (uint8_t i = 0; i < device_handles.size(); ++i) {
+      cout << to_string(static_cast<long long>(i)) << ": " << hex
+           << device_handles.at(i) << dec << endl;
+    }
+  }
+
+  return device_handles;
 }
 
 int main(int argc, char **argv) {

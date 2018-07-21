@@ -5,6 +5,9 @@
 #include <string>
 #include <exception>
 
+#include "i_usbRequest.h"
+#include "eeprom_metadata.h"
+
 static constexpr uint8_t kCommandBufferSize=254u;
 
 void onExit(std::vector<usb_dev_handle *> &handles);
