@@ -1,6 +1,6 @@
 MCU = atmega328p
 
-EXE = usbtest.exe
+EXE = usbterminal.exe
 HEX = software_usb.hex
 
 CC = avr-g++
@@ -19,15 +19,15 @@ OBJECTS = usbdrvasm.o usbdrv.o oddebug.o
 UNAME := $(shell uname)
 
 ifeq ($(UNAME), Linux)
-  COMPILE_COMMAND = g++ -std=c++11 -lusb -O -Wall usbtest.cxx -o usbtest.bin
+  COMPILE_COMMAND = g++ -std=c++11 -lusb -O -Wall usbterminal.cpp -o usbterminal.bin
 else
-  COMPILE_COMMAND = g++ -std=c++11 -I ./libusb/include -O -Wall usbtest.cxx ./libusb/lib/dynamic/libusb_dyn.c -o $@
+  COMPILE_COMMAND = g++ -std=c++11 -I ./libusb/include -O -Wall usbterminal.cpp ./libusb/lib/dynamic/libusb_dyn.c -o $@
 endif
 
 
 all: $(EXE) $(HEX)
 
-$(EXE): usbtest.cxx
+$(EXE): usbterminal.cpp
 	@echo
 	$(COMPILE_COMMAND)
 
