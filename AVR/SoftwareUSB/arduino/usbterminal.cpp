@@ -253,27 +253,8 @@ auto getUsbHandles() -> std::vector<usb_dev_handle *>{
     return device_handles;
 }
 
-
-
 int main(int argc, char **argv) {
-
-
   int nBytes = 0;
-
-  cout << "Usage:" << endl;
-  cout << "  exit" << endl;
-  cout << "  flashdump <direct hex address literals>" << endl;
-  cout << "  in <predicate - see below>: send to usb device" << endl;
-  cout << "     s:[frequence in millisecond multiples of 100ms[:max count]]:<string>: send over radio" << endl;
-  cout << "       example: in s:5:HelloWorld"<<endl;
-  cout << "     r: receive over radio" << endl;
-  cout << "  list" << endl;
-  cout << "  off" << endl;
-  cout << "  on" << endl;
-  cout << "  out: looping read from usb device" << endl;
-  cout << "  oute: read and parse eeprom metadata" << endl;
-  cout << "  use <device index>" << endl;
-  cout << "  reset" << endl << endl;
 
   string command = "list";
   string parameters;
