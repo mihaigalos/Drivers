@@ -19,15 +19,15 @@ OBJECTS = usbdrvasm.o usbdrv.o oddebug.o
 UNAME := $(shell uname)
 
 ifeq ($(UNAME), Linux)
-  COMPILE_COMMAND = g++ -std=c++11 -lusb -O -Wall usbterminal.cpp -o usbterminal.bin
+  COMPILE_COMMAND = g++ -std=c++11 -lusb -O -Wall usbterminal.cxx -o usbterminal.bin
 else
-  COMPILE_COMMAND = g++ -std=c++11 -I ./libusb/include -O -Wall usbterminal.cpp ./libusb/lib/dynamic/libusb_dyn.c -o $@
+  COMPILE_COMMAND = g++ -std=c++11 -I ./libusb/include -O -Wall usbterminal.cxx ./libusb/lib/dynamic/libusb_dyn.c -o $@
 endif
 
 
 all: $(EXE) $(HEX)
 
-$(EXE): usbterminal.cpp
+$(EXE): usbterminal.cxx
 	@echo
 	$(COMPILE_COMMAND)
 
