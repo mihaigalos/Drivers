@@ -28,7 +28,10 @@ struct TRunParameters{
   EndpointIO endpoint;
   USBRequest request;
   std::function<void()> postAction;
-  uint8_t byte_count_override;
+  uint8_t byte_count_override{0};
+  TRunParameters(EndpointIO _endpoint, USBRequest _request) : endpoint(_endpoint), request(_request){}
+  TRunParameters(EndpointIO _endpoint, USBRequest _request, std::function<void()> _postAction) : endpoint(_endpoint), request(_request), postAction(_postAction){}
+  TRunParameters(EndpointIO _endpoint, USBRequest _request, std::function<void()> _postAction, uint8_t _byte_count_override) : endpoint(_endpoint), request(_request), postAction(_postAction), byte_count_override(_byte_count_override){}
 };
 
 class Command {
@@ -46,7 +49,8 @@ public:
 
     if(USBRequest::Unknown != parameters.request){
       uint8_t request_length = sizeof(buffer_);
-      if(USBRequest::FLASH_DUMP_FROM_ADDRESS == parameters.request) request_length = parameters.byte_count_override;
+
+      if(0 != parameters.byte_count_override)request_length = parameters.byte_count_override;
 
       result = usb_control_msg(handle_, USB_TYPE_VENDOR | USB_RECIP_DEVICE |
         static_cast<int>(parameters.endpoint),
@@ -159,6 +163,50 @@ public:
 
             printReceivedBytes(offset, kBufferSize, buffer_, "", false);
          }
+    return TRunParameters{EndpointIO(), USBRequest()};
+  }
+};
+
+class EepromDumpCommandSimple : public Command{
+public:
+  TRunParameters run(std::vector<std::string>& args) override {
+    std::string arg = args.at(1);
+    uint8_t length = kCommandBufferSize>arg.length()?arg.length():kCommandBufferSize;
+    memcpy(buffer_,arg.c_str(), arg.length()+1);
+    return TRunParameters{USB_ENDPOINT_OUT, USBRequest::EEPROM_DUMP_FROM_ADDRESS,[](){},length};
+  }
+};
+
+class EepromDumpCommand : public Command{
+public:
+  TRunParameters run(std::vector<std::string>& args) override {
+    if(2 == args.size() ){
+      std::cout<<"Address specified: "<<args.at(1)<<std::endl;
+      uint16_t offset = std::stoi(args.at(1));
+      EepromDumpCommandSimple{}.execute(args);
+      OutCommandSimple{}.execute();
+
+      printReceivedBytes(offset, kBufferSize, buffer_, "", false);
+    }else {
+     char address_hex[6];
+     memset (address_hex, 0, sizeof(address_hex));
+     address_hex[0] = '0';
+         constexpr double atmega328p_eeprom_size = 1 * 1024;
+         constexpr uint16_t repeat_count = static_cast<uint16_t>(
+             ceil(atmega328p_eeprom_size / static_cast<double>(kBufferSize)));
+
+         for (uint16_t i = 0; i < repeat_count; ++i) {
+            uint16_t offset = i * kBufferSize;
+            sprintf(address_hex, "%x", offset);
+            std::vector<std::string> args;
+            args.push_back(std::string{"irrelevant"});
+            args.push_back(std::string{address_hex});
+            EepromDumpCommandSimple{}.execute(args);
+            OutCommandSimple{}.execute();
+
+            printReceivedBytes(offset, kBufferSize, buffer_, "", false);
+         }
+    }
     return TRunParameters{EndpointIO(), USBRequest()};
   }
 };
@@ -348,6 +396,7 @@ public:
     std::cout << "Usage:" << std::endl;
     std::cout << "  clear" << std::endl;
     std::cout << "  exit" << std::endl;
+    std::cout << "  eepromdump <direct hex address literals>" << std::endl;
     std::cout << "  flashdump <direct hex address literals>" << std::endl;
     std::cout << "  in <predicate - see below>: send to usb device" << std::endl;
     std::cout << "     s:[frequence in millisecond multiples of 100ms[:max count]]:<string>: send over radio" << std::endl;
@@ -372,6 +421,7 @@ std::unique_ptr<Command> creator() {
 using CommandMap = std::map<std::string, std::unique_ptr<Command>(*)()>;
 CommandMap command_map {
   {"exit", &creator<ExitCommand>},
+  {"eepromdump", &creator<EepromDumpCommand>},
   {"flashdump", &creator<FlashDumpCommand>},
   {"in", &creator<InCommand>},
   {"out", &creator<OutCommand>},

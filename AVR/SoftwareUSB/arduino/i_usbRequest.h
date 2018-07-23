@@ -12,7 +12,8 @@ enum class USBRequest {
   DATA_OUT,
   DATA_WRITE,
   FLASH_DUMP_FROM_ADDRESS,
-  RESET
+  RESET,
+  EEPROM_DUMP_FROM_ADDRESS
 };
 
 extern uint8_t buffer[kBufferSize];
