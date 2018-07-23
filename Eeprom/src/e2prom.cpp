@@ -31,13 +31,13 @@ E2PROM::E2PROM(uint8_t ownAddress, uint32_t speed) {
 uint8_t E2PROM::readByte(uint16_t registerAddress) {
   uint8_t data = 0x55;
 
-  TEEepromResult result = TEEepromResult_Ok;
+  TEEepromResult result = TEEepromResult::Ok;
   do {
     Wire.beginTransmission(ownAddress_);
     Wire.write(static_cast<uint8_t>(registerAddress >> 8));
     Wire.write(static_cast<uint8_t>(registerAddress));
-    result = Wire.endTransmission();
-  } while (TEEepromResult_Ok != result);
+    result = static_cast<TEEepromResult>(Wire.endTransmission());
+  } while (TEEepromResult::Ok != result);
 
   // Ask the I2C device for data
   Wire.requestFrom(ownAddress_, static_cast<uint8_t>(1));
@@ -59,22 +59,22 @@ void E2PROM::dump(int8_t columnCount) {
 }
 
 TEEepromResult E2PROM::writeByte(uint16_t registerAddress, uint8_t data) {
-  TEEepromResult result = TEEepromResult_Ok;
+  TEEepromResult result = TEEepromResult::Ok;
   Wire.beginTransmission(ownAddress_);
   Wire.write(static_cast<uint8_t>(registerAddress >> 8));
   Wire.write(static_cast<uint8_t>(registerAddress));
   Wire.write(data);
-  result = Wire.endTransmission();
+  result = static_cast<TEEepromResult>(Wire.endTransmission());
   delay(5);
   return result;
 }
 
 TEEepromResult E2PROM::writePage(uint16_t registerAddress, uint8_t *buffer,
                                  uint8_t byteCount) {
-  TEEepromResult result = TEEepromResult_Ok;
+  TEEepromResult result = TEEepromResult::Ok;
 
   if (byteCount > 32)
-    result = TEEepromResult_BufferGreaterAsPageSize;
+    result = TEEepromResult::BufferGreaterAsPageSize;
   else {
 
     Wire.beginTransmission(ownAddress_);
@@ -84,7 +84,7 @@ TEEepromResult E2PROM::writePage(uint16_t registerAddress, uint8_t *buffer,
       Wire.write(buffer[i]);
       delay(5);
     }
-    result = Wire.endTransmission();
+    result = static_cast<TEEepromResult>(Wire.endTransmission());
     delay(5);
   }
   Wire.end();
@@ -93,19 +93,19 @@ TEEepromResult E2PROM::writePage(uint16_t registerAddress, uint8_t *buffer,
 
 TEEepromResult E2PROM::readPage(uint16_t registerAddress, uint8_t *buffer,
                                 uint8_t byteCount) {
-  TEEepromResult result = TEEepromResult_Ok;
+  TEEepromResult result = TEEepromResult::Ok;
 
   if (byteCount > 32)
-    result = TEEepromResult_BufferGreaterAsPageSize;
+    result = TEEepromResult::BufferGreaterAsPageSize;
   else {
     do {
       Wire.beginTransmission(ownAddress_);
       Wire.write(static_cast<uint8_t>(registerAddress >> 8));
       Wire.write(static_cast<uint8_t>(registerAddress));
-      result = Wire.endTransmission();
+      result = static_cast<TEEepromResult>(Wire.endTransmission());
 
       Wire.requestFrom(ownAddress_, byteCount);
-    } while (TEEepromResult_Ok != result);
+    } while (TEEepromResult::Ok != result);
 
     for (auto i = 0; i < byteCount; i++) {
       buffer[i++] = Wire.read();

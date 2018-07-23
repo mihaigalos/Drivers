@@ -25,13 +25,13 @@
 #define CLOCK_SPEED_400KHZ 400000
 #endif
 
-typedef enum {
-  TEEepromResult_Ok,
-  TEEepromResult_BufferGreaterAsPageSize,
-  TEEepromResult_NackOnAddressTransmit,
-  TEEepromResult_NackOnDataTransmit,
-  TEEepromResult_OtherError
-} TEEepromResult;
+enum class TEEepromResult{
+  Ok,
+  BufferGreaterAsPageSize,
+  NackOnAddressTransmit,
+  NackOnDataTransmit,
+  OtherError
+};
 
 class E2PROM {
   static uint8_t ownAddress_;
