@@ -8,6 +8,12 @@
 
 typedef void(*TFunc_void_puint8_uint8)(uint8_t*, uint8_t);
 
+struct SStateFlags{
+    uint8_t is_dumping_flash_:1;
+    uint8_t is_callback_perform_:1;
+    uint8_t is_dumping_eeprom_;
+};
+
 class SoftwareUSB{
 public:
   SoftwareUSB ();
@@ -29,5 +35,5 @@ public:
 
   static TFunc_void_puint8_uint8 callback_on_usb_data_receive_;
   static bool is_dumping_flash_, is_callback_perform_, is_dumping_eeprom_;
-
+  static SStateFlags state_flags_;
 };

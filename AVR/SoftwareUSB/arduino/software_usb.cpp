@@ -27,9 +27,10 @@ uint8_t buffer[kBufferSize] {"Hello, USB!"};
 uint8_t dataReceived, dataLength; // for USB_DATA_IN
 
 TFunc_void_puint8_uint8 SoftwareUSB::callback_on_usb_data_receive_;
-bool SoftwareUSB::is_dumping_flash_;
-bool SoftwareUSB::is_dumping_eeprom_;
-bool SoftwareUSB::is_callback_perform_;
+// bool SoftwareUSB::is_dumping_flash_;
+// bool SoftwareUSB::is_dumping_eeprom_;
+// bool SoftwareUSB::is_callback_perform_;
+bool SoftwareUSB::state_flags_;
 
 [[noreturn]]
 void reset_microcontroller(){
@@ -64,8 +65,8 @@ void SoftwareUSB::spin() {
 
   wdt_reset(); // keep the watchdog happy
   usbPoll();
-  if(is_callback_perform_){
-    is_callback_perform_= false;
+  if(state_flags_::is_callback_perform_){
+    state_flags_::is_callback_perform_= false;
     callback_on_usb_data_receive_(buffer, dataLength);
   }
 }
@@ -85,8 +86,8 @@ void SoftwareUSB::fillBufferFromEeprom(uint16_t offset) {
 // this gets called when custom control message is received
 USB_PUBLIC uint8_t SoftwareUSB::usbFunctionSetup(uint8_t data[8]) {
 	usbRequest_t *rq = reinterpret_cast<usbRequest_t *>(data); // cast data to correct type
-  is_dumping_flash_ = false;
-  is_dumping_eeprom_= false;
+  state_flags_::is_dumping_flash_ = false;
+  state_flags_::is_dumping_eeprom_= false;
 	switch (static_cast<USBRequest>(rq->bRequest)) { // custom command is in the bRequest field
 	case USBRequest::LED_ON:
     DDRD  |= (1 << 1);
@@ -105,10 +106,10 @@ USB_PUBLIC uint8_t SoftwareUSB::usbFunctionSetup(uint8_t data[8]) {
 	case USBRequest::DATA_WRITE:
     goto data_continue;
   case USBRequest::EEPROM_DUMP_FROM_ADDRESS:
-    is_dumping_eeprom_ = true;
+    state_flags_::is_dumping_eeprom_ = true;
     goto data_continue;
   case USBRequest::FLASH_DUMP_FROM_ADDRESS: // receive data from PC
-    is_dumping_flash_ = true;
+    state_flags_::is_dumping_flash_ = true;
     data_continue:
     dataLength = static_cast<uint8_t>(rq->wLength.word);
 		dataReceived = 0;
@@ -133,17 +134,17 @@ USB_PUBLIC uint8_t SoftwareUSB::usbFunctionWrite(uint8_t *data, uint8_t len) {
 	for (i = 0; dataReceived < dataLength && i < len; i++, dataReceived++)
 		buffer[dataReceived] = data[i];
 
-  bool is_fully_received = dataReceived == dataLength;
+  bool state_flags_::is_fully_received = dataReceived == dataLength;
 
-  if(is_dumping_flash_){
+  if(state_flags_::is_dumping_flash_){
     fillBufferFromFlash(getStartOffset());
-  }else if(is_dumping_eeprom_){
+  }else if(state_flags_::is_dumping_eeprom_){
     fillBufferFromEeprom(getStartOffset());
-  }else if(is_fully_received && nullptr != callback_on_usb_data_receive_){
-    is_callback_perform_ = true;
+  }else if(state_flags_::is_fully_received && nullptr != callback_on_usb_data_receive_){
+    state_flags_::is_callback_perform_ = true;
   }
 
-	return is_fully_received; // 1 if we received it all, 0 if not
+	return state_flags_::is_fully_received; // 1 if we received it all, 0 if not
 }
 
 void SoftwareUSB::copyToUSBBuffer(uint8_t *data, uint8_t len){
