@@ -388,6 +388,32 @@ public:
     return TRunParameters{USB_ENDPOINT_IN, USBRequest::RESET};
   }
 };
+
+class WireReadSimple : public Command{
+public:
+  TRunParameters run(std::vector<std::string>& args) override {
+
+    std::string arg = args.at(1);
+    uint8_t length = kCommandBufferSize>arg.length()?arg.length():kCommandBufferSize;
+    memcpy(buffer_,arg.c_str(), arg.length()+1);
+
+    buffer_[arg.length()+1]=' ';
+
+    arg = args.at(2);
+    memcpy(&buffer_[0]  + arg.length()+1,arg.c_str(), arg.length()+1);
+
+    return TRunParameters{USB_ENDPOINT_OUT, USBRequest::I2C_WIRE_READ,[](){},length};
+  }
+};
+class WireRead : public Command{
+public:
+  TRunParameters run(std::vector<std::string>& args) override {
+    WireReadSimple{}.execute(args);
+    OutCommandSimple{}.execute();
+    return TRunParameters{EndpointIO(), USBRequest()};
+  }
+};
+
 class ListCommand : public Command{
 public:
   TRunParameters run(std::vector<std::string>& args) override {
@@ -408,6 +434,7 @@ public:
     std::cout << "  out: looping read from usb device" << std::endl;
     std::cout << "  oute: read and parse eeprom metadata" << std::endl;
     std::cout << "  use <device index>" << std::endl;
+    std::cout << "  wr <address hex> <register hex>: Wire (I2C) read from device's register" << std::endl;
     std::cout << "  reset" << std::endl << std::endl;
     return TRunParameters{EndpointIO(), USBRequest()};
   }
@@ -420,16 +447,17 @@ std::unique_ptr<Command> creator() {
 
 using CommandMap = std::map<std::string, std::unique_ptr<Command>(*)()>;
 CommandMap command_map {
-  {"exit", &creator<ExitCommand>},
+  {"clear", &creator<ClearCommand>},
   {"eepromdump", &creator<EepromDumpCommand>},
+  {"exit", &creator<ExitCommand>},
   {"flashdump", &creator<FlashDumpCommand>},
   {"in", &creator<InCommand>},
-  {"out", &creator<OutCommand>},
   {"list", &creator<ListCommand>},
   {"off", &creator<OffCommand>},
   {"on", &creator<OnCommand>},
+  {"out", &creator<OutCommand>},
   {"oute", &creator<OuteCommand>},
   {"use", &creator<UseCommand>},
-  {"clear", &creator<ClearCommand>},
+  {"wr", &creator<WireRead>},
   {"reset", &creator<ResetCommand>}
 };

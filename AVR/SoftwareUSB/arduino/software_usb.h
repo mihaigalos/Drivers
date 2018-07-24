@@ -7,7 +7,7 @@
 #endif
 
 using TFunc_void_puint8_uint8 = void(*)(uint8_t*, uint8_t);
-// static inline uint8_t readByte(const uint8_t source_address,const uint16_t register_address)
+using TFunc_uint8_constUint8_constUint16 = uint8_t(*)(const uint8_t, const uint16_t);
 
 typedef struct {
     uint8_t is_dumping_flash:1;
@@ -35,6 +35,7 @@ public:
   static void copyToUSBBuffer(uint8_t *data, uint8_t len);
 
   static TFunc_void_puint8_uint8 callback_on_usb_data_receive_;
-  // static bool is_dumping_flash_, is_callback_perform_, is_dumping_eeprom_;
+  static TFunc_uint8_constUint8_constUint16 handler_i2c_read_;
+
   static TStateFlags state_flags_;
 };

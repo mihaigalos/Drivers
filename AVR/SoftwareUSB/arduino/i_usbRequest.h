@@ -13,7 +13,10 @@ enum class USBRequest {
   DATA_WRITE,
   FLASH_DUMP_FROM_ADDRESS,
   RESET,
-  EEPROM_DUMP_FROM_ADDRESS
+  EEPROM_DUMP_FROM_ADDRESS,
+  I2C_WIRE_READ,
+  I2C_WIRE_WRITE,
+  I2C_WIRE_DUMP
 };
 
 extern uint8_t buffer[kBufferSize];
