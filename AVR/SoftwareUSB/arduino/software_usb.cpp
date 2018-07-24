@@ -27,9 +27,6 @@ uint8_t buffer[kBufferSize] {"Hello, USB!"};
 uint8_t dataReceived, dataLength; // for USB_DATA_IN
 
 TFunc_void_puint8_uint8 SoftwareUSB::callback_on_usb_data_receive_;
-// bool SoftwareUSB::is_dumping_flash_;
-// bool SoftwareUSB::is_dumping_eeprom_;
-// bool SoftwareUSB::is_callback_perform_;
 bool SoftwareUSB::state_flags_;
 
 [[noreturn]]
@@ -42,8 +39,6 @@ SoftwareUSB::SoftwareUSB (){
   dataReceived =0;
   dataLength=0;
   callback_on_usb_data_receive_ = nullptr;
-//wdt_enable (WDTO_1S); // enable 1s watchdog timer
-//	fillBufferFromFlash();
 	usbInit();
 
 	usbDeviceDisconnect(); // enforce re-enumeration
