@@ -389,7 +389,17 @@ public:
   }
 };
 
-class WireReadSimple : public Command{
+class WireDumpSimple : public Command{
+public:
+  TRunParameters run(std::vector<std::string>& args) override {
+
+     std::string arg = args.at(1);
+     uint8_t length = kCommandBufferSize>arg.length()?arg.length():kCommandBufferSize;
+     memcpy(buffer_,arg.c_str(), arg.length()+1);
+    return TRunParameters{USB_ENDPOINT_OUT, USBRequest::I2C_WIRE_DUMP,[](){},length};
+  }
+};
+class WireReadByte : public Command{
 public:
   TRunParameters run(std::vector<std::string>& args) override {
 
@@ -408,8 +418,21 @@ public:
 class WireRead : public Command{
 public:
   TRunParameters run(std::vector<std::string>& args) override {
-    WireReadSimple{}.execute(args);
+    WireReadByte{}.execute(args);
     OutCommandSimple{}.execute();
+
+    printReceivedBytes(0, kBufferSize, buffer_, " ", false);
+    return TRunParameters{EndpointIO(), USBRequest()};
+  }
+};
+
+class WireDump : public Command{
+public:
+  TRunParameters run(std::vector<std::string>& args) override {
+    WireDumpSimple{}.execute(args);
+    OutCommandSimple{}.execute();
+
+    printReceivedBytes(0, kBufferSize, buffer_, " ", false);
     return TRunParameters{EndpointIO(), USBRequest()};
   }
 };
@@ -435,6 +458,7 @@ public:
     std::cout << "  oute: read and parse eeprom metadata" << std::endl;
     std::cout << "  use <device index>" << std::endl;
     std::cout << "  wr <address hex> <register hex>: Wire (I2C) read from device's register" << std::endl;
+    std::cout << "  wd <address hex>: Wire (I2C) dump contents" << std::endl;
     std::cout << "  reset" << std::endl << std::endl;
     return TRunParameters{EndpointIO(), USBRequest()};
   }
@@ -459,5 +483,6 @@ CommandMap command_map {
   {"oute", &creator<OuteCommand>},
   {"use", &creator<UseCommand>},
   {"wr", &creator<WireRead>},
+  {"wd", &creator<WireDump>},
   {"reset", &creator<ResetCommand>}
 };

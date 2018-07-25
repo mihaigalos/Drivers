@@ -21,6 +21,8 @@
 #include "usbdrv.h"
 #include "software_usb.h"
 
+#include "Arduino.h"
+
 extern "C" void USB_INTR_VECTOR(void);
 
 uint8_t buffer[kBufferSize] {"Hello, USB!"};
@@ -83,7 +85,13 @@ void SoftwareUSB::fillBufferFromEeprom(uint16_t offset) {
 USB_PUBLIC uint8_t SoftwareUSB::usbFunctionSetup(uint8_t data[8]) {
 	usbRequest_t *rq = reinterpret_cast<usbRequest_t *>(data); // cast data to correct type
   state_flags_.is_dumping_flash = false;
-  state_flags_.is_dumping_eeprom= false;
+  state_flags_.is_callback_perform = false;
+  state_flags_.is_dumping_eeprom = false;
+  state_flags_.is_read_i2c = false;
+
+  state_flags_.is_dumping_i2c = false;
+
+
 	switch (static_cast<USBRequest>(rq->bRequest)) { // custom command is in the bRequest field
 	case USBRequest::LED_ON:
     DDRD  |= (1 << 1);
@@ -100,6 +108,13 @@ USB_PUBLIC uint8_t SoftwareUSB::usbFunctionSetup(uint8_t data[8]) {
     reset_microcontroller();
     return 0;
 	case USBRequest::DATA_WRITE:
+    goto data_continue;
+
+  case USBRequest::I2C_WIRE_DUMP:
+    state_flags_.is_dumping_i2c = true;
+    goto data_continue;
+  case USBRequest::I2C_WIRE_READ:
+    state_flags_.is_read_i2c = true;
     goto data_continue;
   case USBRequest::EEPROM_DUMP_FROM_ADDRESS:
     state_flags_.is_dumping_eeprom = true;
@@ -124,6 +139,7 @@ uint16_t SoftwareUSB::getStartOffset() {
 			NULL, 16));
 }
 
+
 // This gets called when data is sent from PC to the device
 USB_PUBLIC uint8_t SoftwareUSB::usbFunctionWrite(uint8_t *data, uint8_t len) {
   uint8_t i;
@@ -136,7 +152,22 @@ USB_PUBLIC uint8_t SoftwareUSB::usbFunctionWrite(uint8_t *data, uint8_t len) {
     fillBufferFromFlash(getStartOffset());
   }else if(state_flags_.is_dumping_eeprom){
     fillBufferFromEeprom(getStartOffset());
-  }else if(is_fully_received && nullptr != callback_on_usb_data_receive_){
+  }else if(state_flags_.is_read_i2c){
+    if(handler_i2c_read_){
+      uint8_t position_space = String(reinterpret_cast<char*>(buffer)).indexOf(" ");
+      uint8_t device_address = String(reinterpret_cast<char*>(buffer)).substring(0, position_space).toInt();
+      uint8_t register_address = String(reinterpret_cast<char*>(buffer)).substring(position_space+1).toInt();
+      buffer[0] = handler_i2c_read_(device_address, register_address);
+    }
+  }else if(state_flags_.is_dumping_i2c){
+
+    if(handler_i2c_read_){
+      uint8_t device_address = String(reinterpret_cast<char*>(buffer)).toInt();
+      for(uint8_t i = 0; i<kBufferSize; ++i){
+        buffer[i] = handler_i2c_read_(device_address, i);
+      }
+    }
+  } else if(is_fully_received && nullptr != callback_on_usb_data_receive_){
     state_flags_.is_callback_perform = true;
   }
 

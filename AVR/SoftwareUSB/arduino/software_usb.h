@@ -13,6 +13,9 @@ typedef struct {
     uint8_t is_dumping_flash:1;
     uint8_t is_callback_perform:1;
     uint8_t is_dumping_eeprom:1;
+    uint8_t is_read_i2c:1;
+
+    uint8_t is_dumping_i2c:1;
 }TStateFlags;
 
 class SoftwareUSB{
