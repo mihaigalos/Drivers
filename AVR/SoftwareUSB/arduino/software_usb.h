@@ -8,6 +8,7 @@
 
 using TFunc_void_puint8_uint8 = void(*)(uint8_t*, uint8_t);
 using TFunc_uint8_constUint8_constUint16 = uint8_t(*)(const uint8_t, const uint16_t);
+using TFunc_uint8_constUint8_constUint16_constUint8 = uint8_t(*)(const uint8_t, const uint16_t, const uint8_t);
 
 typedef struct {
     uint8_t is_dumping_flash:1;
@@ -16,6 +17,7 @@ typedef struct {
     uint8_t is_read_i2c:1;
 
     uint8_t is_dumping_i2c:1;
+    uint8_t is_write_i2c:1;
 }TStateFlags;
 
 class SoftwareUSB{
@@ -39,6 +41,7 @@ public:
 
   static TFunc_void_puint8_uint8 callback_on_usb_data_receive_;
   static TFunc_uint8_constUint8_constUint16 handler_i2c_read_;
+  static TFunc_uint8_constUint8_constUint16_constUint8 handler_i2c_write_;
 
   static TStateFlags state_flags_;
 };

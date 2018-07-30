@@ -407,7 +407,7 @@ public:
     uint8_t length = kCommandBufferSize>arg.length()?arg.length():kCommandBufferSize;
     memcpy(buffer_,arg.c_str(), arg.length()+1);
 
-    buffer_[arg.length()+1]=' ';
+    buffer_[arg.length()]=' ';
 
     arg = args.at(2);
     memcpy(&buffer_[0]  + arg.length()+1,arg.c_str(), arg.length()+1);
@@ -447,6 +447,42 @@ public:
   }
 };
 
+class WireWriteSimple : public Command{
+public:
+  TRunParameters run(std::vector<std::string>& args) override {
+    std::string arg = args.at(1);
+    memcpy(buffer_,arg.c_str(), arg.length()+1);
+
+
+    buffer_[arg.length()]=' ';
+    uint8_t beginning_pos = arg.length()+1;
+
+    arg = args.at(2);
+    memcpy(&buffer_[0]+beginning_pos, arg.c_str(), arg.length()+1);
+
+    buffer_[beginning_pos + arg.length()]=' ';
+    beginning_pos = beginning_pos + arg.length()+1;
+
+    arg = args.at(3);
+    memcpy(&buffer_[0]+beginning_pos,arg.c_str(), arg.length()+1);
+
+    std::cout<<"Buffer: "<<buffer_<<"!"<<std::endl;
+
+    return TRunParameters{USB_ENDPOINT_OUT, USBRequest::I2C_WIRE_WRITE,[](){},11};
+  }
+};
+class WireWrite : public Command{
+public:
+  TRunParameters run(std::vector<std::string>& args) override {
+    WireWriteSimple{}.execute(args);
+    OutCommandSimple{}.execute();
+    std::cout<<buffer_<<std::endl;
+
+
+    return TRunParameters{EndpointIO(), USBRequest()};
+  }
+};
+
 class ListCommand : public Command{
 public:
   TRunParameters run(std::vector<std::string>& args) override {
@@ -467,8 +503,9 @@ public:
     std::cout << "  out: looping read from usb device" << std::endl;
     std::cout << "  oute: read and parse eeprom metadata" << std::endl;
     std::cout << "  use <device index>" << std::endl;
-    std::cout << "  wr <address hex> <register hex>: Wire (I2C) read from device's register" << std::endl;
     std::cout << "  wd <address hex> [d, decode]: Wire (I2C) dump contents." << std::endl;
+    std::cout << "  wr <address hex> <register hex>: Wire (I2C) read from device's register" << std::endl;
+    std::cout << "  ww <address hex> <register hex> <value>: Wire (I2C) write to device's register" << std::endl;
     std::cout << "  reset" << std::endl << std::endl;
     return TRunParameters{EndpointIO(), USBRequest()};
   }
@@ -492,7 +529,8 @@ CommandMap command_map {
   {"out", &creator<OutCommand>},
   {"oute", &creator<OuteCommand>},
   {"use", &creator<UseCommand>},
-  {"wr", &creator<WireRead>},
   {"wd", &creator<WireDump>},
+  {"wr", &creator<WireRead>},
+  {"ww", &creator<WireWrite>},
   {"reset", &creator<ResetCommand>}
 };

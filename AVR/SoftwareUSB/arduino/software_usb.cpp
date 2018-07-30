@@ -30,6 +30,7 @@ uint8_t dataReceived, dataLength; // for USB_DATA_IN
 
 TFunc_void_puint8_uint8 SoftwareUSB::callback_on_usb_data_receive_;
 TFunc_uint8_constUint8_constUint16 SoftwareUSB::handler_i2c_read_;
+TFunc_uint8_constUint8_constUint16_constUint8 SoftwareUSB::handler_i2c_write_;
 TStateFlags SoftwareUSB::state_flags_;
 
 [[noreturn]]
@@ -90,6 +91,7 @@ USB_PUBLIC uint8_t SoftwareUSB::usbFunctionSetup(uint8_t data[8]) {
   state_flags_.is_read_i2c = false;
 
   state_flags_.is_dumping_i2c = false;
+  state_flags_.is_write_i2c = false;
 
 
 	switch (static_cast<USBRequest>(rq->bRequest)) { // custom command is in the bRequest field
@@ -115,6 +117,9 @@ USB_PUBLIC uint8_t SoftwareUSB::usbFunctionSetup(uint8_t data[8]) {
     goto data_continue;
   case USBRequest::I2C_WIRE_READ:
     state_flags_.is_read_i2c = true;
+    goto data_continue;
+  case USBRequest::I2C_WIRE_WRITE:
+    state_flags_.is_write_i2c = true;
     goto data_continue;
   case USBRequest::EEPROM_DUMP_FROM_ADDRESS:
     state_flags_.is_dumping_eeprom = true;
@@ -152,11 +157,45 @@ USB_PUBLIC uint8_t SoftwareUSB::usbFunctionWrite(uint8_t *data, uint8_t len) {
     fillBufferFromFlash(getStartOffset());
   }else if(state_flags_.is_dumping_eeprom){
     fillBufferFromEeprom(getStartOffset());
+  }else if(state_flags_.is_write_i2c){
+    if(handler_i2c_write_){
+      uint8_t position_space1 = String(reinterpret_cast<char*>(buffer)).indexOf(" ");
+      uint8_t position_space2 = String(reinterpret_cast<char*>(buffer)).indexOf(" ",position_space1+1);
+
+      String device_address_substring(reinterpret_cast<char*>(buffer));
+      device_address_substring = device_address_substring.substring(0, position_space1);
+      uint8_t device_address = strtol(device_address_substring.c_str(), 0, 16);
+
+      String register_address_substring(reinterpret_cast<char*>(buffer));
+      register_address_substring= register_address_substring.substring(position_space1+1, position_space2);
+      uint8_t register_address = strtol(register_address_substring.c_str(), 0, 16);
+
+      String value_substring(reinterpret_cast<char*>(buffer));
+      value_substring = value_substring.substring(position_space2+1);
+      uint8_t value = strtol(value_substring.c_str(), 0, 16);
+
+      uint8_t result = handler_i2c_write_(device_address, register_address, value);
+      if(0 == result){
+        buffer[0] = 'O'; buffer[1] = 'K'; buffer[2]='\0';
+      } else {
+        strncpy(buffer, "I2C Error ", 10);
+
+        buffer[10] = '0'+result;
+        buffer[11] = '\0';
+      }
+    }
   }else if(state_flags_.is_read_i2c){
     if(handler_i2c_read_){
       uint8_t position_space = String(reinterpret_cast<char*>(buffer)).indexOf(" ");
-      uint8_t device_address = String(reinterpret_cast<char*>(buffer)).substring(0, position_space).toInt();
-      uint8_t register_address = String(reinterpret_cast<char*>(buffer)).substring(position_space+1).toInt();
+
+      String device_address_substring(reinterpret_cast<char*>(buffer));
+      device_address_substring = device_address_substring.substring(0, position_space);
+      uint8_t device_address = strtol(device_address_substring.c_str(), 0, 16);
+
+      String register_address_substring(reinterpret_cast<char*>(buffer));
+      register_address_substring= register_address_substring.substring(position_space+1);
+      uint8_t register_address = strtol(register_address_substring.c_str(), 0, 16);
+
       buffer[0] = handler_i2c_read_(device_address, register_address);
     }
   }else if(state_flags_.is_dumping_i2c){
