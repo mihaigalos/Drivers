@@ -447,9 +447,9 @@ public:
     std::cout << "  exit" << std::endl;
     std::cout << "  eepromdump <direct hex address literals>" << std::endl;
     std::cout << "  flashdump <direct hex address literals>" << std::endl;
-    std::cout << "  in <predicate - see below>: send to usb device" << std::endl;
+    std::cout << "  in <predicate - see below>: I/O over radio" << std::endl;
     std::cout << "     s:[frequence in millisecond multiples of 100ms[:max count]]:<string>: send over radio" << std::endl;
-    std::cout << "       example: in s:5:HelloWorld"<< std::endl;
+    std::cout << "       example: in s:5:HelloWorld; in s:5:2:HelloWorld"<< std::endl;
     std::cout << "     r: receive over radio" << std::endl;
     std::cout << "  list" << std::endl;
     std::cout << "  off" << std::endl;
