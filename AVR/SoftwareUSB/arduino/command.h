@@ -13,7 +13,7 @@ static constexpr uint8_t kCommandBufferSize=254u;
 void onExit(std::vector<usb_dev_handle *> &handles);
 auto getUsbHandles() -> std::vector<usb_dev_handle *>;
 void printReceivedBytes(uint16_t start_address, uint16_t nBytes, char buffer[],
-                        std::string separator, bool print_bytecount);
+                        std::string separator = "", bool print_bytecount = true, bool decode = true);
 std::vector<std::string> tokenize_string(const std::string &s) {
   std::stringstream ss(s);
   std::istream_iterator<std::string> begin(ss);
@@ -421,7 +421,12 @@ public:
     WireReadByte{}.execute(args);
     OutCommandSimple{}.execute();
 
-    printReceivedBytes(0, kBufferSize, buffer_, " ", false);
+    bool decode = false;
+    if(args.size()>2 && 'd'==args.at(2)[0]){
+      decode = true;
+    }
+
+    printReceivedBytes(0, kBufferSize, buffer_, " ", false, decode);
     return TRunParameters{EndpointIO(), USBRequest()};
   }
 };
@@ -432,7 +437,12 @@ public:
     WireDumpSimple{}.execute(args);
     OutCommandSimple{}.execute();
 
-    printReceivedBytes(0, kBufferSize, buffer_, " ", false);
+    bool decode = false;
+    if(args.size()>2 && 'd'==args.at(2)[0]){
+      decode = true;
+    }
+
+    printReceivedBytes(0, kBufferSize, buffer_, " ", false, decode);
     return TRunParameters{EndpointIO(), USBRequest()};
   }
 };
@@ -458,7 +468,7 @@ public:
     std::cout << "  oute: read and parse eeprom metadata" << std::endl;
     std::cout << "  use <device index>" << std::endl;
     std::cout << "  wr <address hex> <register hex>: Wire (I2C) read from device's register" << std::endl;
-    std::cout << "  wd <address hex>: Wire (I2C) dump contents" << std::endl;
+    std::cout << "  wd <address hex> [d, decode]: Wire (I2C) dump contents." << std::endl;
     std::cout << "  reset" << std::endl << std::endl;
     return TRunParameters{EndpointIO(), USBRequest()};
   }

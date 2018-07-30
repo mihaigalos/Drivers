@@ -150,7 +150,7 @@ static vector<usb_dev_handle *> usbOpenDevice(int vendor, char *vendorName,
 }
 
 void printReceivedBytes(uint16_t start_address, uint16_t nBytes, char buffer[],
-                        string separator = "", bool print_bytecount = true) {
+                        string separator, bool print_bytecount, bool decode) {
   if (print_bytecount)
     cout << "Got bytes: " << endl;
   const uint16_t kIntelHexByteCount = 0x10;
@@ -216,6 +216,7 @@ void printReceivedBytes(uint16_t start_address, uint16_t nBytes, char buffer[],
         printCrc(i);
       printNumberOfBytes(i);
       printRecordType();
+      cout<<separator;
     }
 
     auto value = static_cast<uint16_t>(static_cast<uint8_t>(buffer[i]));
@@ -224,6 +225,7 @@ void printReceivedBytes(uint16_t start_address, uint16_t nBytes, char buffer[],
     if (value < 16)
       cout << "0";
     cout << value;
+    if(decode) cout << "["<<buffer[i]<<"]";
     cout << separator;
   }
 
