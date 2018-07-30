@@ -162,7 +162,7 @@ USB_PUBLIC uint8_t SoftwareUSB::usbFunctionWrite(uint8_t *data, uint8_t len) {
   }else if(state_flags_.is_dumping_i2c){
 
     if(handler_i2c_read_){
-      uint8_t device_address = String(reinterpret_cast<char*>(buffer)).toInt();
+      uint8_t device_address= strtol(reinterpret_cast<char*>(buffer), 0, 16);
       for(uint8_t i = 0; i<kBufferSize; ++i){
         buffer[i] = handler_i2c_read_(device_address, i);
       }
