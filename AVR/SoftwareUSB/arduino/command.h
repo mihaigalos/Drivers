@@ -405,10 +405,10 @@ public:
     memcpy(buffer_,arg.c_str(), arg.length()+1);
 
     buffer_[arg.length()]=' ';
+    uint8_t beginning_pos = arg.length()+1;
 
     arg = args.at(2);
-    memcpy(&buffer_[0]  + arg.length()+1,arg.c_str(), arg.length()+1);
-    std::cout<<"Buffer: "<<buffer_<<"!"<<std::endl;
+    memcpy(&buffer_[0] + beginning_pos,arg.c_str(), arg.length()+1);
     return TRunParameters{USB_ENDPOINT_OUT, USBRequest::I2C_WIRE_READ,[](){},static_cast<uint8_t>(std::string{buffer_}.length()+1)};
   }
 };
@@ -464,8 +464,6 @@ public:
 
     arg = args.at(3);
     memcpy(&buffer_[0]+beginning_pos,arg.c_str(), arg.length()+1);
-
-    std::cout<<"Buffer: "<<buffer_<<"!"<<std::endl;
 
     return TRunParameters{USB_ENDPOINT_OUT, USBRequest::I2C_WIRE_WRITE,[](){},static_cast<uint8_t>(std::string{buffer_}.length()+1)};
   }
