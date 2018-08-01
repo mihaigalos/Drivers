@@ -25,11 +25,13 @@
 
 extern "C" void USB_INTR_VECTOR(void);
 
+
+static constexpr uint8_t kI2CMaximumTransmissionSize = 32; // fixed from Arduino
 uint8_t buffer[kBufferSize] {"Hello, USB!"};
 uint8_t dataReceived, dataLength; // for USB_DATA_IN
 
 TFunc_void_puint8_uint8 SoftwareUSB::callback_on_usb_data_receive_;
-TFunc_uint8_constUint8_constUint16 SoftwareUSB::handler_i2c_read_;
+TFunc_uint8_constUint8_constUint16_constUint8_uint8P SoftwareUSB::handler_i2c_read_;
 TFunc_uint8_constUint8_constUint16_constUint8 SoftwareUSB::handler_i2c_write_;
 TStateFlags SoftwareUSB::state_flags_;
 
@@ -196,14 +198,15 @@ USB_PUBLIC uint8_t SoftwareUSB::usbFunctionWrite(uint8_t *data, uint8_t len) {
       register_address_substring= register_address_substring.substring(position_space+1);
       uint8_t register_address = strtol(register_address_substring.c_str(), 0, 16);
 
-      buffer[0] = handler_i2c_read_(device_address, register_address);
+      buffer[0] = handler_i2c_read_(device_address, register_address,32,buffer);
+      buffer[33] = '\0';
     }
   }else if(state_flags_.is_dumping_i2c){
 
     if(handler_i2c_read_){
       uint8_t device_address= strtol(reinterpret_cast<char*>(buffer), 0, 16);
-      for(uint8_t i = 0; i<kBufferSize; ++i){
-        buffer[i] = handler_i2c_read_(device_address, i);
+      for(uint16_t i = 0; i< kBufferSize;i+=kI2CMaximumTransmissionSize){
+        handler_i2c_read_(device_address, i, kI2CMaximumTransmissionSize, &buffer[i]);
       }
     }
   } else if(is_fully_received && nullptr != callback_on_usb_data_receive_){

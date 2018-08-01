@@ -392,11 +392,9 @@ public:
 class WireDumpSimple : public Command{
 public:
   TRunParameters run(std::vector<std::string>& args) override {
-
-     std::string arg = args.at(1);
-     uint8_t length = kCommandBufferSize>arg.length()?arg.length():kCommandBufferSize;
-     memcpy(buffer_,arg.c_str(), arg.length()+1);
-    return TRunParameters{USB_ENDPOINT_OUT, USBRequest::I2C_WIRE_DUMP,[](){},length};
+    std::string arg = args.at(1);
+    memcpy(buffer_,arg.c_str(), arg.length()+1);
+    return TRunParameters{USB_ENDPOINT_OUT, USBRequest::I2C_WIRE_DUMP,[](){},static_cast<uint8_t>(std::string{buffer_}.length()+1)};
   }
 };
 class WireReadByte : public Command{
@@ -404,15 +402,14 @@ public:
   TRunParameters run(std::vector<std::string>& args) override {
 
     std::string arg = args.at(1);
-    uint8_t length = kCommandBufferSize>arg.length()?arg.length():kCommandBufferSize;
     memcpy(buffer_,arg.c_str(), arg.length()+1);
 
     buffer_[arg.length()]=' ';
 
     arg = args.at(2);
     memcpy(&buffer_[0]  + arg.length()+1,arg.c_str(), arg.length()+1);
-
-    return TRunParameters{USB_ENDPOINT_OUT, USBRequest::I2C_WIRE_READ,[](){},length};
+    std::cout<<"Buffer: "<<buffer_<<"!"<<std::endl;
+    return TRunParameters{USB_ENDPOINT_OUT, USBRequest::I2C_WIRE_READ,[](){},static_cast<uint8_t>(std::string{buffer_}.length()+1)};
   }
 };
 class WireRead : public Command{
@@ -422,11 +419,13 @@ public:
     OutCommandSimple{}.execute();
 
     bool decode = false;
-    if(args.size()>2 && 'd'==args.at(2)[0]){
+    if(args.size()>3 && 'd'==args.at(3)[0]){
       decode = true;
     }
 
-    printReceivedBytes(0, kBufferSize, buffer_, " ", false, decode);
+    std::cout<<std::hex<<buffer_[0]<<std::dec;
+    if(decode) std::cout<<std::hex<<"["<<static_cast<uint16_t>(buffer_[0])<<"]";
+    std::cout<<std::endl;
     return TRunParameters{EndpointIO(), USBRequest()};
   }
 };
@@ -468,7 +467,7 @@ public:
 
     std::cout<<"Buffer: "<<buffer_<<"!"<<std::endl;
 
-    return TRunParameters{USB_ENDPOINT_OUT, USBRequest::I2C_WIRE_WRITE,[](){},11};
+    return TRunParameters{USB_ENDPOINT_OUT, USBRequest::I2C_WIRE_WRITE,[](){},static_cast<uint8_t>(std::string{buffer_}.length()+1)};
   }
 };
 class WireWrite : public Command{
