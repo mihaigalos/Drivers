@@ -119,7 +119,7 @@
 /* Define this to 1 if the device has its own power supply. Set it to 0 if the
  * device is powered from the USB bus.
  */
-#define USB_CFG_MAX_BUS_POWER           100
+#define USB_CFG_MAX_BUS_POWER           500
 /* Set this variable to the maximum USB bus power consumption of your device.
  * The value is in milliamperes. [It will be divided by two since USB
  * communicates power requirements in units of 2 mA.]
@@ -375,7 +375,7 @@
 
 // setup interrupt for Pin Change for D+
 // register where interrupt features are configured
-#define USB_INTR_CFG            PCMSK1  
+#define USB_INTR_CFG            PCMSK1
 // feature bits to set
 #define USB_INTR_CFG_SET        (1 << USB_CFG_DPLUS_BIT)
 // feature bits to clear
