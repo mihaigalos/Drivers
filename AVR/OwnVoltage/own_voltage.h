@@ -1,5 +1,8 @@
 #pragma once
 
+#include <stdint.h>
+#include "Arduino.h"
+
 uint16_t readVcc() {
   // Read 1.1V reference against AVcc
   // set the reference to Vcc and the measurement to the internal 1.1V reference
