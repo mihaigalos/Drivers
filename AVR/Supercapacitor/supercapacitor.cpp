@@ -48,23 +48,23 @@ void Supercapacitor2_7V::voltageToLeds(){
 
     uint16_t vcc = readVcc();
     uint8_t led =-1, times=0;
-    if(vcc >= 2675UL) {
+    if(vcc >= 2600UL) {
       led = blue_led_; times=3;
-    } else if(vcc >= 2600UL && vcc < 2675UL){
-      led = blue_led_; times=2;
     } else if(vcc >= 2525UL && vcc < 2600UL){
-      led = blue_led_; times=1;
+      led = blue_led_; times=2;
     } else if(vcc >= 2450UL && vcc < 2525UL){
-      led = green_led_; times=3;
+      led = blue_led_; times=1;
     } else if(vcc >= 2375UL && vcc < 2450UL){
+      led = green_led_; times=3;
+    } else if(vcc >= 2300UL && vcc < 2375UL){
       led = green_led_; times=2;
-    }else if(vcc >= 2300UL && vcc < 2375UL){
+    }else if(vcc >= 2225UL && vcc < 2300UL){
       led = green_led_; times=1;
-    }else if(vcc >= 2250UL && vcc < 2300UL){
+    }else if(vcc >= 2150UL && vcc < 2225UL){
       led = red_led_; times=3;
-    }else if(vcc >= 2150UL && vcc < 2250UL){
+    }else if(vcc >= 2075UL && vcc < 2150UL){
       led = red_led_; times=2;
-    }else if(vcc < 2150UL){
+    }else if(vcc < 2075UL){
       led = red_led_; times=1;
     }
 
