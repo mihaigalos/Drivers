@@ -10,6 +10,13 @@
 
 static constexpr uint8_t kCommandBufferSize=254u;
 
+using ModelMap = std::map<DeviceType, std::string>;
+ModelMap model_map {
+    {DeviceType::DotPhat, "DotPhat"},
+    {DeviceType::DotStix, "DotStix"},
+    {DeviceType::DotShine, "DotShine"},
+};
+
 void onExit(std::vector<usb_dev_handle *> &handles);
 auto getUsbHandles() -> std::vector<usb_dev_handle *>;
 void printReceivedBytes(uint16_t start_address, uint16_t nBytes, char buffer[],
@@ -245,15 +252,20 @@ private:
   class EepromParser{
   public:
     static void parse(){
+        std::cout<<std::endl;
         std::cout << "Got eeprom bytes: " << buffer_ << std::endl;
         std::vector<std::string> eeprom_metadata = tokenize_string(buffer_);
 
+        print_model(eeprom_metadata);
         print_versions(eeprom_metadata);
         print_timestamps(eeprom_metadata);
     }
 
   private:
-
+  static void print_model(const std::vector<std::string>& eeprom_metadata){
+    std::cout<<"Model: "<<model_map[static_cast<DeviceType>(std::stoi(eeprom_metadata.at(1)))];
+    std::cout<<std::endl<<std::endl;
+  }
   static void print_versions(const std::vector<std::string>& eeprom_metadata){
     uint8_t one_byte = 0;
     std::istringstream iss(eeprom_metadata.at(0));
@@ -405,10 +417,10 @@ public:
     memcpy(buffer_,arg.c_str(), arg.length()+1);
 
     buffer_[arg.length()]=' ';
-    uint8_t beginning_pos = arg.length()+1;
 
     arg = args.at(2);
-    memcpy(&buffer_[0] + beginning_pos,arg.c_str(), arg.length()+1);
+    memcpy(&buffer_[0]  + arg.length()+1,arg.c_str(), arg.length()+1);
+    std::cout<<"Buffer: "<<buffer_<<"!"<<std::endl;
     return TRunParameters{USB_ENDPOINT_OUT, USBRequest::I2C_WIRE_READ,[](){},static_cast<uint8_t>(std::string{buffer_}.length()+1)};
   }
 };
@@ -464,6 +476,8 @@ public:
 
     arg = args.at(3);
     memcpy(&buffer_[0]+beginning_pos,arg.c_str(), arg.length()+1);
+
+    std::cout<<"Buffer: "<<buffer_<<"!"<<std::endl;
 
     return TRunParameters{USB_ENDPOINT_OUT, USBRequest::I2C_WIRE_WRITE,[](){},static_cast<uint8_t>(std::string{buffer_}.length()+1)};
   }
