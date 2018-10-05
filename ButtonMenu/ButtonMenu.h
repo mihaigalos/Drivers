@@ -10,10 +10,12 @@ enum class ButtonMenuState{
   Cyan,
   Yellow,
   White,
+  TRXCyan,
+  TRXMagenta,
   EndOfList
 };
 
-ButtonMenuState currentButtonMenuState=ButtonMenuState::White;
+ButtonMenuState currentButtonMenuState=static_cast<ButtonMenuState>(static_cast<uint8_t>(ButtonMenuState::EndOfList)-1);
 
 ButtonMenuState& operator++(ButtonMenuState& s){
   using IntType = uint8_t;//TODO: For C++14: typename std::underlying_type<ButtonMenuState>::type
@@ -23,96 +25,122 @@ ButtonMenuState& operator++(ButtonMenuState& s){
   return s;
 }
 
-inline void ledOn(uint8_t led){
+inline void pinLow(uint8_t led){
   digitalWrite(led, LOW);
 }
 
-inline void ledOff(uint8_t led){
+inline void pinHigh(uint8_t led){
   digitalWrite(led, HIGH);
+}
+
+inline void ledHiImpedance(uint8_t led){
+  pinMode(led, INPUT);
 }
 
 class IColor{
 public:
-  explicit IColor(uint8_t red_pin, uint8_t green_pin, uint8_t blue_pin):
-  red_pin_(red_pin), green_pin_(green_pin), blue_pin_(blue_pin){}
+  explicit IColor(uint8_t red_pin, uint8_t green_pin, uint8_t blue_pin, uint8_t trx_pin):
+  red_pin_{red_pin}, green_pin_{green_pin}, blue_pin_{blue_pin}, trx_pin_{trx_pin}{}
   virtual ~IColor(){}
   virtual void onEnter() =0;
   virtual void onExit(){
-    ledOff(red_pin_);
-    ledOff(green_pin_);
-    ledOff(blue_pin_);
+    pinHigh(red_pin_);
+    pinHigh(green_pin_);
+    pinHigh(blue_pin_);
+    ledHiImpedance(trx_pin_);
   }
 protected:
   uint8_t red_pin_;
   uint8_t green_pin_;
   uint8_t blue_pin_;
+  uint8_t trx_pin_;
 };
 
-class RedColor : public IColor{
+class Red : public IColor{
 public:
-  RedColor(uint8_t red_pin, uint8_t green_pin, uint8_t blue_pin):IColor(red_pin, green_pin, blue_pin){}
+  Red(uint8_t red_pin, uint8_t green_pin, uint8_t blue_pin, uint8_t trx_pin):IColor{red_pin, green_pin, blue_pin, trx_pin}{}
   void onEnter() override {
     onExit();
-    ledOn(red_pin_);
+    pinLow(red_pin_);
   }
 };
 
-class GreenColor : public IColor{
+class Green : public IColor{
 public:
-  GreenColor(uint8_t red_pin, uint8_t green_pin, uint8_t blue_pin):IColor(red_pin, green_pin, blue_pin){}
+  Green(uint8_t red_pin, uint8_t green_pin, uint8_t blue_pin, uint8_t trx_pin):IColor{red_pin, green_pin, blue_pin, trx_pin}{}
   virtual void onEnter() override {
     onExit();
-    ledOn(green_pin_);
+    pinLow(green_pin_);
   }
 };
 
-class BlueColor : public IColor{
+class Blue : public IColor{
 public:
-  BlueColor(uint8_t red_pin, uint8_t green_pin, uint8_t blue_pin):IColor(red_pin, green_pin, blue_pin){}
+  Blue(uint8_t red_pin, uint8_t green_pin, uint8_t blue_pin, uint8_t trx_pin):IColor{red_pin, green_pin, blue_pin, trx_pin}{}
   virtual void onEnter() override {
     onExit();
-    ledOn(blue_pin_);
+    pinLow(blue_pin_);
   }
 };
 
-class MagentaColor : public IColor{
+class Magenta : public IColor{
 public:
-  MagentaColor(uint8_t red_pin, uint8_t green_pin, uint8_t blue_pin):IColor(red_pin, green_pin, blue_pin){}
+  Magenta(uint8_t red_pin, uint8_t green_pin, uint8_t blue_pin, uint8_t trx_pin):IColor{red_pin, green_pin, blue_pin, trx_pin}{}
   virtual void onEnter() override {
     onExit();
-    ledOn(red_pin_);
-    ledOn(blue_pin_);
+    pinLow(red_pin_);
+    pinLow(blue_pin_);
   }
 };
 
-class CyanColor : public IColor{
+class Cyan : public IColor{
 public:
-  CyanColor(uint8_t red_pin, uint8_t green_pin, uint8_t blue_pin):IColor(red_pin, green_pin, blue_pin){}
+  Cyan(uint8_t red_pin, uint8_t green_pin, uint8_t blue_pin, uint8_t trx_pin):IColor{red_pin, green_pin, blue_pin, trx_pin}{}
   virtual void onEnter() override {
     onExit();
-    ledOn(green_pin_);
-    ledOn(blue_pin_);
+    pinLow(green_pin_);
+    pinLow(blue_pin_);
   }
 };
 
-class YellowColor : public IColor{
+class Yellow : public IColor{
 public:
-  YellowColor(uint8_t red_pin, uint8_t green_pin, uint8_t blue_pin):IColor(red_pin, green_pin, blue_pin){}
+  Yellow(uint8_t red_pin, uint8_t green_pin, uint8_t blue_pin, uint8_t trx_pin):IColor{red_pin, green_pin, blue_pin, trx_pin}{}
   virtual void onEnter() override {
     onExit();
-    ledOn(red_pin_);
-    ledOn(green_pin_);
+    pinLow(red_pin_);
+    pinLow(green_pin_);
   }
 };
 
-class WhiteColor : public IColor{
+class White : public IColor{
 public:
-  WhiteColor(uint8_t red_pin, uint8_t green_pin, uint8_t blue_pin):IColor(red_pin, green_pin, blue_pin){}
+  White(uint8_t red_pin, uint8_t green_pin, uint8_t blue_pin, uint8_t trx_pin):IColor{red_pin, green_pin, blue_pin, trx_pin}{}
   virtual void onEnter() override {
     onExit();
-    ledOn(red_pin_);
-    ledOn(green_pin_);
-    ledOn(blue_pin_);
+    pinLow(red_pin_);
+    pinLow(green_pin_);
+    pinLow(blue_pin_);
+  }
+};
+
+class TRXCyan : public IColor{
+public:
+  TRXCyan(uint8_t red_pin, uint8_t green_pin, uint8_t blue_pin, uint8_t trx_pin):IColor{red_pin, green_pin, blue_pin, trx_pin}{}
+  virtual void onEnter() override {
+    onExit();
+    pinMode(trx_pin_, OUTPUT);
+    pinHigh(trx_pin_);
+  }
+};
+
+class TRXMagenta : public IColor{
+public:
+  TRXMagenta(uint8_t red_pin, uint8_t green_pin, uint8_t blue_pin, uint8_t trx_pin):IColor{red_pin, green_pin, blue_pin, trx_pin}{}
+  virtual void onEnter() override {
+    onExit();
+    pinMode(trx_pin_, OUTPUT);
+    pinLow(trx_pin_);
   }
 };
 
@@ -121,39 +149,47 @@ public:
 
   static ButtonMenuState get() { return currentButtonMenuState; }
 
-  static void changeState(uint8_t red_pin, uint8_t green_pin, uint8_t blue_pin){
+  static void changeState(uint8_t red_pin, uint8_t green_pin, uint8_t blue_pin, uint8_t trx_pin){
     ++currentButtonMenuState;
     switch(currentButtonMenuState){
       case ButtonMenuState::Red:
-        RedColor{red_pin, green_pin, blue_pin}.onEnter();
+        Red{red_pin, green_pin, blue_pin, trx_pin}.onEnter();
       break;
 
       case ButtonMenuState::Green:
-      GreenColor{red_pin, green_pin, blue_pin}.onEnter();
+      Green{red_pin, green_pin, blue_pin, trx_pin}.onEnter();
       break;
 
       case ButtonMenuState::Blue:
-        BlueColor{red_pin, green_pin, blue_pin}.onEnter();
+        Blue{red_pin, green_pin, blue_pin, trx_pin}.onEnter();
       break;
 
       case ButtonMenuState::Magenta:
-        MagentaColor{red_pin, green_pin, blue_pin}.onEnter();
+        Magenta{red_pin, green_pin, blue_pin, trx_pin}.onEnter();
       break;
 
       case ButtonMenuState::Cyan:
-        CyanColor{red_pin, green_pin, blue_pin}.onEnter();
+        Cyan{red_pin, green_pin, blue_pin, trx_pin}.onEnter();
       break;
 
       case ButtonMenuState::Yellow:
-        YellowColor{red_pin, green_pin, blue_pin}.onEnter();
+        Yellow{red_pin, green_pin, blue_pin, trx_pin}.onEnter();
       break;
 
       case ButtonMenuState::White:
-        WhiteColor{red_pin, green_pin, blue_pin}.onEnter();
+        White{red_pin, green_pin, blue_pin, trx_pin}.onEnter();
+      break;
+
+      case ButtonMenuState::TRXCyan:
+        TRXCyan{red_pin, green_pin, blue_pin, trx_pin}.onEnter();
+      break;
+
+      case ButtonMenuState::TRXMagenta:
+        TRXMagenta{red_pin, green_pin, blue_pin, trx_pin}.onEnter();
       break;
 
       default:
-      WhiteColor{red_pin, green_pin, blue_pin}.onEnter();
+      White{red_pin, green_pin, blue_pin, trx_pin}.onEnter();
     }
   }
 };
