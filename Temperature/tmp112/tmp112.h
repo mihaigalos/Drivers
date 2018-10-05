@@ -25,7 +25,6 @@ public:
     Wire.write(TMP102_CFG_default_byte1);  //Sets to 12bit, sd mode on
     errorflag = Wire.endTransmission();
     if ( errorflag != 0) {
-      digitalWrite(8, LOW);while(1);
       errorflag=0;
     }
     // now seting the one-shot bit to "1" will start a single conversion
@@ -35,7 +34,6 @@ public:
     //Wire.write(TMP102_CFG_default_byte2);  //I don't need to bother writing the second byte?
     errorflag = Wire.endTransmission();
     if ( errorflag != 0) {
-      digitalWrite(8, LOW);while(1);
       errorflag=0;
     }
 
@@ -48,7 +46,6 @@ public:
     Wire.write(TMP102_TEMP_REG_pointer); // Select temperature register.
     errorflag = Wire.endTransmission();
     if ( errorflag != 0) {
-      digitalWrite(8, LOW); while(1);
       errorflag=0;
     }
     Wire.requestFrom(static_cast<int>(address_), static_cast<int>(2));
