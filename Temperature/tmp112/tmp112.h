@@ -4,6 +4,7 @@
 #include <Wire.h>
 
 constexpr uint8_t kTmp112ConfigurationValue_12Bytes_shut_down = 0b01100001;  // 12 bit WITH ShutDown bit turned ON as well
+//constexpr uint8_t kTmp112ConfigurationValue_default_byte2 = 0b10100000;
 constexpr uint8_t kTmp112ConfigurationValue_one_shot = 0b10000000;  // one-shot by ORing D7 of CFG byte 1 to 1
 
 // 1-byte pointer to write to tmp102 BEFORE reading back 2 bytes of data from that register
@@ -19,6 +20,7 @@ public:
   Tmp112(uint8_t address = tmp112_i2c_default_address) : address_{address}{}
 
   float getTemperature() {
+    reset();
     enableSingleConversion();
     delay(28);
     return readTemperature();
@@ -26,9 +28,11 @@ public:
 private:
 
   void reset(){
+    Wire.begin();  // join I2C bus as master
     Wire.beginTransmission(address_);
     Wire.write(kTmp112ConfigurationRegisterStartPointer);
     Wire.write(kTmp112ConfigurationValue_12Bytes_shut_down);
+    Wire.endTransmission();
   }
 
   void enableSingleConversion(){
@@ -42,6 +46,8 @@ private:
     float result = 0.0f;
     Wire.beginTransmission(address_); //now read the temp
     Wire.write(kTmp112TemperatureRegisterStartPointer); // Select temperature register.
+    Wire.endTransmission();
+
     Wire.requestFrom(static_cast<int>(address_), static_cast<int>(2));
     const uint8_t TempByte1 = Wire.read(); // MSByte, should be signed whole degrees C.
     const uint8_t TempByte2 = Wire.read(); // unsigned because I am not reading any negative temps
