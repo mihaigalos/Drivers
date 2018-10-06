@@ -3,7 +3,7 @@
 
 #include "tmp112.h"
 
-constexpr uint8_t kConfig_12Bytes_shut_down = 0b01100001; // 12 bit + ShutDown
+constexpr uint8_t kConfig_12Bytes_shut_down = 0b01100001;
 constexpr uint8_t kConfig_one_shot = 0b10000000;
 
 constexpr uint8_t kTemperatureRegisterStartPointer = 0x00;
@@ -19,7 +19,7 @@ float Tmp112::getTemperature() {
 }
 
 void Tmp112::reset() {
-  Wire.begin(); // join I2C bus as master
+  Wire.begin();
   Wire.beginTransmission(address_);
   Wire.write(kConfigurationRegisterStartPointer);
   Wire.write(kConfig_12Bytes_shut_down);
@@ -39,12 +39,9 @@ float Tmp112::readTemperature() {
   Wire.endTransmission();
 
   Wire.requestFrom(static_cast<int>(address_), static_cast<int>(2));
-  const uint8_t TempByte1 =
-      Wire.read(); // MSByte, should be signed whole degrees C.
-  const uint8_t TempByte2 =
-      Wire.read(); // unsigned because I am not reading any negative temps
-  const uint16_t Temp16 =
-      (TempByte1 << 4) | (TempByte2 >> 4); // builds 12-bit value
-
-  return static_cast<float>(Temp16) * kSensorResolution;
+  const uint8_t temperature_msb = Wire.read();
+  const uint8_t temperature_lsb = Wire.read();
+  const uint16_t temperature = (temperature_msb << 4) | (temperature_lsb >> 4);
+  // TODO: investigate how negative values are handled
+  return static_cast<float>(temperature) * kSensorResolution;
 }
