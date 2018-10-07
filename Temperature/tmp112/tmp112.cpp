@@ -10,6 +10,7 @@ constexpr uint8_t kTemperatureRegisterStartPointer = 0x00;
 constexpr uint8_t kConfigurationRegisterStartPointer = 0x01;
 
 constexpr float kSensorResolution = 0.0625;
+constexpr int16_t kSensorResolution_bits = 12;
 
 float Tmp112::getTemperature() {
   reset();
@@ -41,7 +42,10 @@ float Tmp112::readTemperature() {
   Wire.requestFrom(static_cast<int>(address_), static_cast<int>(2));
   const uint8_t temperature_msb = Wire.read();
   const uint8_t temperature_lsb = Wire.read();
-  const uint16_t temperature = (temperature_msb << 4) | (temperature_lsb >> 4);
-  // TODO: investigate how negative values are handled
+  int16_t temperature = (temperature_msb << 4) | (temperature_lsb >> 4);
+  if (temperature >= (1 << kSensorResolution_bits)) {
+    temperature &= ~(1 << kSensorResolution_bits);
+    temperature -= (1 << kSensorResolution_bits);
+  }
   return static_cast<float>(temperature) * kSensorResolution;
 }
