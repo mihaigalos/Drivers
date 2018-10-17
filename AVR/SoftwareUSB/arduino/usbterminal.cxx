@@ -13,7 +13,6 @@
 
 #include <chrono>
 #include <ctime>
-#include <ctime>
 #include <iomanip>
 #include <iostream>
 #include <thread>
@@ -28,15 +27,13 @@
 
 #include <algorithm> // for std::remove
 #include <chrono>    // std::chrono::seconds
-#include <conio.h>   // for kbhit
-#include <thread>    // std::this_thread::sleep_for
-#include <time.h>    // for unix timestamps
 
+#include <thread> // std::this_thread::sleep_for
+#include <time.h> // for unix timestamps
 
 #include "command.h"
 #include "eeprom_metadata.h"
 #include "i_usbRequest.h"
-
 
 using namespace std;
 
@@ -216,7 +213,7 @@ void printReceivedBytes(uint16_t start_address, uint16_t nBytes, char buffer[],
         printCrc(i);
       printNumberOfBytes(i);
       printRecordType();
-      cout<<separator;
+      cout << separator;
     }
 
     auto value = static_cast<uint16_t>(static_cast<uint8_t>(buffer[i]));
@@ -225,7 +222,8 @@ void printReceivedBytes(uint16_t start_address, uint16_t nBytes, char buffer[],
     if (value < 16)
       cout << "0";
     cout << value;
-    if(decode) cout << "["<<buffer[i]<<"]";
+    if (decode)
+      cout << "[" << buffer[i] << "]";
     cout << separator;
   }
 
