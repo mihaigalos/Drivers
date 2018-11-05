@@ -1,4 +1,6 @@
 # Read() : https://stackoverflow.com/questions/32807781/ble-subscribe-to-notification-using-gatttool-or-bluepy
+# Gread Android app for debugging : LightBlue Explorer.
+
 
 import bluepy.btle as btle
 import binascii
