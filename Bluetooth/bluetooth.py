@@ -9,12 +9,9 @@ class MyDelegate(btle.DefaultDelegate):
     def handleNotification(self, cHandle, data):
         print("A notification was received: %s" %data)
 
-
 class BluetoothModule:
     def __init__(self, address):
-
         self.peripheral = btle.Peripheral(address)
-
 
     def write(self, string_to_write):
         service = self.peripheral.getServiceByUUID("0000ffe0-0000-1000-8000-00805f9b34fb")
@@ -34,4 +31,5 @@ class BluetoothModule:
             print("Waiting...")
 
 jdy16 = BluetoothModule("3C:A5:39:90:BB:B1")
+jdy16.write("Foobar")
 jdy16.read()
