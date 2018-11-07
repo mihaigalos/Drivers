@@ -33,6 +33,7 @@ class BluetoothModule:
                 continue
             print("Waiting...")
 
-jdy16 = BluetoothModule("3C:A5:39:90:BB:B1")
-jdy16.write("Foobar")
-jdy16.read()
+def try_me():
+    jdy16 = BluetoothModule("3C:A5:39:90:BB:B1")
+    jdy16.write("Foobar")
+    jdy16.read()
