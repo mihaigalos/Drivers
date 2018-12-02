@@ -49,3 +49,10 @@ float Tmp112::readTemperature() {
   }
   return static_cast<float>(temperature) * kSensorResolution;
 }
+
+void Tmp112::shutDown() {
+  Wire.beginTransmission(address_);
+  Wire.write(kConfigurationRegisterStartPointer);
+  Wire.write(kConfig_12Bytes_shut_down);
+  Wire.endTransmission();
+}
