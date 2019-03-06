@@ -1,0 +1,3 @@
+[submodule "AVR/PinChangeInt"]
+	path = AVR/PinChangeInt
+	url = https://github.com/GreyGnome/PinChangeInt.git
