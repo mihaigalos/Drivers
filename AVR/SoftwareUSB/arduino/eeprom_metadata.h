@@ -182,3 +182,12 @@ typedef struct SEEPROMMetadata
   }
 #endif
 } EEPROMMetadata;
+
+void update_eeprom_config(const EEPROMMetadata &current_configuration, const EEPROMMetadata &e2prom_metadata)
+{
+  EEPROM.get(kEEPROMMetadataAddress, e2prom_metadata);
+  if (current_configuration != e2prom_metadata)
+  {
+    EEPROM.put(kEEPROMMetadataAddress, current_configuration);
+  }
+}
