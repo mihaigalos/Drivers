@@ -1,4 +1,4 @@
-#include <iostream>
+// #include <iostream>
 #include "simple_tea.h"
 
 int main()
@@ -9,11 +9,11 @@ int main()
 
     encrypt(rounds, v, key);
 
-    std::cout << "Encrypted: " << std::endl;
-    std::cout << std::hex << static_cast<uint16_t>(v[0]) << "    " << static_cast<uint16_t>(v[1]) << std::endl;
+    // std::cout << "Encrypted: " << std::endl;
+    // std::cout << std::hex << static_cast<uint16_t>(v[0]) << "    " << static_cast<uint16_t>(v[1]) << std::endl;
 
     decrypt(rounds, v, key);
 
-    std::cout << "Decrypted: " << std::endl;
-    std::cout << std::hex << static_cast<uint16_t>(v[0]) << "    " << static_cast<uint16_t>(v[1]) << std::endl;
+    // std::cout << "Decrypted: " << std::endl;
+    // std::cout << std::hex << static_cast<uint16_t>(v[0]) << "    " << static_cast<uint16_t>(v[1]) << std::endl;
 }
