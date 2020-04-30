@@ -53,6 +53,21 @@ cc_library(
 )
 
 cc_test(
+    name = "unit_test_simple_tea_2bytes_payload",
+    srcs = [
+        "AVR/Encryption/test_unit_tea_2bytes_payload.cpp",
+    ],
+
+    # copts = DEFAULT_COMPILER_OPTIONS,
+    tags = ["unit"],
+    deps = [
+        ":simple_tea2",
+        "@gtest",
+        "@gtest//:gtest_main",
+    ],
+)
+
+cc_test(
     name = "unit_test_simple_tea_4bytes_payload",
     srcs = [
         "AVR/Encryption/test_unit_tea_4bytes_payload.cpp",
