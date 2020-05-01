@@ -4,7 +4,7 @@
 #include <memory>
 #include <string>
 
-#include "simple_tea2.h"
+#include "simple_tea.h"
 
 constexpr uint8_t kHalfPayloadSize{2};
 
