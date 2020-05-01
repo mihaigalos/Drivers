@@ -12,7 +12,6 @@ DEFAULT_COMPILER_OPTIONS = [
 ]
 
 DEFAULT_TEST_DEPS = [
-    ":sut",
     "@gtest",
     "@gtest//:gtest_main",
 ]
@@ -23,7 +22,7 @@ cc_library(
         "AVR/Encryption/simple_tea.cpp",
     ],
     hdrs = glob(["AVR/Encryption/simple_tea.h"]),
-    #copts = DEFAULT_COMPILER_OPTIONS,
+    copts = DEFAULT_COMPILER_OPTIONS,
     strip_include_prefix = "AVR/Encryption",
 )
 
@@ -32,14 +31,9 @@ cc_test(
     srcs = [
         "AVR/Encryption/test_unit_tea_2bytes_payload.cpp",
     ],
-
-    # copts = DEFAULT_COMPILER_OPTIONS,
+    copts = DEFAULT_COMPILER_OPTIONS,
     tags = ["unit"],
-    deps = [
-        ":simple_tea",
-        "@gtest",
-        "@gtest//:gtest_main",
-    ],
+    deps = DEFAULT_TEST_DEPS + [":simple_tea"],
 )
 
 cc_test(
@@ -47,14 +41,9 @@ cc_test(
     srcs = [
         "AVR/Encryption/test_unit_tea_4bytes_payload.cpp",
     ],
-
-    # copts = DEFAULT_COMPILER_OPTIONS,
+    copts = DEFAULT_COMPILER_OPTIONS,
     tags = ["unit"],
-    deps = [
-        ":simple_tea",
-        "@gtest",
-        "@gtest//:gtest_main",
-    ],
+    deps = DEFAULT_TEST_DEPS + [":simple_tea"],
 )
 
 cc_test(
@@ -62,12 +51,7 @@ cc_test(
     srcs = [
         "AVR/Encryption/test_unit_tea_8bytes_payload.cpp",
     ],
-
-    # copts = DEFAULT_COMPILER_OPTIONS,
+    copts = DEFAULT_COMPILER_OPTIONS,
     tags = ["unit"],
-    deps = [
-        ":simple_tea",
-        "@gtest",
-        "@gtest//:gtest_main",
-    ],
+    deps = DEFAULT_TEST_DEPS + [":simple_tea"],
 )
