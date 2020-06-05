@@ -52,8 +52,8 @@ TEST_F(Fixture, EncryptDecryptTwoBytesWorks_WhenTypical)
 
         sut_.encrypt(rounds_, key, v);
         sut_.decrypt(rounds_, key, v);
-        auto actual = static_cast<uint16_t>(v[0]) | (static_cast<uint16_t>(v[1]) << 8);
 
+        auto actual = static_cast<uint16_t>(v[0]) | (static_cast<uint16_t>(v[1]) << 8);
         ASSERT_EQ(expected, actual);
     }
 }
