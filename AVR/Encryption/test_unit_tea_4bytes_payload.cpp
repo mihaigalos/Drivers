@@ -29,10 +29,11 @@ TEST_F(Fixture, EncryptDecryptFourBytesWorks_WhenTypical)
     {
         auto expected = i;
         uint8_t v[kHalfPayloadSize * 2] = {static_cast<uint8_t>(i), static_cast<uint8_t>(i >> 8), static_cast<uint8_t>(i >> 16), static_cast<uint8_t>(i >> 24)};
+
         sut_.encrypt(rounds_, key, v);
         sut_.decrypt(rounds_, key, v);
-        auto actual = static_cast<uint32_t>(v[0]) | (static_cast<uint32_t>(v[1]) << 8) | (static_cast<uint32_t>(v[2]) << 16) | (static_cast<uint32_t>(v[3]) << 24);
 
+        auto actual = static_cast<uint32_t>(v[0]) | (static_cast<uint32_t>(v[1]) << 8) | (static_cast<uint32_t>(v[2]) << 16) | (static_cast<uint32_t>(v[3]) << 24);
         ASSERT_EQ(expected, actual);
     }
 }

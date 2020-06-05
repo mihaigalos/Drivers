@@ -45,11 +45,12 @@ TEST_F(Fixture, EncryptDecryptTwoBytesFails_WhenImproperContent)
     {
         auto expected = i;
         uint8_t v[kHalfPayloadSize * 2] = {static_cast<uint8_t>(i), static_cast<uint8_t>(i >> 8)};
+
         sut_.encrypt(rounds_, key, v);
         sut_.decrypt(rounds_, key, v);
         v[0] = v[0] + 1;
-        auto actual = static_cast<uint16_t>(v[0]) | (static_cast<uint16_t>(v[1]) << 8);
 
+        auto actual = static_cast<uint16_t>(v[0]) | (static_cast<uint16_t>(v[1]) << 8);
         ASSERT_NE(expected, actual);
     }
 }
