@@ -25,6 +25,7 @@ uint8_t Fixture::key[kKeySize] = {0x45, 0x74, 0x32, 0x11, 0x98, 0x94, 0xAB, 0xCF
 
 TEST_F(Fixture, EncryptTookPlace_WhenTypical)
 {
+    uint8_t allowed_identical_raw_vs_encrypted_count{10};
     uint16_t identical{};
     for (uint16_t i = 0; i < 0xFFFF; ++i)
     {
@@ -39,7 +40,7 @@ TEST_F(Fixture, EncryptTookPlace_WhenTypical)
         }
     }
 
-    ASSERT_LT(identical, 10);
+    ASSERT_LT(identical, allowed_identical_raw_vs_encrypted_count);
 }
 
 TEST_F(Fixture, EncryptDecryptTwoBytesWorks_WhenTypical)
