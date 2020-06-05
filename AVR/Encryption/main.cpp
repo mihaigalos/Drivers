@@ -1,4 +1,4 @@
-#include "simple_tea2.h"
+#include "simple_tea.h"
 
 int main()
 {
