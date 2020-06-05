@@ -33,7 +33,6 @@ TEST_F(Fixture, EncryptDecryptEightBytesWorks_WhenTypical)
                                         static_cast<uint8_t>(i >> 32), static_cast<uint8_t>(i >> 40), static_cast<uint8_t>(i >> 48), static_cast<uint8_t>(i >> 56)};
 
         sut_.encrypt(rounds_, key, v);
-        ASSERT_NE(expected, i);
         sut_.decrypt(rounds_, key, v);
         uint64_t actual = static_cast<uint64_t>(v[0]) | (static_cast<uint64_t>(v[1]) << 8) | (static_cast<uint64_t>(v[2]) << 16) | (static_cast<uint64_t>(v[3]) << 24) |
                           (static_cast<uint64_t>(v[4]) << 32) | (static_cast<uint64_t>(v[5]) << 40) | (static_cast<uint64_t>(v[6]) << 48) | (static_cast<uint64_t>(v[7]) << 56);
