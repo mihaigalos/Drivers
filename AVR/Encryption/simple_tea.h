@@ -9,7 +9,7 @@ template <uint8_t HalfPayloadSize, uint8_t Delta = 0x39>
 class SimpleTEA
 {
 public:
-    void encrypt(uint8_t num_rounds, uint8_t const key[16], uint8_t payload[])
+    void encrypt(uint8_t num_rounds, uint8_t const key[kKeySize], uint8_t payload[])
     {
         for (uint8_t i = 2; i <= HalfPayloadSize * 2; i = i + 2)
         {
@@ -25,7 +25,7 @@ public:
         }
     }
 
-    void decrypt(uint8_t num_rounds, uint8_t const key[16], uint8_t payload[])
+    void decrypt(uint8_t num_rounds, uint8_t const key[kKeySize], uint8_t payload[])
     {
         for (uint8_t i = 2; i <= HalfPayloadSize * 2; i = i + 2)
         {
