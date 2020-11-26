@@ -108,3 +108,4 @@ bazel-*
 .vscode
 *.map
 *.d
+*.elf
