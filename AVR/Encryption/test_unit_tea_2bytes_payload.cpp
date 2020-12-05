@@ -6,6 +6,7 @@
 
 #include "simple_tea.h"
 #include "simple_tea_v2.h"
+#include "simple_tea_v3.h"
 
 constexpr uint8_t kPayloadSize{2};
 
@@ -23,7 +24,8 @@ protected:
 };
 
 using MyTypes = ::testing::Types<SimpleTEA<kPayloadSize>,
-                                 SimpleTEA_v2<kPayloadSize>>;
+                                 SimpleTEA_v2<kPayloadSize>,
+                                 SimpleTEA_v3<kPayloadSize>>;
 
 uint8_t key[kKeySize] = {0x45, 0x74, 0x32, 0x11, 0x98, 0x94, 0xAB, 0xCF, 0x90, 0xAE, 0xBA, 0xDC, 0x06, 0x16, 0x81, 0x95};
 

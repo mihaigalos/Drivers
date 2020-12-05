@@ -22,9 +22,7 @@ cc_library(
     srcs = [
     ],
     hdrs = glob([
-        "AVR/Encryption/simple_tea.h",
-        "AVR/Encryption/simple_tea_v2.h",
-        "AVR/Encryption/common.h"
+        "AVR/Encryption/*.h",
     ]),
     copts = DEFAULT_COMPILER_OPTIONS,
     strip_include_prefix = "AVR/Encryption",
@@ -47,6 +45,7 @@ cc_test(
     ],
     copts = DEFAULT_COMPILER_OPTIONS,
     tags = ["unit"],
+    timeout = "eternal",
     deps = DEFAULT_TEST_DEPS + [":simple_tea"],
 )
 

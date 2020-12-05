@@ -6,6 +6,7 @@
 
 #include "simple_tea.h"
 #include "simple_tea_v2.h"
+#include "simple_tea_v3.h"
 
 constexpr uint8_t kPayloadSize{8};
 
@@ -25,7 +26,8 @@ protected:
 uint8_t key[kKeySize] = {0x45, 0x74, 0x32, 0x11, 0x98, 0x94, 0xAB, 0xCF, 0x90, 0xAE, 0xBA, 0xDC, 0x06, 0x16, 0x81, 0x95};
 
 using MyTypes = ::testing::Types<SimpleTEA<kPayloadSize>,
-                                 SimpleTEA_v2<kPayloadSize>>;
+                                 SimpleTEA_v2<kPayloadSize>,
+                                 SimpleTEA_v3<kPayloadSize>>;
 
 TYPED_TEST_SUITE(Fixture, MyTypes);
 
@@ -33,7 +35,6 @@ TYPED_TEST(Fixture, EncryptDecryptEightBytesWorks_WhenTypical)
 {
     for (uint64_t i = 0x1234FFFCBA000000; i < 0x1234FFDCBA000000; ++i)
     {
-        this->rounds_ = 32;
         auto expected = i;
         uint8_t v[kPayloadSize]{static_cast<uint8_t>(i), static_cast<uint8_t>(i >> 8), static_cast<uint8_t>(i >> 16), static_cast<uint8_t>(i >> 24),
                                 static_cast<uint8_t>(i >> 32), static_cast<uint8_t>(i >> 40), static_cast<uint8_t>(i >> 48), static_cast<uint8_t>(i >> 56)};
