@@ -20,7 +20,6 @@ DEFAULT_TEST_DEPS = [
 cc_library(
     name = "simple_tea",
     srcs = [
-        "AVR/Encryption/simple_tea.cpp",
     ],
     hdrs = glob([
         "AVR/Encryption/simple_tea.h",
