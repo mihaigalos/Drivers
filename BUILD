@@ -9,6 +9,7 @@ DEFAULT_COMPILER_OPTIONS = [
     "-Wpedantic",
     "-Werror",
     "-std=c++14",
+    "-fmax-errors=3"
 ]
 
 DEFAULT_TEST_DEPS = [
@@ -21,7 +22,11 @@ cc_library(
     srcs = [
         "AVR/Encryption/simple_tea.cpp",
     ],
-    hdrs = glob(["AVR/Encryption/simple_tea.h"]),
+    hdrs = glob([
+        "AVR/Encryption/simple_tea.h",
+        "AVR/Encryption/simple_tea_v2.h",
+        "AVR/Encryption/common.h"
+    ]),
     copts = DEFAULT_COMPILER_OPTIONS,
     strip_include_prefix = "AVR/Encryption",
 )
