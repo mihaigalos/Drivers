@@ -1,8 +1,8 @@
 #include <avr/io.h>
-#include "simple_tea_v3.h"
+#include "simple_tea_v4.h"
 
 uint8_t secret_data[] = {0xFE, 0x67, 0xAA, 0x45, 0x74, 0x32, 0x11, 0x98, 0x94, 0x06, 0x16, 0x81, 0x95, 0x95};
-SimpleTEA_v3<sizeof(secret_data) / 2> tea;
+SimpleTEA_v4<sizeof(secret_data) / 2> tea;
 
 int main()
 {

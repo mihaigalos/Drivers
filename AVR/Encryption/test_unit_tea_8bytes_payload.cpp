@@ -7,6 +7,7 @@
 #include "simple_tea.h"
 #include "simple_tea_v2.h"
 #include "simple_tea_v3.h"
+#include "simple_tea_v4.h"
 
 constexpr uint8_t kPayloadSize{8};
 
@@ -27,7 +28,8 @@ uint8_t key[kKeySize] = {0x45, 0x74, 0x32, 0x11, 0x98, 0x94, 0xAB, 0xCF, 0x90, 0
 
 using MyTypes = ::testing::Types<SimpleTEA<kPayloadSize>,
                                  SimpleTEA_v2<kPayloadSize>,
-                                 SimpleTEA_v3<kPayloadSize>>;
+                                 SimpleTEA_v3<kPayloadSize>,
+                                 SimpleTEA_v4<kPayloadSize>>;
 
 TYPED_TEST_SUITE(Fixture, MyTypes);
 
