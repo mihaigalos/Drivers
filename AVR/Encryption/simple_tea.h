@@ -29,7 +29,7 @@ public:
         for (uint8_t i = 2; i <= PayloadSize; i = i + 2)
         {
             uint8_t p0 = payload[i - 2], p1 = payload[i - 1], sum = Delta * num_rounds;
-            for (uint8_t i = 0; i < num_rounds; i++)
+            for (uint8_t i = 0; i < num_rounds; ++i)
             {
                 p1 -= (((p0 << 4) ^ (p0 >> 5)) + p0) ^ (sum + key[(sum >> 3) & kKeyMaxIndex]);
                 sum -= Delta;

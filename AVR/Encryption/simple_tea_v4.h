@@ -52,7 +52,7 @@ public:
         for (uint8_t i = 2; i <= PayloadSize; i = i + 2)
         {
             uint8_t p0 = payload[i - 2], p1 = payload[i - 1];
-            for (uint8_t i = 0; i < rounds; i++)
+            for (uint8_t i = 0; i < rounds; ++i)
             {
                 p1 -= ((p0 << 4) ^ (p0 >> 3)) ^ (encription_key[kKeyMaxIndex]);
                 sum -= Delta;
