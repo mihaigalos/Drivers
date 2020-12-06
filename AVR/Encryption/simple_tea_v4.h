@@ -23,11 +23,12 @@ public:
         (void)key;
         encrypt(payload);
     }
-    inline void encrypt(uint8_t payload[])
+    void encrypt(uint8_t payload[])
     {
+        uint8_t sum = 0;
         for (uint8_t i = 2; i <= PayloadSize; i = i + 2)
         {
-            uint8_t p0 = payload[i - 2], p1 = payload[i - 1], sum = 0;
+            uint8_t p0 = payload[i - 2], p1 = payload[i - 1];
             for (uint8_t j = 0; j < rounds; ++j)
             {
                 p0 += ((p1 << 4) ^ (p1 >> 3)) ^ (encription_key[sum & kKeyMaxIndex]);
@@ -45,11 +46,12 @@ public:
         (void)key;
         decrypt(payload);
     }
-    inline void decrypt(uint8_t payload[])
+    void decrypt(uint8_t payload[])
     {
+        uint8_t sum = static_cast<uint8_t>(PayloadSize * Delta * rounds);
         for (uint8_t i = 2; i <= PayloadSize; i = i + 2)
         {
-            uint8_t p0 = payload[i - 2], p1 = payload[i - 1], sum = static_cast<uint8_t>(Delta * rounds);
+            uint8_t p0 = payload[i - 2], p1 = payload[i - 1];
             for (uint8_t i = 0; i < rounds; i++)
             {
                 p1 -= ((p0 << 4) ^ (p0 >> 3)) ^ (encription_key[kKeyMaxIndex]);
