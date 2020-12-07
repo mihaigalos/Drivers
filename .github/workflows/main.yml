@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+
+    tags:
+      - v*
+
+  pull_request:
+
+jobs:
+  build_and_test:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install dependencies
+        run: |
+          wget https://github.com/bazelbuild/bazel/releases/download/3.7.1/bazel_3.7.1-linux-x86_64.deb
+          sudo dpkg -i bazel_3.7.1-linux-x86_64.deb
+          sudo apt install pkg-config
+
+      - name: Build and Test
+        run: |
+          bazel test --color=yes //... > >(tee -a /tmp/test.log) 2>&1
