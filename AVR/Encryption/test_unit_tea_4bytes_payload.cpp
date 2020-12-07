@@ -35,7 +35,7 @@ TYPED_TEST_SUITE(Fixture, MyTypes);
 
 TYPED_TEST(Fixture, EncryptDecryptFourBytesWorks_WhenTypical_Part1)
 {
-    for (uint32_t i = 0; i < 0x10000000; ++i)
+    for (uint32_t i = 0; i < 0x100000; ++i)
     {
         auto expected = i;
         uint8_t v[kPayloadSize] = {static_cast<uint8_t>(i), static_cast<uint8_t>(i >> 8), static_cast<uint8_t>(i >> 16), static_cast<uint8_t>(i >> 24)};
