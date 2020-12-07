@@ -26,3 +26,20 @@ jobs:
       - name: Build and Test
         run: |
           bazel test --color=yes //... > >(tee -a /tmp/test.log) 2>&1
+
+  cross-compile:
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Log into GitHub Container Registry
+        run: echo "${{ secrets.CR_PAT }}" | docker login https://docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+
+      - name: Pull Docker
+        run: |
+          docker pull docker.pkg.github.com/mihaigalos/docker/avr-gcc
+
+      - name: Cross Compile
+        run: |
+          cd AVR/Encryption/
+          docker run -t --rm --cap-add SYS_PTRACE -v $(pwd):/src docker.pkg.github.com/mihaigalos/docker/avr-gcc  /bin/zsh -c \
+            'cd /src && ./compile.sh'
