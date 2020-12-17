@@ -109,3 +109,5 @@ bazel-*
 *.map
 *.d
 *.elf
+*.su
+
