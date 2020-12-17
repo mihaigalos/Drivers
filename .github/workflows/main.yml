@@ -39,7 +39,7 @@ jobs:
           docker pull docker.pkg.github.com/mihaigalos/docker/avr-gcc
 
       - name: Cross Compile
-        run: |
-          cd AVR/Encryption/
-          docker run -t --rm --cap-add SYS_PTRACE -v $(pwd):/src docker.pkg.github.com/mihaigalos/docker/avr-gcc  /bin/zsh -c \
-            'cd /src && ./compile.sh'
+        run: ./.github/workflows/cross_compile.sh {{ targets }}
+        env:
+          targets:
+            - AVR/Encryption/
