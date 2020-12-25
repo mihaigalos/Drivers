@@ -58,3 +58,15 @@ cc_test(
     tags = ["unit"],
     deps = DEFAULT_TEST_DEPS + [":simple_tea"],
 )
+
+
+cc_test(
+    name = "unit_test_tea_4bytes_payload_crc_key_select",
+    srcs = [
+        "AVR/Encryption/test_unit_tea_4bytes_payload_crc_key_select.cpp",
+    ],
+    copts = DEFAULT_COMPILER_OPTIONS,
+    tags = ["unit"],
+    timeout = "eternal",
+    deps = DEFAULT_TEST_DEPS + [":simple_tea"],
+)
