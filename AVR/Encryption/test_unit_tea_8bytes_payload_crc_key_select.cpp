@@ -27,7 +27,7 @@ TYPED_TEST_SUITE(Fixture, MyTypes);
 
 TYPED_TEST(Fixture, EncryptDecryptEightBytesWorks_WhenTypical)
 {
-    for (uint64_t i = 0; i < 0x00A00000; ++i)
+    for (uint64_t i = 0x12000000; i < 0x123A0000; ++i)
     {
         auto expected = i;
         uint8_t v[kPayloadSize]{static_cast<uint8_t>(i), static_cast<uint8_t>(i >> 8), static_cast<uint8_t>(i >> 16), static_cast<uint8_t>(i >> 24),
@@ -37,7 +37,8 @@ TYPED_TEST(Fixture, EncryptDecryptEightBytesWorks_WhenTypical)
         this->sut_.encrypt(v, crc);
         this->sut_.decrypt(v, crc);
 
-        auto actual = static_cast<uint32_t>(v[0]) | (static_cast<uint32_t>(v[1]) << 8) | (static_cast<uint32_t>(v[2]) << 16) | (static_cast<uint32_t>(v[3]) << 24);
+        uint64_t actual = static_cast<uint64_t>(v[0]) | (static_cast<uint64_t>(v[1]) << 8) | (static_cast<uint64_t>(v[2]) << 16) | (static_cast<uint64_t>(v[3]) << 24) |
+                          (static_cast<uint64_t>(v[4]) << 32) | (static_cast<uint64_t>(v[5]) << 40) | (static_cast<uint64_t>(v[6]) << 48) | (static_cast<uint64_t>(v[7]) << 56);
         ASSERT_EQ(expected, actual);
     }
 }
