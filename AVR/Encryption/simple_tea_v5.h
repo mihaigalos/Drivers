@@ -10,7 +10,7 @@
 #define PROGMEM
 #endif //__AVR__
 
-constexpr uint8_t kNumberOfKeys{8};
+constexpr uint8_t kNumberOfKeys{6};
 constexpr uint8_t kNumberOfKeysMaxIndex{kNumberOfKeys - 1};
 
 constexpr uint8_t rounds PROGMEM{16};
