@@ -1,6 +1,14 @@
 ### SoftwareUart_v2 (Work in Progress)
 
-Simplified, portable bit-bang software uart.
+Simplified, portable bit-bang software uart, under 64 bytes.
+
+```
+$ avr-nm --size-sort -C -r --radix=d *.elf
+
+00000028 T uart_write(unsigned char)
+00000010 T uart_init_clk_div64__38400bps()
+00000008 T uart_init()
+```
 
 By using a clock division factor to slow the clock cycles down, we don't need a delay when bit-banging through software uart.
 
