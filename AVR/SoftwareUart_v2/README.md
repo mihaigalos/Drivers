@@ -2,7 +2,7 @@
 
 Simplified, portable bit-bang software uart.
 
-By using a clock division facktor to slow the clock cycles down, we don't need a delay when bit-banging through software uart.
+By using a clock division factor to slow the clock cycles down, we don't need a delay when bit-banging through software uart.
 
 For AVR, sending requires :
 * 1 cc for the start condition (low).
@@ -27,8 +27,6 @@ _Z10uart_writeh:
 /* prologue: function */
 /* frame size = 0 */
 /* stack size = 0 */
-
-
 
 .L__stack_usage = 0
 	out 0x2,__zero_reg__ //1
