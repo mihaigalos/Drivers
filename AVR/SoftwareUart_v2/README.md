@@ -20,7 +20,7 @@ For AVR, sending requires :
 * 2 cc for setting the output to default high.
 * 4 cc for returning.
 
-```asm
+```avrasm
 .file	"SoftwareUart.cpp"
 __SP_H__ = 0x3e
 __SP_L__ = 0x3d
