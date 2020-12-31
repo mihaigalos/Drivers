@@ -77,6 +77,7 @@ void uart_init()
   UART_DDR &= ~(1 << RX_PIN);
 #endif
 }
+
 #endif // #if defined (RX_PIN) || defined (TX_PIN)
 
 #ifdef RX_PIN
