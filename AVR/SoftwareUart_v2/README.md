@@ -20,48 +20,15 @@ For AVR, sending requires :
 * 2 cc for setting the output to default high.
 * 4 cc for returning.
 
-```avrasm
-.file	"SoftwareUart.cpp"
-__SP_H__ = 0x3e
-__SP_L__ = 0x3d
-__SREG__ = 0x3f
-__CCP__ = 0x3c
-__tmp_reg__ = 16
-__zero_reg__ = 17
-	.text
-.global	_Z10uart_writeh
-	.type	_Z10uart_writeh, @function
-_Z10uart_writeh:
-/* prologue: function */
-/* frame size = 0 */
-/* stack size = 0 */
-
-.L__stack_usage = 0
-	out 0x2,__zero_reg__ //1
-	ldi r20,lo8(8)  //1 cc
-.L2:
-	mov r21,r24     //1
-	andi r21,lo8(1) //1
-	lsl r21         //1
-	lsl r21         //1
-	out 0x2,r21     //1
-	lsr r24         //1
-	subi r20,lo8(-(-1)) //1
-	brne .L2        //1 or 2
-	sbi 0x2,2       //2
-	ret             //4
-	.size	_Z10uart_writeh, .-_Z10uart_writeh
-	.ident	"GCC: (GNU) 5.4.0"
-```
-
-If we use the default clock of 8Mhz, and divide it by a division factor of 64 (CLKPS register on AtTiny10), we get a clock of 125Khz.
+If we use the default clock of 16Mhz, and divide it by a division factor of 64 (CLKPS register on AtTiny10), we get a clock of 250Khz.
 
 ```
-1/125000 = 8us/cc
-8us/cc * 8cc/bit (computed by the generated assembly)=64us/bit
-64us/bit * 8 bit/byte = 512 us/byte
+1/250000 = 4us/cc
+4us/cc * 7cc/bit (computed by the generated assembly)=28us/bit
+28us/bit * 8 bit/byte = 224 us/byte
 ```
-Also, at 64us/bit, this would yield a bitrate of 1/0.000064 = 15625 bits/s.
+Also, at 28us/bit, this would yield a bitrate of 1/0.000028 = 35714 bits/s.
+This bitrate is close enough to 38400 for most practical purposes.
 
 ### Results
 
