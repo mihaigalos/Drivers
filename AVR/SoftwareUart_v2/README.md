@@ -54,3 +54,9 @@ If we use the default clock of 8Mhz, and divide it by a division factor of 64 (C
 64us/bit * 8 bit/byte = 512 us/byte
 ```
 Also, at 64us/bit, this would yield a bitrate of 1/0.000064 = 15625 bits/s.
+
+### Results
+
+Successful transmission on AtTiny85 at 38400@8N1. Clock reduced using div64.
+
+![alt text](screenshots/38400_tx_high_accuracy_nops_enabled.png "Demo Transmit and Receive")
