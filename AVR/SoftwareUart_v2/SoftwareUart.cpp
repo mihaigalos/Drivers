@@ -6,7 +6,7 @@
 
 #if defined(RX_PIN) || defined(TX_PIN)
 
-void uart_init_clk_div64__38400bps()
+static inline void uart_init_clk_div64__38400bps()
 {
     CLKPR = (1 << CLKPCE) & 0x80;
     CLKPR = (1 << CLKPS2) | (1 << CLKPS1);
