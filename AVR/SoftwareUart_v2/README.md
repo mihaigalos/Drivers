@@ -54,14 +54,14 @@ _Z10uart_writeh:
 	.ident	"GCC: (GNU) 5.4.0"
 ```
 
-If we use the default clock of 8Mhz, and divide it by a division factor of 64 (CLKPS register on AtTiny10), we get a clock of 125Khz.
+If we use the default clock of 16Mhz, and divide it by a division factor of 64 (CLKPS register on AtTiny10), we get a clock of 250Khz.
 
 ```
-1/125000 = 8us/cc
-8us/cc * 8cc/bit (computed by the generated assembly)=64us/bit
-64us/bit * 8 bit/byte = 512 us/byte
+1/250000 = 4us/cc
+4us/cc * 8cc/bit (computed by the generated assembly)=32us/bit
+32us/bit * 8 bit/byte = 256 us/byte
 ```
-Also, at 64us/bit, this would yield a bitrate of 1/0.000064 = 15625 bits/s.
+Also, at 32us/bit, this would yield a bitrate of 1/0.000032 = 31250 bits/s.
 
 ### Results
 
