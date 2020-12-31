@@ -12,14 +12,6 @@ $ avr-nm --size-sort -C -r --radix=d *.elf
 
 By using a clock division factor to slow the clock cycles down, we don't need a delay when bit-banging through software uart.
 
-For AVR, sending requires :
-* 1 cc for the start condition (low).
-* 1 cc for loading the value 8 to know how many bits had been sent.
-* 8 cc / loop of sending 1 bit.
-* 1 extra cc when the branch is false.
-* 2 cc for setting the output to default high.
-* 4 cc for returning.
-
 If we use the default clock of 16Mhz, and divide it by a division factor of 64 (CLKPS register on AtTiny10), we get a clock of 250Khz.
 
 ```
