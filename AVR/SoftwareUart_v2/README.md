@@ -1,6 +1,6 @@
 ### SoftwareUart_v2 (Work in Progress)
 
-Simplified, portable bit-bang software uart, under 64 bytes.
+Simplified, more portable bit-bang software uart, under 64 bytes.
 
 ```
 $ avr-nm --size-sort -C -r --radix=d *.elf

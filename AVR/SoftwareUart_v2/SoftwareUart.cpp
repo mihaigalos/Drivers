@@ -47,3 +47,22 @@ void uart_write(uint8_t c)
 #endif
     UART_OUT_PORT_MAPPING |= (1 << TX_PIN);
 }
+
+// uart_read() :: experimental, untested
+uint8_t uart_read()
+{
+    uint8_t result{0x80};
+    do
+    {
+    } while (UART_IN_PORT_MAPPING & (1 << RX_PIN));
+
+read_one_bit:
+    result >>= 1;
+    if (UART_IN_PORT_MAPPING & (1 << RX_PIN))
+    {
+        result |= 0x80;
+    }
+    asm goto("brcc %l[read_one_bit]" :: ::read_one_bit); // branch if carry set from in initial 0x80 value.
+
+    return result;
+}
