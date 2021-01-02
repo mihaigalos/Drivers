@@ -2,7 +2,7 @@
 
 Simplified, more portable bit-bang software uart, 64 bytes.
 Uses clock scaling to achieve baudrate.
-Receive only fast enough for individual characters.
+Read only fast enough for individual characters.
 
 ```
 $ avr-nm --size-sort -C -r --radix=d *.elf
@@ -26,8 +26,8 @@ This bitrate is close enough to 38400 for most practical purposes.
 
 ### Results
 
-Successful transmission on AtTiny85 at 38400@8N1. Clock reduced using div64.
+Successful transmission (write) on AtTiny85 at 38400@8N1. Clock reduced using div64.
 
 ![alt text](screenshots/38400_tx_high_accuracy_nops_enabled.png "Demo Transmit and Receive")
 
-Reception is currently only working for individual characters, as it is not fast enough for multi-character communication.
+Reception (read) is currently only working for individual characters, as it is not fast enough for multi-character communication.
