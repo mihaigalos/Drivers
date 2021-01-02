@@ -7,7 +7,7 @@
 
 // Pins used in writing and reading to/from the UART. Comment out if not needed
 // to save up Flash space.
-#define RX_PIN 3
+#define RX_PIN 1
 #define TX_PIN 0
 
 #define UART_DDR DDRB             // Data direction for port

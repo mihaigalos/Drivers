@@ -2,5 +2,5 @@
 
 int main()
 {
-    uart_write(PINB);
+    uart_write(uart_read());
 }
