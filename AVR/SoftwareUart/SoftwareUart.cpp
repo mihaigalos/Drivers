@@ -40,7 +40,7 @@
 
 #define PRESCALE_WAIT_ONE_BIT_RX_NO_OFFSET PRESCALE_WAIT_ONE_BIT
 #define INSTRUCTION_OFFSET_RX \
-  8 // clock cycles needed  before starting ; this represents the number of bytes in the prologue
+  0 // clock cycles needed  before starting ; this represents the number of bytes in the prologue
 
 #define PRESCALE_WAIT_ONE_BIT_RX \
   (PRESCALE_WAIT_ONE_BIT_RX_NO_OFFSET - INSTRUCTION_OFFSET_RX)
