@@ -40,8 +40,7 @@
 
 #define PRESCALE_WAIT_ONE_BIT_RX_NO_OFFSET PRESCALE_WAIT_ONE_BIT
 #define INSTRUCTION_OFFSET_RX \
-  8 // clock cycles needed after reading a pin hi/lo before starting \
-      // bitDelaySend
+  8 // clock cycles needed  before starting ; this represents the number of bytes in the prologue
 
 #define PRESCALE_WAIT_ONE_BIT_RX \
   (PRESCALE_WAIT_ONE_BIT_RX_NO_OFFSET - INSTRUCTION_OFFSET_RX)
@@ -49,8 +48,7 @@
   (static_cast<uint8_t>(PRESCALE_WAIT_ONE_BIT_RX)) / 2
 
 #define INSTRUCTION_OFFSET_TX \
-  7 // clock cycles needed after setting a pin hi/lo before starting \
-      // bitDelaySend
+  7 // clock cycles needed  before starting ; this represents the number of bytes in the prologue
 #define PRESCALE_WAIT_ONE_BIT_TX (PRESCALE_WAIT_ONE_BIT - INSTRUCTION_OFFSET_TX)
 
 #if PRESCALE_WAIT_ONE_BIT_RX == 0
