@@ -4,6 +4,8 @@ Simplified, more portable bit-bang software uart, 64 bytes.
 Uses clock scaling to achieve baudrate.
 Read only fast enough for individual characters.
 
+**Warning: Cycle accuracy is only guaranteed and successfuly tested on AtTiny85. Actual observed bitrate for requested 38400bps is 25200 on AtMega328p.**
+
 ```
 $ avr-nm --size-sort -C -r --radix=d *.elf
 
