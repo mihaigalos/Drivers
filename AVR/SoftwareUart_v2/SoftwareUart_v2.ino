@@ -12,5 +12,8 @@ void setup()
 
 void loop()
 {
-  uart_write(uart_read());
+  for (uint8_t c = 'a'; c < 'z'; ++c) {
+    uart_write(c);
+  }
+  delay(10);
 }

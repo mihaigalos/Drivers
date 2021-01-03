@@ -2,7 +2,6 @@
 
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)
-#pragma message "assuming clock: " STR(F_CPU) " Mhz."
 
 #if defined(RX_PIN) || defined(TX_PIN)
 
