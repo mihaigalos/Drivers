@@ -5,6 +5,7 @@
 #include <string>
 
 #include "simple_tea_v5.h"
+#include "simple_tea_v6.h"
 
 constexpr uint8_t kPayloadSize{4};
 
@@ -21,7 +22,9 @@ protected:
     T sut_;
 };
 
-using MyTypes = ::testing::Types<SimpleTEA_v5<kPayloadSize>>;
+using MyTypes = ::testing::Types<
+    SimpleTEA_v5<kPayloadSize>,
+    SimpleTEA_v6<kPayloadSize>>;
 
 TYPED_TEST_SUITE(Fixture, MyTypes);
 
