@@ -8,11 +8,11 @@
 #define PROGMEM
 #endif //__AVR__
 
-constexpr uint8_t kKeySize{16};
-constexpr uint8_t kPrivateKeyMaxIndex{kKeySize - 1};
+constexpr uint8_t kKeySize PROGMEM{16};
+constexpr uint8_t kPrivateKeyMaxIndex PROGMEM{kKeySize - 1};
 
-constexpr uint8_t kNumberOfKeys{6};
-constexpr uint8_t kNumberOfKeysMaxIndex{kNumberOfKeys - 1};
+constexpr uint8_t kNumberOfKeys PROGMEM{6};
+constexpr uint8_t kNumberOfKeysMaxIndex PROGMEM{kNumberOfKeys - 1};
 constexpr uint8_t rounds PROGMEM{16};
 constexpr uint8_t privateKey[kNumberOfKeys][kKeySize] PROGMEM = {
     {0x45, 0x74, 0x32, 0x11, 0x98, 0x94, 0xAB, 0xCF, 0x90, 0xAE, 0xBA, 0xDC, 0x06, 0x16, 0x81, 0x95},
