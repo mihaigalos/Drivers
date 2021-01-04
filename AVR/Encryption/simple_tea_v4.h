@@ -11,7 +11,7 @@
 #endif //__AVR__
 
 constexpr uint8_t rounds PROGMEM{16};
-constexpr uint8_t encription_key[kKeySize] PROGMEM = {0x45, 0x74, 0x32, 0x11, 0x98, 0x94, 0xAB, 0xCF, 0x90, 0xAE, 0xBA, 0xDC, 0x06, 0x16, 0x81, 0x95};
+constexpr uint8_t privateKey[kKeySize] PROGMEM = {0x45, 0x74, 0x32, 0x11, 0x98, 0x94, 0xAB, 0xCF, 0x90, 0xAE, 0xBA, 0xDC, 0x06, 0x16, 0x81, 0x95};
 
 template <uint8_t PayloadSize, uint8_t Delta = 0x39>
 class SimpleTEA_v4
@@ -31,9 +31,9 @@ public:
             uint8_t p0 = payload[i - 2], p1 = payload[i - 1];
             for (uint8_t j = 0; j < rounds; ++j)
             {
-                p0 += ((p1 << 4) ^ (p1 >> 3)) ^ (encription_key[sum & kKeyMaxIndex]);
+                p0 += ((p1 << 4) ^ (p1 >> 3)) ^ (privateKey[sum & kKeyMaxIndex]);
                 sum += Delta;
-                p1 += ((p0 << 4) ^ (p0 >> 3)) ^ (encription_key[kKeyMaxIndex]);
+                p1 += ((p0 << 4) ^ (p0 >> 3)) ^ (privateKey[kKeyMaxIndex]);
             }
             payload[i - 2] = p0;
             payload[i - 1] = p1;
@@ -54,9 +54,9 @@ public:
             uint8_t p0 = payload[i - 2], p1 = payload[i - 1];
             for (uint8_t j = 0; j < rounds; ++j)
             {
-                p1 -= ((p0 << 4) ^ (p0 >> 3)) ^ (encription_key[kKeyMaxIndex]);
+                p1 -= ((p0 << 4) ^ (p0 >> 3)) ^ (privateKey[kKeyMaxIndex]);
                 sum -= Delta;
-                p0 -= ((p1 << 4) ^ (p1 >> 3)) ^ (encription_key[sum & kKeyMaxIndex]);
+                p0 -= ((p1 << 4) ^ (p1 >> 3)) ^ (privateKey[sum & kKeyMaxIndex]);
             }
             payload[i - 2] = p0;
             payload[i - 1] = p1;
