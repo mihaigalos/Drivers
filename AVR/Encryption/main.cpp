@@ -12,12 +12,12 @@ int main()
     tea.encrypt(publicKey, secret_data, crc);
     if (secret_data[0] & (PINB))
     {
-        PORTC = 0x05;
+        PORTB = 0x05;
     }
     secret_data[1] = PINB & (1 << 2);
     tea.decrypt(publicKey, secret_data, crc);
     if (secret_data[0] & (PINB))
     {
-        PORTC = 0x50;
+        PORTB = 0x50;
     }
 }
