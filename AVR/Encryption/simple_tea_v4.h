@@ -48,11 +48,11 @@ public:
     }
     void decrypt(uint8_t payload[])
     {
-        uint8_t sum = static_cast<uint8_t>(PayloadSize * Delta * rounds);
+        uint8_t sum = static_cast<uint8_t>((PayloadSize / 2) * Delta * rounds);
         for (uint8_t i = 2; i <= PayloadSize; i = i + 2)
         {
             uint8_t p0 = payload[i - 2], p1 = payload[i - 1];
-            for (uint8_t i = 0; i < rounds; ++i)
+            for (uint8_t j = 0; j < rounds; ++j)
             {
                 p1 -= ((p0 << 4) ^ (p0 >> 3)) ^ (encription_key[kKeyMaxIndex]);
                 sum -= Delta;
