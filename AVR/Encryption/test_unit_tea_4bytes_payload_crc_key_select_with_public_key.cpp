@@ -28,7 +28,7 @@ TYPED_TEST_SUITE(Fixture, MyTypes);
 TYPED_TEST(Fixture, EncryptDecryptFourBytesWorks_WhenTypical)
 {
 
-    const uint8_t publicKey[kPublicKeySize]{0xa6, 0x6f, 0x23, 0x9f, 0x8b, 0x7f, 0xb1, 0x50};
+    uint8_t publicKey[kPublicKeySize]{0xa6, 0x6f, 0x23, 0x9f, 0x8b, 0x7f, 0xb1, 0x50};
 
     for (uint32_t i = 0x100000; i < 0x1000000; ++i)
     {
