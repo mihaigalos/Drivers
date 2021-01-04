@@ -8,9 +8,13 @@
 
 # cross-compiling for AVR:
 
-avr-gcc -D __AVR__  -fstack-usage -std=c++14 -mmcu=atmega328p -Os main.cpp -o main.elf
+MCU=atmega328p
 
-avr-size main.elf
+avr-gcc -D __AVR__  -fstack-usage -std=c++14 -mmcu="${MCU}" -Os main.cpp -o main.elf
+
+avr-size --mcu="${MCU}" main.elf
+echo ""
+avr-size -C --mcu="${MCU}" main.elf
 
 echo ""
 avr-nm --size-sort -C -r --radix=d main.elf
