@@ -16,9 +16,9 @@ public:
             uint8_t p0 = payload[i - 2], p1 = payload[i - 1];
             for (uint8_t j = 0; j < rounds; ++j)
             {
-                p0 += ((p1 << 4) ^ (p1 >> 3)) ^ (privateKey[crc & kNumberOfKeysMaxIndex][sum & kKeyMaxIndex]) ^ (publicKey[i & kPublicKeyMaxIndex]);
+                p0 += ((p1 << 4) ^ (p1 >> 3)) ^ (privateKey[crc & kNumberOfKeysMaxIndex][sum & kPrivateKeyMaxIndex]) ^ (publicKey[i & kPublicKeyMaxIndex]);
                 sum += Delta;
-                p1 += ((p0 << 4) ^ (p0 >> 3)) ^ (privateKey[crc & kNumberOfKeysMaxIndex][kKeyMaxIndex]) ^ (publicKey[i & kPublicKeyMaxIndex]);
+                p1 += ((p0 << 4) ^ (p0 >> 3)) ^ (privateKey[crc & kNumberOfKeysMaxIndex][kPrivateKeyMaxIndex]) ^ (publicKey[i & kPublicKeyMaxIndex]);
             }
             payload[i - 2] = p0;
             payload[i - 1] = p1;
@@ -33,9 +33,9 @@ public:
             uint8_t p0 = payload[i - 2], p1 = payload[i - 1];
             for (uint8_t j = 0; j < rounds; ++j)
             {
-                p1 -= ((p0 << 4) ^ (p0 >> 3)) ^ (privateKey[crc & kNumberOfKeysMaxIndex][kKeyMaxIndex]) ^ (publicKey[i & kPublicKeyMaxIndex]);
+                p1 -= ((p0 << 4) ^ (p0 >> 3)) ^ (privateKey[crc & kNumberOfKeysMaxIndex][kPrivateKeyMaxIndex]) ^ (publicKey[i & kPublicKeyMaxIndex]);
                 sum -= Delta;
-                p0 -= ((p1 << 4) ^ (p1 >> 3)) ^ (privateKey[crc & kNumberOfKeysMaxIndex][sum & kKeyMaxIndex]) ^ (publicKey[i & kPublicKeyMaxIndex]);
+                p0 -= ((p1 << 4) ^ (p1 >> 3)) ^ (privateKey[crc & kNumberOfKeysMaxIndex][sum & kPrivateKeyMaxIndex]) ^ (publicKey[i & kPublicKeyMaxIndex]);
             }
             payload[i - 2] = p0;
             payload[i - 1] = p1;

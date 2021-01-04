@@ -9,7 +9,7 @@
 #endif //__AVR__
 
 constexpr uint8_t kKeySize{16};
-constexpr uint8_t kKeyMaxIndex{kKeySize - 1};
+constexpr uint8_t kPrivateKeyMaxIndex{kKeySize - 1};
 
 constexpr uint8_t kNumberOfKeys{6};
 constexpr uint8_t kNumberOfKeysMaxIndex{kNumberOfKeys - 1};
