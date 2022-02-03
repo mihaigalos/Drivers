@@ -49,3 +49,17 @@ TYPED_TEST(Fixture, EncryptDecryptEightBytesWorks_WhenTypical)
         ASSERT_EQ(expected, actual);
     }
 }
+
+TYPED_TEST(Fixture, EncryptDecryptEightBytesWorks_WhenRandomData)
+{
+    auto expected = 0xABCDEF9678ADECAB;
+    uint8_t v[kPayloadSize]{static_cast<uint8_t>(expected), static_cast<uint8_t>(expected >> 8), static_cast<uint8_t>(expected >> 16), static_cast<uint8_t>(expected >> 24),
+                            static_cast<uint8_t>(expected >> 32), static_cast<uint8_t>(expected >> 40), static_cast<uint8_t>(expected >> 48), static_cast<uint8_t>(expected >> 56)};
+
+    this->sut_.encrypt(this->rounds_, key, v);
+    this->sut_.decrypt(this->rounds_, key, v);
+
+    uint64_t actual = static_cast<uint64_t>(v[0]) | (static_cast<uint64_t>(v[1]) << 8) | (static_cast<uint64_t>(v[2]) << 16) | (static_cast<uint64_t>(v[3]) << 24) |
+                        (static_cast<uint64_t>(v[4]) << 32) | (static_cast<uint64_t>(v[5]) << 40) | (static_cast<uint64_t>(v[6]) << 48) | (static_cast<uint64_t>(v[7]) << 56);
+    ASSERT_EQ(expected, actual);
+}
