@@ -5,6 +5,7 @@ Uses clock scaling to achieve baudrate.
 Read only fast enough for individual characters.
 
 **Warning: Cycle accuracy is only guaranteed and successfuly tested on AtTiny85. Actual observed bitrate for requested 38400bps is 25200bps on AtMega328p.**
+
 **TODO: set CPU frequency back to initial after receive done, retest if receive works reliably for >1Byte. **
 
 ```
