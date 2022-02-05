@@ -2,7 +2,9 @@
 
 Simplified, more portable bit-bang software uart, 64 bytes.
 Uses clock scaling to achieve baudrate.
-Read only fast enough for individual characters.
+
+Reception (read) is currently only working for individual characters, as it is not fast enough for multi-character communication.
+Should work fine, however, if one adds a small delay on the transmitter side after each byte sent.
 
 **Warning: Cycle accuracy is only guaranteed and successfuly tested on AtTiny85. Actual observed bitrate for requested 38400bps is 25200bps on AtMega328p.**
 
@@ -32,4 +34,3 @@ Successful transmission (write) on AtTiny85 at 38400@8N1. Clock reduced using di
 
 ![alt text](screenshots/38400_tx_high_accuracy_nops_enabled.png "Demo Transmit and Receive")
 
-Reception (read) is currently only working for individual characters, as it is not fast enough for multi-character communication.
