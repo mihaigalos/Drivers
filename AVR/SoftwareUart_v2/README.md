@@ -8,7 +8,7 @@ Should work fine, however, if one adds a small delay on the transmitter side aft
 
 **Warning: Cycle accuracy is only guaranteed and successfuly tested on AtTiny85. Actual observed bitrate for requested 38400bps is 25200bps on AtMega328p.**
 
-**TODO: set CPU frequency back to initial after receive done, retest if receive works reliably for >1Byte.**
+**TODO: make uart_read() an Iterrupt Service Routine and write to a global buffer if count < capacity. The _if_ should substitute the clock cycles needed for poll-waiting for the line to go low. The actual writing to the buffer can take place during the STOP bit.**
 
 ```
 $ avr-nm --size-sort -C -r --radix=d *.elf
