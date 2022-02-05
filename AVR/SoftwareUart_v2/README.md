@@ -8,6 +8,8 @@ Should work fine, however, if one adds a small delay on the transmitter side aft
 
 **Warning: Cycle accuracy is only guaranteed and successfuly tested on AtTiny85. Actual observed bitrate for requested 38400bps is 25200bps on AtMega328p.**
 
+**TODO: set CPU frequency back to initial after receive done, retest if receive works reliably for >1Byte.**
+
 ```
 $ avr-nm --size-sort -C -r --radix=d *.elf
 
