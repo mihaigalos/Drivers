@@ -47,7 +47,8 @@ void uart_write(uint8_t c)
     UART_OUT_PORT_MAPPING |= (1 << TX_PIN);
 }
 
-// uart_read() :: only validated for individual characters, not rapid read i.e. in a loop.
+// uart_read() :: if reading continuously (i.e.: in a loop), ensure transmitter has a small delay after each  byte sent.
+// this gives the reader enought time to start observing the start condition again.
 
 uint8_t uart_read()
 {
