@@ -29,3 +29,22 @@ When the TTL serial adapter is not transmitting, the voltage from the Tx pin kee
 This schematic can be used when interfacing different voltage levels (i.e.: 5V TTL with 3.3V CMOS).
 
 ![alt text](one_wire.png)
+
+
+##### Simplified Single Resistor
+
+Use this when A and B are connected to same VCC and same GND.
+Assuming the B have an internal pull-up resistor Rpu = 10kΩ, and assuming maximum input Voltage for a logic '0' Vil_max = 0.8V (just to be sure), we need the following resistor value Rx to reliably drive a '0': Ohm's Law
+
+```
+   5V * Rx / (Rx + 10kΩ) <= 0.8V
+                      Rx <= 1.9kΩ
+```
+
+Assuming B does not have an internal pull-up, use Rx = 10kΩ..100kΩ. Your A Tx will drive a '1' on bus idle, which will conveniently pull the bus up to VCC when your state machine logic expects B to answer.
+
+In any case, the resistor will prevent shorts in case the B and your controller drive the bus at the same time. It will also act as a pull-up for your own Rx unit, so you won't get spurious data input when B isn't connected.
+
+One can use a multimeter to determine which of the two cases your application falls in. When in doubt, start with 1.8kΩ, see that your code works. Then move on to 100kΩ. If your code fails, you can be sure they use an internal Rpu, so stay 1.8kΩ.
+
+![alt text](single_resistor.png)
