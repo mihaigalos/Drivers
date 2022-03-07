@@ -26,5 +26,6 @@ When the TTL serial adapter is not transmitting, the voltage from the Tx pin kee
 
 ##### Simplified 1-Diode
 
+This schematic can be used when interfacing different voltage levels (i.e.: 5V TTL with 3.3V CMOS).
 
 ![alt text](one_wire.png)
