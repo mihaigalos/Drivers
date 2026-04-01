@@ -30,155 +30,117 @@
 #error Please #define F_CPU
 #endif
 
-// Internal computing macros
-#define BIT_TIME_NANOSEC 1000000000UL / FIXED_BAUD_RATE
-#define ONE_CLOCK_CYCLE_NANOSEC (1000000000UL / F_CPU)
-#define CLOCK_CYCLES_PER_FULL_WAIT_LOOP 3 // using 3cc for each iteration
-#define PRESCALE_WAIT_ONE_BIT                     \
-  ((BIT_TIME_NANOSEC / ONE_CLOCK_CYCLE_NANOSEC) / \
-   (CLOCK_CYCLES_PER_FULL_WAIT_LOOP))
-
-#define PRESCALE_WAIT_ONE_BIT_RX_NO_OFFSET PRESCALE_WAIT_ONE_BIT
-
-#define PRESCALE_WAIT_ONE_BIT_RX PRESCALE_WAIT_ONE_BIT
-#define PRESCALE_WAIT_HALF_BIT_RX \
-  (static_cast<uint8_t>(PRESCALE_WAIT_ONE_BIT_RX)) / 2
-
-#define INSTRUCTION_OFFSET_TX \
-  7 // clock cycles needed  before starting ; this represents the number of bytes in the prologue
-#define PRESCALE_WAIT_ONE_BIT_TX (PRESCALE_WAIT_ONE_BIT - INSTRUCTION_OFFSET_TX)
-
-#if PRESCALE_WAIT_ONE_BIT_RX == 0
-#ifdef F_CPU
-#error PRESCALE_WAIT_ONE_BIT_RX is 0. Try decreasing the Baudrate.
-#endif
-#endif
-
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)
 
 #pragma message "assuming clock: " STR(F_CPU) " Mhz."
 
-#if defined(RX_PIN) || defined(TX_PIN)
-void uart_init()
-{
-#ifdef TX_PIN
-  UART_DDR |= (1 << TX_PIN);
-  UART_OUT_PORT_MAPPING |= (1 << TX_PIN); // Tx line high when idle
-#endif
+// Raw cycles per bit
+#define BIT_CYCLES  (F_CPU / FIXED_BAUD_RATE)
 
-#ifdef RX_PIN
-  UART_DDR &= ~(1 << RX_PIN);
-#endif
-}
+// TX: delay-first loop structure.
+// Per-bit overhead: lsr(1)+ror(1)+brcc+sbi/cbi+rjmp/nop(4)+brne(2) = 8cc (both paths balanced)
+#define TX_BIT_OVERHEAD  8
+#define TX_BIT_WAIT      (BIT_CYCLES - TX_BIT_OVERHEAD)
 
-#endif // #if defined (RX_PIN) || defined (TX_PIN)
+// RX: sample-first loop structure.
+// Per-bit overhead: lsr(1)+sbis+rjmp/ori(3)+brcc(2) = 6cc (both paths balanced)
+// carry flag is NOT clobbered by dec/brne inside __builtin_avr_delay_cycles
+#define RX_BIT_OVERHEAD  6
+#define RX_BIT_WAIT      (BIT_CYCLES - RX_BIT_OVERHEAD)
+
+// RX first-bit alignment: after glitch-check (half-bit + ~4cc overhead consumed),
+// wait remaining distance to center of bit 0 = BIT_CYCLES - 4
+#define RX_START_WAIT    (BIT_CYCLES - 4)
+
+#if TX_BIT_WAIT <= 0
+#error TX_BIT_WAIT is zero or negative. Decrease baud rate or increase F_CPU.
+#endif
+#if RX_BIT_WAIT <= 0
+#error RX_BIT_WAIT is zero or negative. Decrease baud rate or increase F_CPU.
+#endif
 
 #ifdef RX_PIN
 
 uint8_t uart_read()
 {
-  register uint8_t temporary    asm("r18") = 0;
-  register uint8_t readValue    asm("r24") = 0;  // r24 = ABI return register
-  register uint8_t bitPosition  asm("r19") = 0x40;
+  // r24 = ABI return register; c serves as both sentinel counter and accumulator.
+  // Sentinel 0x80 shifts right each iteration; carry sets after 8 shifts → exit.
+  register uint8_t c asm("r24") = 0x80;
 
+detect:
+  // Wait for start bit falling edge (sbic/rjmp = 2cc loop)
   __asm__ volatile(
-
-      "wait: \n\t"
-      "sbic %[uart_in_port_mapping], %[rx_pin]\n\t"
-      "rjmp wait \n\t"
-      "rcall halfDelay \n\t"
-
-      "sbic %[uart_in_port_mapping], %[rx_pin]\n\t"
-      "rjmp wait \n\t"
-      "rcall bitDelayReceive \n\t"
-
-      "read8bits: \n\t"
-
-      "sbis %[uart_in_port_mapping], %[rx_pin]\n\t" // skip next if pin HIGH (bit=1)
-      "rjmp skipBitSet\n\t"                          // pin LOW (bit=0): skip set
-      "ori %[read_value], 0x80\n\t"                  // pin HIGH (bit=1): set MSB
-
-      "skipBitSet: \n\t"
-      "rcall bitDelayReceive \n\t"
-
-      "lsr %[read_value] \n\t"
-      "lsr %[bit_position] \n\t"
-
-      "breq eof_read8bits \n\t"
-      "rjmp read8bits \n\t"
-
-      // delay routines
-
-      "halfDelay: \n\t"
-      "ldi %[temporary], %[prescale_wait_half_bit] \n\t"
-      "rjmp loop_3cc \n\t"
-      "bitDelayReceive: \n\t"
-      "mov %[temporary], %[prescale_wait_one_bit_rx] \n\t"
-      "loop_3cc: \n\t"
-      "dec %[temporary] \n\t" // 1cc
-      "brne loop_3cc \n\t"    // 2cc (true), 1cc (false)
-      "ret \n\t"
-
-      // done
-      "eof_read8bits: \n\t"
-
-      : [ read_value ]  "=&r"(readValue),
-        [ temporary ]    "+r"(temporary),
-        [ bit_position ] "+r"(bitPosition)
-      : [ rx_pin ] "M"(RX_PIN),
-        [ prescale_wait_half_bit ] "M"(PRESCALE_WAIT_HALF_BIT_RX),
-        [ prescale_wait_one_bit_rx ] "r"(PRESCALE_WAIT_ONE_BIT_RX),
-        [ uart_in_port_mapping ] "M"(_SFR_IO_ADDR(UART_IN_PORT_MAPPING))
-
+      "0: sbic %[pin_reg], %[rx_pin] \n\t"
+      "   rjmp 0b \n\t"
+      :: [pin_reg] "M"(_SFR_IO_ADDR(UART_IN_PORT_MAPPING)), [rx_pin] "M"(RX_PIN)
   );
-  return readValue;
+
+  // Half-bit glitch check: sample at mid-start-bit; if HIGH it was a glitch
+  __builtin_avr_delay_cycles(BIT_CYCLES / 2);
+  if (UART_IN_PORT_MAPPING & (1 << RX_PIN)) goto detect;
+
+  // Align to center of first data bit
+  __builtin_avr_delay_cycles(RX_START_WAIT);
+
+rxbit:
+  // Sample pin, accumulate bit into c, shift sentinel toward carry
+  __asm__ volatile(
+      "lsr %[c] \n\t"                          // c >>= 1; carry = old bit0 (sentinel)
+      "sbis %[pin_reg], %[rx_pin] \n\t"        // skip if pin HIGH (bit=1)
+      "rjmp 1f \n\t"                           // pin LOW: skip ori
+      "ori %[c], 0x80 \n\t"                    // pin HIGH: set MSB
+      "1: \n\t"
+      : [c] "+r"(c)
+      : [pin_reg] "M"(_SFR_IO_ADDR(UART_IN_PORT_MAPPING)), [rx_pin] "M"(RX_PIN)
+  );
+  // delay AFTER sample; dec inside __builtin doesn't touch carry flag
+  __builtin_avr_delay_cycles(RX_BIT_WAIT);
+  // brcc: loop while carry clear (sentinel not yet shifted out = fewer than 8 bits read)
+  asm goto("brcc %l[rxbit]" :::: rxbit);
+
+  return c;
 }
+
 #endif // #ifdef RX_PIN
 
 #ifdef TX_PIN
+
 void uart_write(uint8_t value)
 {
-  register uint8_t temporary     asm("r18") = 0;
-  register uint8_t bitsRemaining asm("r19") = 8;
-  __asm__ volatile(
+  // 16-bit sentinel frame: lo8 = data, hi8 = 0x01 (stop bit).
+  // Each iteration: lsr r25 / ror r24 shifts frame right; carry = transmitted bit.
+  // Loop exits via brne when lo8 (r24) reaches 0 after 9 shifts (8 data + 1 stop).
+  // value arrives in r24 per ABI; compiler emits ldi r25, 0x01 for hi8.
+  register uint16_t frame asm("r24") = ((uint16_t)0x01 << 8) | value;
 
-      "cbi %[uart_out_port_mapping], %[tx_pin] \n\t" // falling edge : start condition
-      "rcall bitDelaySend \n\t"
-
-      "write8bits: \n\t"
-      "lsr %[value] \n\t"                                    // shift right: old LSB → carry flag
-      "brcc setPinLow \n\t"                                  // carry clear → bit was 0
-      "sbi %[uart_out_port_mapping], %[tx_pin] \n\t"         // carry set → bit was 1
-      "rjmp pinSetFinished \n\t"
-
-      "setPinLow: \n\t"
-      "cbi %[uart_out_port_mapping], %[tx_pin] \n\t"
-      "nop \n\t" // balance: brcc(2)+cbi(1)+nop(1) = brcc(1)+sbi(1)+rjmp(2) = 5cc each path
-      "pinSetFinished:"
-      "rcall bitDelaySend \n\t"
-      "dec %[bits_remaining] \n\t"
-      "brne write8bits \n\t"
-      "rjmp eof_write8bits \n\t"
-
-      "bitDelaySend: \n\t"
-      "mov %[temporary], %[prescale_wait_one_bit_tx] \n\t"
-      "repeat_3cc: \n\t"
-      "dec %[temporary] \n\t" // 1cc
-      "brne repeat_3cc \n\t"  // 2cc (true), 1cc (false)
-      "ret \n\t"
-
-      // done
-      "eof_write8bits: \n\t"
-      "sbi %[uart_out_port_mapping], %[tx_pin] \n\t" // stop bit
-      "rcall bitDelaySend \n\t"
-      : [ value ]          "+r"(value),
-        [ temporary ]      "+r"(temporary),
-        [ bits_remaining ] "+r"(bitsRemaining)
-      : [ tx_pin ] "M"(TX_PIN),
-        [ uart_out_port_mapping ] "M"(_SFR_IO_ADDR(UART_OUT_PORT_MAPPING)),
-        [ prescale_wait_one_bit_tx ] "r"(PRESCALE_WAIT_ONE_BIT_TX)
-
+  // Start bit: drive TX LOW atomically (1cc)
+  asm volatile(
+      "cbi %[port], %[pin] \n\t"
+      :: [port] "M"(_SFR_IO_ADDR(UART_OUT_PORT_MAPPING)), [pin] "M"(TX_PIN)
   );
+
+txbit:
+  // Delay first: Z flag from ror below will be fresh for brne
+  __builtin_avr_delay_cycles(TX_BIT_WAIT);
+
+  __asm__ volatile(
+      "lsr r25 \n\t"                           // shift hi8; carry = hi8[0]
+      "ror r24 \n\t"                           // rotate lo8; carry = old lo8[0] = bit to send
+                                               // Z flag = (new r24 == 0) — used by brne below
+      "brcc 1f \n\t"                           // carry clear → bit=0
+      "sbi %[port], %[pin] \n\t"               // bit=1: drive HIGH
+      "rjmp 2f \n\t"
+      "1: \n\t"
+      "cbi %[port], %[pin] \n\t"               // bit=0: drive LOW
+      "nop \n\t"                               // balance: brcc(2)+cbi(1)+nop(1) = brcc(1)+sbi(1)+rjmp(2) = 4cc
+      "2: \n\t"
+      : "+r"(frame)
+      : [port] "M"(_SFR_IO_ADDR(UART_OUT_PORT_MAPPING)), [pin] "M"(TX_PIN)
+  );
+  // brne reads Z set by ror r24; sbi/cbi/rjmp/nop do not modify Z
+  asm goto("brne %l[txbit]" :::: txbit);
+  // line remains HIGH (last transmitted bit was stop bit = 1) = UART idle state
 }
+
 #endif // #ifdef TX_PIN

@@ -41,7 +41,19 @@
 #define UART_IN_PORT_MAPPING PINB // Mapping of UART to physical input port
 #define UART_OUT_PORT_MAPPING PORTB
 
-void uart_init();
+#if defined(RX_PIN) || defined(TX_PIN)
+static inline __attribute__((always_inline)) void uart_init()
+{
+#ifdef TX_PIN
+  UART_DDR |= (1 << TX_PIN);
+  UART_OUT_PORT_MAPPING |= (1 << TX_PIN); // Tx line high when idle
+#endif
+#ifdef RX_PIN
+  UART_DDR &= ~(1 << RX_PIN);
+#endif
+}
+#endif
+
 uint8_t uart_read();
 void uart_write(uint8_t value);
 
