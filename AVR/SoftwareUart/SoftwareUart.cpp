@@ -95,12 +95,9 @@ uint8_t uart_read()
 
       "read8bits: \n\t"
 
-      "sbic %[uart_in_port_mapping], %[rx_pin]\n\t" // 2cc true, 1cc false
-      "rjmp setBit\n\t"
-      "rjmp skipBitSet\n\t"
-
-      "setBit:   \n\t"
-      "ori %[read_value], 0x80\n\t"
+      "sbis %[uart_in_port_mapping], %[rx_pin]\n\t" // skip next if pin HIGH (bit=1)
+      "rjmp skipBitSet\n\t"                          // pin LOW (bit=0): skip set
+      "ori %[read_value], 0x80\n\t"                  // pin HIGH (bit=1): set MSB
 
       "skipBitSet: \n\t"
       "rcall bitDelayReceive \n\t"
@@ -150,19 +147,15 @@ void uart_write(uint8_t value)
       "rcall bitDelaySend \n\t"
 
       "write8bits: \n\t"
-      "mov %[temporary], %[value] \n\t"
-      "andi %[value], %[constant_0x01] \n\t"
-      "breq setPinLow \n\t"                          // and == 0, meaning LSB was 0, set bit low
-      "sbi %[uart_out_port_mapping], %[tx_pin] \n\t" // and == 1, meaning LSB was 1, set bit high
-      "rjmp pinSetFinished \n\t"                     // .. and jump to pinSetFinished
+      "lsr %[value] \n\t"                                    // shift right: old LSB → carry flag
+      "brcc setPinLow \n\t"                                  // carry clear → bit was 0
+      "sbi %[uart_out_port_mapping], %[tx_pin] \n\t"         // carry set → bit was 1
+      "rjmp pinSetFinished \n\t"
 
       "setPinLow: \n\t"
       "cbi %[uart_out_port_mapping], %[tx_pin] \n\t"
-      "nop \n\t" // additional no operation to balance the clock cycle count
-                 // when taking the previous branches
+      "nop \n\t" // balance: brcc(2)+cbi(1)+nop(1) = brcc(1)+sbi(1)+rjmp(2) = 5cc each path
       "pinSetFinished:"
-      "mov %[value], %[temporary] \n\t"
-      "lsr %[value] \n\t"
       "rcall bitDelaySend \n\t"
       "dec %[bits_remaining] \n\t"
       "brne write8bits \n\t"
@@ -183,7 +176,6 @@ void uart_write(uint8_t value)
         [ temporary ]      "+r"(temporary),
         [ bits_remaining ] "+r"(bitsRemaining)
       : [ tx_pin ] "M"(TX_PIN),
-        [ constant_0x01 ] "M"(0x01),
         [ uart_out_port_mapping ] "M"(_SFR_IO_ADDR(UART_OUT_PORT_MAPPING)),
         [ prescale_wait_one_bit_tx ] "r"(PRESCALE_WAIT_ONE_BIT_TX)
 
