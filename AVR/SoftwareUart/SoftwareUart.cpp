@@ -78,9 +78,9 @@ void uart_init()
 
 uint8_t uart_read()
 {
-  uint8_t temporary = 0;
-  uint8_t readValue = 0;
-  uint8_t bitPosition = 0x40;
+  register uint8_t temporary    asm("r18") = 0;
+  register uint8_t readValue    asm("r24") = 0;  // r24 = ABI return register
+  register uint8_t bitPosition  asm("r19") = 0x40;
 
   __asm__ volatile(
 
@@ -126,10 +126,10 @@ uint8_t uart_read()
       // done
       "eof_read8bits: \n\t"
 
-      : [ read_value ] "=&r"(readValue)
+      : [ read_value ]  "=&r"(readValue),
+        [ temporary ]    "+r"(temporary),
+        [ bit_position ] "+r"(bitPosition)
       : [ rx_pin ] "M"(RX_PIN),
-        [ temporary ] "r"(temporary),
-        [ bit_position ] "r"(bitPosition),
         [ prescale_wait_half_bit ] "M"(PRESCALE_WAIT_HALF_BIT_RX),
         [ prescale_wait_one_bit_rx ] "r"(PRESCALE_WAIT_ONE_BIT_RX),
         [ uart_in_port_mapping ] "M"(_SFR_IO_ADDR(UART_IN_PORT_MAPPING))
@@ -142,7 +142,8 @@ uint8_t uart_read()
 #ifdef TX_PIN
 void uart_write(uint8_t value)
 {
-  uint8_t temporary = 0, bitsRemaining = 8; // 8 bits
+  register uint8_t temporary     asm("r18") = 0;
+  register uint8_t bitsRemaining asm("r19") = 8;
   __asm__ volatile(
 
       "cbi %[uart_out_port_mapping], %[tx_pin] \n\t" // falling edge : start condition
@@ -178,13 +179,12 @@ void uart_write(uint8_t value)
       "eof_write8bits: \n\t"
       "sbi %[uart_out_port_mapping], %[tx_pin] \n\t" // stop bit
       "rcall bitDelaySend \n\t"
-      :
+      : [ value ]          "+r"(value),
+        [ temporary ]      "+r"(temporary),
+        [ bits_remaining ] "+r"(bitsRemaining)
       : [ tx_pin ] "M"(TX_PIN),
-        [ value ] "r"(value),
         [ constant_0x01 ] "M"(0x01),
-        [ bits_remaining ] "r"(bitsRemaining),
         [ uart_out_port_mapping ] "M"(_SFR_IO_ADDR(UART_OUT_PORT_MAPPING)),
-        [ temporary ] "r"(temporary),
         [ prescale_wait_one_bit_tx ] "r"(PRESCALE_WAIT_ONE_BIT_TX)
 
   );
