@@ -1,3 +1,6 @@
+🚧 Experimental refactoring to 62 bytes TRx on branch: feat/softwareuart/optimize
+
+
 # AVR Software UART [![license](https://img.shields.io/badge/license-GPLv3-brightgreen.svg)](LICENSE)
 A custom-made lightweight Software UART Library for the AVR.
 
